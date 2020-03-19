@@ -94,9 +94,9 @@ class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         var tx = req.getTx();
         int code = validate(tx);
         if (code == 0) {
-            List parts = split(tx, '=');
-            var key = new ArrayByteIterable(parts.get(0));
-            var value = new ArrayByteIterable(parts.get(1));
+            List<byte[]> parts = split(tx, '=');
+            ByteIterable key = new ArrayByteIterable(parts.get(0));
+            ByteIterable value = new ArrayByteIterable(parts.get(1));
             store.put(txn, key, value);
         }
         var resp = ResponseDeliverTx.newBuilder()

@@ -13,6 +13,8 @@ buildscript {
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.8'
     }
 }
+
+
 plugins {
     // Apply the java plugin to add support for Java
     id 'java'
@@ -20,6 +22,16 @@ plugins {
     id 'com.google.protobuf' version '0.8.8'
     // Apply the application plugin to add support for building a CLI application
     id 'application'
+}
+
+
+sourceSets {
+    main {
+        java {
+            srcDir "${buildDir.absolutePath}/generated/source/proto/main/grpc"
+            srcDir "${buildDir.absolutePath}/generated/source/proto/main/java"
+        }
+    }
 }
 protobuf {
     protoc {
@@ -37,21 +49,6 @@ protobuf {
     }
 }
 
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:3.8.0'
-    }
-    generateProtoTasks {
-        all().each { task ->
-            task.builtins {
-                java {
-                    option "lite"
-                }
-            }
-        }
-    }
-}
-
 repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
@@ -62,7 +59,7 @@ dependencies {
     // This dependency is used by the application.
     implementation 'com.google.guava:guava:28.0-jre'
     implementation 'org.jetbrains.xodus:xodus-environment:1.3.91'
-
+    implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'

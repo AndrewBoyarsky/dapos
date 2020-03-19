@@ -17,7 +17,7 @@ class GrpcServer {
 
     void start() throws IOException {
         server.start();
-        System.out.println("gRPC server started, listening on $port");
+        System.out.println("gRPC server started, listening on port " + server.getPort());
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("shutting down gRPC server since JVM is shutting down");
             GrpcServer.this.stop();
