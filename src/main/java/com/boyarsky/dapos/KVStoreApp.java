@@ -1,4 +1,4 @@
-package io.example;
+package com.boyarsky.dapos;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
@@ -8,6 +8,8 @@ import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Store;
 import jetbrains.exodus.env.StoreConfig;
 import jetbrains.exodus.env.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import types.ABCIApplicationGrpc;
 import types.*;
 
@@ -15,14 +17,17 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
+@Component
+public class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     private Environment env;
     private Transaction txn = null;
     private Store store = null;
 
-    KVStoreApp(Environment env) {
+    @Autowired
+    public KVStoreApp(Environment env) {
         this.env = env;
     }
+
     @Override
     public void checkTx(RequestCheckTx req, StreamObserver<ResponseCheckTx> responseObserver) {
         var tx = req.getTx();
