@@ -60,6 +60,7 @@ dependencies {
     implementation 'com.google.guava:guava:28.0-jre'
     implementation 'org.jetbrains.xodus:xodus-environment:1.3.91'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
+    compile 'com.github.jtendermint:jabci:0.32.3'
 
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'

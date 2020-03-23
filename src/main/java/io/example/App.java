@@ -3,17 +3,40 @@
  */
 package io.example;
 
+import com.github.jtendermint.jabci.socket.ExceptionListener;
+import com.github.jtendermint.jabci.socket.TSocket;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Environments;
 
 import java.io.IOException;
+import java.net.ServerSocket;
+
 public class App {
     public static void main(String[] args) throws IOException, InterruptedException {
         try (Environment env = Environments.newInstance("tmp/storage")) {
-            KVStoreApp app = new KVStoreApp(env);
-            var server = new GrpcServer(app, 26658);
-            server.start();
-            server.blockUntilShutdown();
+            TSocket tSocket;
+            System.out.println("starting counter");
+            tSocket = new TSocket((socket, event, exception) -> {
+                if (event == ExceptionListener.Event.SocketHandler_handleRequest) {
+                    exception.printStackTrace();
+                } else if (event == ExceptionListener.Event.SocketHandler_readFromStream) {
+                    System.err.println("error on " + socket.orElse("NONAME") + "-> SocketHandler_readFromStream: " + exception.getMessage());
+                }
+            }, (socketName, count) -> {
+                System.out.println("CONNECT socketname: " + socketName + " count: " + count);
+            }, (socketName, count) -> {
+                System.out.println("DISCONNET socketname: " + socketName + " count: " + count);
+            });
+
+            tSocket.registerListener(new KVStoreApp(env));
+
+            Thread t = new Thread(() -> tSocket.start(TSocket.DEFAULT_LISTEN_SOCKET_PORT));
+            t.setName("Java Counter Main Thread");
+            t.start();
+            while (true) {
+                Thread.sleep(1000L);
+            }
         }
     }
+
 }

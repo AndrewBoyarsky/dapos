@@ -1,5 +1,20 @@
 package io.example;
 
+import com.github.jtendermint.jabci.api.IBeginBlock;
+import com.github.jtendermint.jabci.api.ICheckTx;
+import com.github.jtendermint.jabci.api.ICommit;
+import com.github.jtendermint.jabci.api.IDeliverTx;
+import com.github.jtendermint.jabci.api.IQuery;
+import com.github.jtendermint.jabci.types.RequestBeginBlock;
+import com.github.jtendermint.jabci.types.RequestCheckTx;
+import com.github.jtendermint.jabci.types.RequestCommit;
+import com.github.jtendermint.jabci.types.RequestDeliverTx;
+import com.github.jtendermint.jabci.types.RequestQuery;
+import com.github.jtendermint.jabci.types.ResponseBeginBlock;
+import com.github.jtendermint.jabci.types.ResponseCheckTx;
+import com.github.jtendermint.jabci.types.ResponseCommit;
+import com.github.jtendermint.jabci.types.ResponseDeliverTx;
+import com.github.jtendermint.jabci.types.ResponseQuery;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import jetbrains.exodus.ArrayByteIterable;
@@ -8,31 +23,18 @@ import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Store;
 import jetbrains.exodus.env.StoreConfig;
 import jetbrains.exodus.env.Transaction;
-import types.ABCIApplicationGrpc;
-import types.Types.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
+class KVStoreApp implements IDeliverTx, ICheckTx, ICommit, IQuery, IBeginBlock {
     private Environment env;
     private Transaction txn = null;
     private Store store = null;
 
     KVStoreApp(Environment env) {
         this.env = env;
-    }
-    @Override
-    public void checkTx(RequestCheckTx req, StreamObserver<ResponseCheckTx> responseObserver) {
-        var tx = req.getTx();
-        int code = validate(tx);
-        var resp = ResponseCheckTx.newBuilder()
-                .setCode(code)
-                .setGasWanted(1)
-                .build();
-        responseObserver.onNext(resp);
-        responseObserver.onCompleted();
     }
 
     private int validate(ByteString tx) {
@@ -80,17 +82,28 @@ class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         });
     }
 
+
+
     @Override
-    public void beginBlock(RequestBeginBlock req, StreamObserver responseObserver) {
-        txn = env.beginTransaction();
-        store = env.openStore("store", StoreConfig.WITHOUT_DUPLICATES, txn);
-        var resp = ResponseBeginBlock.newBuilder().build();
-        responseObserver.onNext(resp);
-        responseObserver.onCompleted();
+    public ResponseCheckTx requestCheckTx(RequestCheckTx req) {
+        var tx = req.getTx();
+        int code = validate(tx);
+        return ResponseCheckTx.newBuilder()
+                .setCode(code)
+                .setGasWanted(1)
+                .build();
     }
 
     @Override
-    public void deliverTx(RequestDeliverTx req, StreamObserver responseObserver) {
+    public ResponseCommit requestCommit(RequestCommit requestCommit) {
+        txn.commit();
+        return ResponseCommit.newBuilder()
+                .setData(ByteString.copyFrom(new byte[8]))
+                .build();
+    }
+
+    @Override
+    public ResponseDeliverTx receivedDeliverTx(RequestDeliverTx req) {
         var tx = req.getTx();
         int code = validate(tx);
         if (code == 0) {
@@ -99,25 +112,13 @@ class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
             ByteIterable value = new ArrayByteIterable(parts.get(1));
             store.put(txn, key, value);
         }
-        var resp = ResponseDeliverTx.newBuilder()
+        return ResponseDeliverTx.newBuilder()
                 .setCode(code)
                 .build();
-        responseObserver.onNext(resp);
-        responseObserver.onCompleted();
     }
 
     @Override
-    public void commit(RequestCommit req, StreamObserver responseObserver) {
-        txn.commit();
-        var resp = ResponseCommit.newBuilder()
-                .setData(ByteString.copyFrom(new byte[8]))
-                .build();
-        responseObserver.onNext(resp);
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void query(RequestQuery req, StreamObserver responseObserver) {
+    public ResponseQuery requestQuery(RequestQuery req) {
         var k = req.getData().toByteArray();
         var v = getPersistedValue(k);
         var builder = ResponseQuery.newBuilder();
@@ -128,7 +129,18 @@ class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
             builder.setKey(ByteString.copyFrom(k));
             builder.setValue(ByteString.copyFrom(v));
         }
-        responseObserver.onNext(builder.build());
-        responseObserver.onCompleted();
+        return builder.build();
+    }
+
+    @Override
+    public ResponseBeginBlock requestBeginBlock(RequestBeginBlock req) {
+        try {
+            txn = env.beginTransaction();
+            store = env.openStore("store", StoreConfig.WITHOUT_DUPLICATES, txn);
+            return ResponseBeginBlock.newBuilder().build();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        return ResponseBeginBlock.newBuilder().build();
     }
 }

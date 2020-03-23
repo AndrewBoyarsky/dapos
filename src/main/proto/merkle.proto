@@ -1,16 +1,8 @@
 syntax = "proto3";
-package merkle;
+package utils;
 
 // For more information on gogo.proto, see:
-// https://github.com/gogo/protobuf/blob/master/extensions.md
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-
-option (gogoproto.marshaler_all) = true;
-option (gogoproto.unmarshaler_all) = true;
-option (gogoproto.sizer_all) = true;
-
-option (gogoproto.populate_all) = true;
-option (gogoproto.equal_all) = true;
+option java_multiple_files = true;
 
 //----------------------------------------
 // Message types
@@ -26,5 +18,5 @@ message ProofOp {
 
 // Proof is Merkle proof defined by the list of ProofOps
 message Proof {
-  repeated ProofOp ops = 1 [(gogoproto.nullable)=false];
+  repeated ProofOp ops = 1;
 }
