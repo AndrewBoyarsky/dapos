@@ -3,6 +3,7 @@ package io.example;
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import jetbrains.exodus.util.HexUtil;
 
 import java.io.IOException;
 
@@ -24,6 +25,12 @@ class GrpcServer {
             System.out.println("server shut down");
         }));
     }
+
+//    public static void main(String[] args) {
+//        byte[] bytes = new String("_").getBytes();
+//        String s = HexUtil.byteArrayToString(bytes);
+//        System.out.println(s);
+//    }
 
     private void stop() {
         server.shutdown();

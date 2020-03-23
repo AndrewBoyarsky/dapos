@@ -9,7 +9,7 @@ import jetbrains.exodus.env.Store;
 import jetbrains.exodus.env.StoreConfig;
 import jetbrains.exodus.env.Transaction;
 import types.ABCIApplicationGrpc;
-import types.Types.*;
+import types.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,20 +36,25 @@ class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     }
 
     private int validate(ByteString tx) {
-        List<byte[]> parts = split(tx, '=');
-        if (parts.size() != 2) {
-            return 1;
-        }
-        byte[] key = parts.get(0);
-        byte[] value = parts.get(1);
+        try {
+            List<byte[]> parts = split(tx, '_');
+            if (parts.size() != 2) {
+                return 1;
+            }
+            byte[] key = parts.get(0);
+            byte[] value = parts.get(1);
 
-        // check if the same key=value already exists
-        var stored = getPersistedValue(key);
-        if (stored != null && Arrays.equals(stored, value)) {
-            return 2;
+            // check if the same key=value already exists
+            var stored = getPersistedValue(key);
+            if (stored != null && Arrays.equals(stored, value)) {
+                return 2;
+            }
+            return 0;
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
 
-        return 0;
+        return 1;
     }
 
     private List<byte[]> split(ByteString tx, char separator) {
@@ -81,6 +86,42 @@ class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     }
 
     @Override
+    public void echo(RequestEcho request, StreamObserver<ResponseEcho> responseObserver) {
+        responseObserver.onNext(ResponseEcho.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void flush(RequestFlush request, StreamObserver<ResponseFlush> responseObserver) {
+        responseObserver.onNext(ResponseFlush.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void info(RequestInfo request, StreamObserver<ResponseInfo> responseObserver) {
+        responseObserver.onNext(ResponseInfo.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void setOption(RequestSetOption request, StreamObserver<ResponseSetOption> responseObserver) {
+        responseObserver.onNext(ResponseSetOption.newBuilder().setCode(0).build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void initChain(RequestInitChain request, StreamObserver<ResponseInitChain> responseObserver) {
+        responseObserver.onNext(ResponseInitChain.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void endBlock(RequestEndBlock request, StreamObserver<ResponseEndBlock> responseObserver) {
+        responseObserver.onNext(ResponseEndBlock.newBuilder().build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void beginBlock(RequestBeginBlock req, StreamObserver responseObserver) {
         txn = env.beginTransaction();
         store = env.openStore("store", StoreConfig.WITHOUT_DUPLICATES, txn);
@@ -94,7 +135,7 @@ class KVStoreApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         var tx = req.getTx();
         int code = validate(tx);
         if (code == 0) {
-            List<byte[]> parts = split(tx, '=');
+            List<byte[]> parts = split(tx, '_');
             ByteIterable key = new ArrayByteIterable(parts.get(0));
             ByteIterable value = new ArrayByteIterable(parts.get(1));
             store.put(txn, key, value);

@@ -7,6 +7,7 @@ import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/tendermint/tendermint/crypto/merkle/merkle.proto";
 import "github.com/tendermint/tendermint/libs/common/types.proto";
 import "google/protobuf/timestamp.proto";
+option java_multiple_files = true;
 
 // This file is copied from http://github.com/tendermint/abci
 // NOTE: When using custom types, mind the warnings.
