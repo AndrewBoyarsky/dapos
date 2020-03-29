@@ -5,22 +5,28 @@ package com.boyarsky.dapos;
 
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Environments;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Configuration
-public class App {
-    public static final String appName = "dapos";
-    public static final String appDir = "." + appName;
-    public static final String appDataDir = appDir + "/app-data";
-    public static final String appDbDir = appDir + "/app-db";
-    public static final String appKeystore = appDir + "/app-keystore";
+public class DbConfig {
+
+    Path dbPath;
+
+    @Autowired
+    @Qualifier("dbDir")
+    public void setDbPath(Path dbPath) {
+        this.dbPath = dbPath;
+    }
 
     @Bean
     public Environment env() throws IOException, InterruptedException {
-        return Environments.newInstance(Paths.get(System.getProperty("user.home")).resolve(appDbDir).toAbsolutePath().toString());
+        return Environments.newInstance(dbPath.toAbsolutePath().toString());
     }
 }
