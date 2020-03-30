@@ -12,6 +12,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
@@ -19,7 +20,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 
 public class CryptoUtils {
     static {
@@ -91,6 +97,28 @@ public class CryptoUtils {
             System.arraycopy(publicKeyHash, 12, address, 0, 20);
             return new Wallet("0x" + Convert.toHexString(address), keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean verifySignature(byte[] signature, byte[] publicKey, byte[] message) {
+        try {
+            Signature instance = Signature.getInstance("SHA256withECDSA", "BC");
+            instance.initVerify(KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(publicKey)));
+            instance.update(message);
+            return instance.verify(signature);
+        } catch (InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] sign(byte[] privKey, byte[] message) {
+        try {
+            Signature instance = Signature.getInstance("SHA256withECDSA", "BC");
+            instance.initSign(KeyFactory.getInstance("EC").generatePrivate(new PKCS8EncodedKeySpec(privKey)));
+            instance.update(message);
+            return instance.sign();
+        } catch (InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
             throw new RuntimeException(e);
         }
     }
