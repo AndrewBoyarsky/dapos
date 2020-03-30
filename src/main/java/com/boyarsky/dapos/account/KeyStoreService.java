@@ -5,10 +5,9 @@
  package com.boyarsky.dapos.account;
 
  import com.apollocurrency.aplwallet.apl.util.StringUtils;
- import com.boyarsky.dapos.utils.Base58;
+ import com.boyarsky.dapos.core.TimeSource;
  import com.boyarsky.dapos.utils.Convert;
  import com.boyarsky.dapos.utils.CryptoUtils;
- import com.boyarsky.dapos.core.TimeSource;
  import com.fasterxml.jackson.databind.ObjectMapper;
  import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  import lombok.extern.slf4j.Slf4j;
@@ -19,20 +18,17 @@
  import java.io.IOException;
  import java.nio.file.Files;
  import java.nio.file.Path;
- import java.security.InvalidAlgorithmParameterException;
- import java.security.KeyPair;
- import java.security.KeyPairGenerator;
  import java.security.MessageDigest;
- import java.security.NoSuchAlgorithmException;
- import java.security.spec.ECGenParameterSpec;
  import java.time.Instant;
  import java.time.LocalDateTime;
  import java.time.ZoneId;
  import java.time.format.DateTimeFormatter;
- import java.util.Date;
+ import java.util.List;
+ import java.util.stream.Collectors;
+ import java.util.stream.Stream;
 
- import static com.boyarsky.dapos.utils.CryptoUtils.keccak256;
- import static com.boyarsky.dapos.utils.CryptoUtils.ripemd160;
+ import static com.boyarsky.dapos.utils.CryptoUtils.generateBitcoinWallet;
+ import static com.boyarsky.dapos.utils.CryptoUtils.generateEthWallet;
  import static com.boyarsky.dapos.utils.CryptoUtils.sha256;
 
  @Service
@@ -75,30 +71,71 @@
      @Override
      public PassphraseProtectedWallet createBitcoin(String pass) {
          Wallet wallet = generateBitcoinWallet();
-         LocalDateTime currentTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(timeSource.getTime()), ZoneId.systemDefault());
-         String keyPath = String.format(FORMAT, version, FORMATTER.format(currentTime), wallet.getAppAccount());
-         Path keyFile = keystoreDirPath.resolve(keyPath);
-         if (Files.exists(keyFile)) {
-             throw new RuntimeException("key file already exits. Should not happen");
+         return save(pass, wallet);
+     }
+
+     public VerifiedWallet getWallet(String account, String password) {
+         FileSearchResult file = findAppropriateFile(account);
+         if (!file.status.isOK()) {
+             return new VerifiedWallet(null, file.status);
          }
-         if (StringUtils.isBlank(pass)) {
-             pass = generator.generate();
-         }
-         byte[] encryptedPrivateKey = CryptoUtils.encryptAes(wallet.getPrivateKey(), sha256().digest(pass.getBytes()));
-         StoredWallet storedWallet = new StoredWallet(wallet.getAccount(), Convert.toHexString(wallet.getPublicKey()), Convert.toHexString(encryptedPrivateKey), currentTime);
          try {
-             Files.write(keyFile, new ObjectMapper().writeValueAsString(storedWallet).getBytes());
+             StoredWallet storedWallet = mapper.readValue(file.path.toFile(), StoredWallet.class);
+             byte[] key = sha256().digest(password.getBytes());
+             byte[] encryptedPrivKey = Convert.parseHexString(storedWallet.getEncryptedPrivateKey());
+
+             String mac = Convert.toHexString(generateMac(encryptedPrivKey, key));
+             if (mac.equalsIgnoreCase(storedWallet.getMac())) {
+                 byte[] decrypted = CryptoUtils.decryptAes(encryptedPrivKey, key);
+                 return new VerifiedWallet(new Wallet(storedWallet.getAccount().substring(3), Convert.parseHexString(storedWallet.getPublicKey()), decrypted), Status.OK);
+             } else {
+                 return new VerifiedWallet(null, Status.BAD_CREDENTIALS);
+             }
+
          } catch (IOException e) {
              throw new RuntimeException(e);
          }
-         PassphraseProtectedWallet passphraseProtectedWallet = new PassphraseProtectedWallet(wallet);
-         passphraseProtectedWallet.setPassword(pass);
-         return passphraseProtectedWallet;
+     }
+
+
+     private FileSearchResult findAppropriateFile(String account) {
+         try (Stream<Path> files = Files.walk(keystoreDirPath)) {
+             List<Path> allAvailable = files.filter(e -> e.getFileName().toString().endsWith(account) && e.getFileName().toString().startsWith("v" + version)).collect(Collectors.toList());
+             if (allAvailable.size() > 1) {
+                 return new FileSearchResult(null, Status.DUPLICATE_FOUND);
+             }
+             if (allAvailable.isEmpty()) {
+                 return new FileSearchResult(Status.NOT_FOUND);
+             }
+             return new FileSearchResult(allAvailable.get(0), Status.OK);
+         } catch (IOException e) {
+             throw new RuntimeException(e);
+         }
+     }
+
+
+
+     private static class FileSearchResult {
+         private Path path;
+         private Status status;
+
+         public FileSearchResult(Status status) {
+             this.status = status;
+         }
+
+         public FileSearchResult(Path path, Status status) {
+             this.path = path;
+             this.status = status;
+         }
      }
 
      @Override
      public PassphraseProtectedWallet createEthereum(String pass) {
          Wallet wallet = generateEthWallet();
+         return save(pass, wallet);
+     }
+
+     private PassphraseProtectedWallet save(String pass, Wallet wallet) {
          LocalDateTime currentTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(timeSource.getTime()), ZoneId.systemDefault());
          String keyPath = String.format(FORMAT, version, FORMATTER.format(currentTime), wallet.getAppAccount());
          Path keyFile = keystoreDirPath.resolve(keyPath);
@@ -108,10 +145,12 @@
          if (StringUtils.isBlank(pass)) {
              pass = generator.generate();
          }
-         byte[] encryptedPrivateKey = CryptoUtils.encryptAes(wallet.getPrivateKey(), sha256().digest(pass.getBytes()));
-         StoredWallet storedWallet = new StoredWallet(wallet.getAccount(), Convert.toHexString(wallet.getPublicKey()), Convert.toHexString(encryptedPrivateKey), currentTime);
+         byte[] encryptionKey = sha256().digest(pass.getBytes());
+         byte[] encryptedPrivateKey = CryptoUtils.encryptAes(wallet.getPrivateKey(), encryptionKey);
+         byte[] mac = generateMac(encryptedPrivateKey, encryptionKey);
+         StoredWallet storedWallet = new StoredWallet(wallet.getAppAccount(), Convert.toHexString(wallet.getPublicKey()), Convert.toHexString(encryptedPrivateKey), Convert.toHexString(mac), currentTime);
          try {
-             Files.write(keyFile, new ObjectMapper().writeValueAsString(storedWallet).getBytes());
+             Files.write(keyFile, mapper.writeValueAsString(storedWallet).getBytes());
          } catch (IOException e) {
              throw new RuntimeException(e);
          }
@@ -120,44 +159,10 @@
          return protectedWallet;
      }
 
-     private Wallet generateBitcoinWallet() {
-         try {
-             KeyPairGenerator g = KeyPairGenerator.getInstance("EC");
-             ECGenParameterSpec spec = new ECGenParameterSpec("secp256k1");
-             g.initialize(spec);
-             KeyPair keyPair = g.generateKeyPair();
-             MessageDigest sha256 = sha256();
-             MessageDigest ripeMd = ripemd160();
-             byte[] sha256PublicKey = sha256.digest(keyPair.getPublic().getEncoded());
-             byte[] ripeMdSha256 = ripeMd.digest(sha256PublicKey);
-             byte[] ripeWithVersion = new byte[21];
-             System.arraycopy(ripeMdSha256, 0, ripeWithVersion, 1, ripeMdSha256.length);
-             ripeWithVersion[0] = 0; // mainnet
-             byte[] firstSHA256 = sha256.digest(ripeWithVersion);
-             byte[] secondSHA256 = sha256.digest(firstSHA256);
-             byte[] addressBytes = new byte[25];
-             System.arraycopy(ripeWithVersion, 0, addressBytes, 0, ripeWithVersion.length);
-             System.arraycopy(secondSHA256, 0, addressBytes, ripeWithVersion.length, 4);
-             String encode = Base58.encode(addressBytes);
-             return new Wallet(encode, keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
-         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
-             throw new RuntimeException(e);
-         }
-     }
-
-     private Wallet generateEthWallet() {
-         try {
-             KeyPairGenerator g = KeyPairGenerator.getInstance("EC");
-             ECGenParameterSpec spec = new ECGenParameterSpec("secp256k1");
-             g.initialize(spec);
-             KeyPair keyPair = g.generateKeyPair();
-             MessageDigest sha256 = keccak256();
-             byte[] publicKeyHash = sha256.digest(keyPair.getPublic().getEncoded());
-             byte[] address = new byte[20];
-             System.arraycopy(publicKeyHash, 12, address, 0, 20);
-             return new Wallet("0x" + Convert.toHexString(address), keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
-         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
-             throw new RuntimeException(e);
-         }
+     public byte[] generateMac(byte[] privKey, byte[] password) {
+         MessageDigest digest = sha256();
+         digest.update(privKey);
+         digest.update(password);
+         return digest.digest();
      }
  }

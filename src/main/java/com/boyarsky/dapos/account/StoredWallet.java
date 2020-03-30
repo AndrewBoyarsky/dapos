@@ -14,6 +14,7 @@ public class StoredWallet {
     private String account;
     private String publicKey;
     private String encryptedPrivateKey;
+    private String mac;
     private LocalDateTime time = LocalDateTime.now();
 
     public String getTime() {
