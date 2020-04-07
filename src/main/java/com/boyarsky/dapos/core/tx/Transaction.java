@@ -3,11 +3,12 @@ package com.boyarsky.dapos.core.tx;
 import com.boyarsky.dapos.account.Account;
 import com.boyarsky.dapos.utils.Convert;
 import com.boyarsky.dapos.utils.CryptoUtils;
+import lombok.ToString;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
-
+@ToString
 public class Transaction {
     private static final byte TX_VERSION = 1;
     private String rawTransaction;
@@ -57,10 +58,9 @@ public class Transaction {
         return signature;
     }
 
-    public Transaction(String rawTransaction) {
-        this.rawTransaction = rawTransaction;
-        byte[] txBytes = Convert.parseHexString(rawTransaction);
-        ByteBuffer buffer = ByteBuffer.wrap(txBytes);
+    public Transaction(byte[] rawTransaction) {
+        this.rawTransaction = Convert.toHexString(rawTransaction);
+        ByteBuffer buffer = ByteBuffer.wrap(rawTransaction);
         version = buffer.get();
         txId = buffer.getLong();
         type = buffer.getInt();
