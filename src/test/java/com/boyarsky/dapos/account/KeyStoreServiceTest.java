@@ -41,7 +41,7 @@ class KeyStoreServiceTest {
         doReturn("12345").when(passphraseGenerator).generate();
         PassphraseProtectedWallet bitcoin = keystore.createBitcoin(null);
 
-        assertTrue(bitcoin.isBitcoin());
+        assertTrue(bitcoin.getAccount().isBitcoin());
         List<Path> files = Files.walk(dir).filter(e-> !Files.isDirectory(e)).collect(Collectors.toList());
         assertEquals(1, files.size());
         StoredWallet wallet = new ObjectMapper().readValue(files.get(0).toFile(), StoredWallet.class);
@@ -55,7 +55,7 @@ class KeyStoreServiceTest {
         KeyStoreService keystore = new KeyStoreService(Paths.get(getClass().getClassLoader().getResource(bitcoinWalletFile).toURI()).getParent(), timeSource, passphraseGenerator);
         VerifiedWallet verified = keystore.getWallet("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", "12345");
         assertEquals(Status.OK, verified.getExtractStatus());
-        assertEquals("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", verified.getWallet().getAppAccount());
+        assertEquals("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", verified.getWallet().getAppSpecificAccount());
     }
 
 
@@ -87,7 +87,7 @@ class KeyStoreServiceTest {
         doReturn(time).when(timeSource).getTime();
         PassphraseProtectedWallet bitcoin = keystore.createEthereum("passphrase");
 
-        assertTrue(bitcoin.isEth());
+        assertTrue(bitcoin.getAccount().isEth());
         List<Path> files = Files.walk(dir).filter(e-> !Files.isDirectory(e)).collect(Collectors.toList());
         assertEquals(1, files.size());
         StoredWallet wallet = new ObjectMapper().readValue(files.get(0).toFile(), StoredWallet.class);

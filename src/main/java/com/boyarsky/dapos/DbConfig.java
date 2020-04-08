@@ -3,6 +3,8 @@
  */
 package com.boyarsky.dapos;
 
+import jetbrains.exodus.entitystore.PersistentEntityStore;
+import jetbrains.exodus.entitystore.PersistentEntityStores;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Environments;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,5 +30,10 @@ public class DbConfig {
     @Bean
     public Environment env() throws IOException, InterruptedException {
         return Environments.newInstance(dbPath.toAbsolutePath().toString());
+    }
+
+    @Bean
+    public PersistentEntityStore store() throws IOException, InterruptedException {
+        return PersistentEntityStores.newInstance(env(), "MAIN");
     }
 }

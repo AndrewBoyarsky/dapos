@@ -1,22 +1,29 @@
 package com.boyarsky.dapos.core;
 
+import jetbrains.exodus.entitystore.PersistentEntityStore;
+import jetbrains.exodus.entitystore.StoreTransaction;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Store;
 import jetbrains.exodus.env.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 @Component
 public class TransactionManager {
-    private final Environment environment;
-    private Transaction txn;
+    private final PersistentEntityStore store;
+    private final AtomicReference<StoreTransaction> txn = new AtomicReference<>();
     @Autowired
-    public TransactionManager(Environment environment) {
-        this.environment = environment;
+    public TransactionManager(PersistentEntityStore store) {
+        this.store = store;
     }
 
     public void begin() {
-        txn = environment.beginTransaction();
+        if (currentTx() != null) {
+            currentTx().abort();
+        }
+        txn.set(store.beginTransaction());
     }
 
     public void rollback() {
@@ -30,15 +37,15 @@ public class TransactionManager {
         }
     }
 
-    public Transaction currentTx() {
-        return txn;
+    public StoreTransaction currentTx() {
+        return txn.get();
     }
 
-    private Transaction requireBeganTx() {
-        if (txn == null) {
+    private StoreTransaction requireBeganTx() {
+        if (txn.get() == null) {
             throw new RuntimeException("Transaction should be begun");
         }
-        return txn;
+        return txn.get();
     }
 
 }

@@ -87,7 +87,7 @@
              String mac = Convert.toHexString(generateMac(encryptedPrivKey, key));
              if (mac.equalsIgnoreCase(storedWallet.getMac())) {
                  byte[] decrypted = CryptoUtils.decryptAes(encryptedPrivKey, key);
-                 return new VerifiedWallet(new Wallet(storedWallet.getAccount().substring(3), Convert.parseHexString(storedWallet.getPublicKey()), decrypted), Status.OK);
+                 return new VerifiedWallet(new Wallet(new AccountId(storedWallet.getAccount()), Convert.parseHexString(storedWallet.getPublicKey()), decrypted), Status.OK);
              } else {
                  return new VerifiedWallet(null, Status.BAD_CREDENTIALS);
              }
@@ -137,7 +137,7 @@
 
      private PassphraseProtectedWallet save(String pass, Wallet wallet) {
          LocalDateTime currentTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(timeSource.getTime()), ZoneId.systemDefault());
-         String keyPath = String.format(FORMAT, version, FORMATTER.format(currentTime), wallet.getAppAccount());
+         String keyPath = String.format(FORMAT, version, FORMATTER.format(currentTime), wallet.getAppSpecificAccount());
          Path keyFile = keystoreDirPath.resolve(keyPath);
          if (Files.exists(keyFile)) {
              throw new RuntimeException("key file already exits. Should not happen");
@@ -148,7 +148,7 @@
          byte[] encryptionKey = sha256().digest(pass.getBytes());
          byte[] encryptedPrivateKey = CryptoUtils.encryptAes(wallet.getPrivateKey(), encryptionKey);
          byte[] mac = generateMac(encryptedPrivateKey, encryptionKey);
-         StoredWallet storedWallet = new StoredWallet(wallet.getAppAccount(), Convert.toHexString(wallet.getPublicKey()), Convert.toHexString(encryptedPrivateKey), Convert.toHexString(mac), currentTime);
+         StoredWallet storedWallet = new StoredWallet(wallet.getAppSpecificAccount(), Convert.toHexString(wallet.getPublicKey()), Convert.toHexString(encryptedPrivateKey), Convert.toHexString(mac), currentTime);
          try {
              Files.write(keyFile, mapper.writeValueAsString(storedWallet).getBytes());
          } catch (IOException e) {

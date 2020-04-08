@@ -13,7 +13,7 @@ public class PassphraseProtectedWallet extends Wallet {
     }
 
     public PassphraseProtectedWallet(String account, byte[] publicKey, byte[] privateKey, String password) {
-        super(account, publicKey, privateKey);
+        super(new AccountId(account), publicKey, privateKey);
         this.password = password;
     }
 }

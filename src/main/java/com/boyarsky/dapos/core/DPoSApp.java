@@ -2,13 +2,18 @@ package com.boyarsky.dapos.core;
 
 import com.apollocurrency.aplwallet.apl.util.StringUtils;
 import com.boyarsky.dapos.core.dao.BlockchainDao;
+import com.boyarsky.dapos.core.dao.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.tx.TransactionParser;
+import com.boyarsky.dapos.core.tx.TransactionProcessor;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import types.ABCIApplicationGrpc;
+import types.BlockParams;
+import types.ConsensusParams;
+import types.EvidenceParams;
 import types.RequestBeginBlock;
 import types.RequestCheckTx;
 import types.RequestCommit;
@@ -38,27 +43,23 @@ import java.nio.charset.StandardCharsets;
 public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     public static final String version = "1.0.0.PRE-ALPHA";
     public static final long protocolVersion = 2;
-    private final BlockchainDao dao;
-    private final TransactionParser parser;
-    private final TransactionManager manager;
-    private final QueryDispatcher dispatcher;
-
     @Autowired
-    public DPoSApp(BlockchainDao dao, TransactionParser parser, TransactionManager manager, QueryDispatcher dispatcher) {
-        this.dao = dao;
-        this.parser = parser;
-        this.manager = manager;
-        this.dispatcher = dispatcher;
-    }
+    private Blockchain blockchain;
+    @Autowired
+    private TransactionProcessor processor;
+    @Autowired
+    private TransactionManager manager;
+    @Autowired
+    private QueryDispatcher dispatcher;
+
 
     @Override
         public void checkTx(RequestCheckTx req, StreamObserver<ResponseCheckTx> responseObserver) {
-            ByteString tx = req.getTx(); // validate transactions here
-        parser.parseTx(tx.toByteArray());
-//            int code = validate(tx);
+        processor.checkTx(req.getTx().toByteArray());
             var resp = ResponseCheckTx.newBuilder()
                     .setCode(0)
                     .setGasWanted(1)
+                    .setGasUsed(1)
                     .build();
             responseObserver.onNext(resp);
             responseObserver.onCompleted();
@@ -73,20 +74,24 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         @Override
         public void flush(RequestFlush request, StreamObserver<ResponseFlush> responseObserver) {
             responseObserver.onNext(ResponseFlush.newBuilder().build());
+
             responseObserver.onCompleted();
         }
 
         @Override
         public void info(RequestInfo request, StreamObserver<ResponseInfo> responseObserver) {
-            log.info("Node blockchain version: {}", request.getBlockVersion());
-            log.info("Node p2p version: {}", request.getP2PVersion());
+            log.info("Tendermint Node blockchain version: {}", request.getBlockVersion());
+            log.info("Tendermint Node p2p version: {}", request.getP2PVersion());
             log.info("Application protocol version: {}", protocolVersion);
             log.info("Application version: {}", version);
-            responseObserver.onNext(ResponseInfo.newBuilder()
-                    .setVersion(version)
-                    .setAppVersion(protocolVersion)
-
-                    .build());
+            LastSuccessBlockData lastBlock = blockchain.getLastBlock();
+            ResponseInfo.Builder builder = ResponseInfo.newBuilder();
+            if (lastBlock != null) {
+                builder.setLastBlockHeight(lastBlock.getHeight())
+                        .setLastBlockAppHash(ByteString.copyFrom(lastBlock.getAppHash()));
+            }
+            builder.setVersion(version)
+                    .setAppVersion(protocolVersion);
             responseObserver.onCompleted();
         }
 
@@ -105,7 +110,15 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         @Override
         public void endBlock(RequestEndBlock request, StreamObserver<ResponseEndBlock> responseObserver) {
             responseObserver.onNext(ResponseEndBlock.newBuilder()
-
+                    .setConsensusParamUpdates(ConsensusParams.newBuilder()
+                            .setBlock(BlockParams.newBuilder()
+                                    .setMaxGas(2)
+                                    .setMaxBytes(100 * 1024 * 1024)
+                                    .build())
+                            .setEvidence(EvidenceParams.newBuilder()
+                                    .setMaxAge(5)
+                                    .build())
+                            .build())
                     .build());
             responseObserver.onCompleted();
         }
@@ -113,6 +126,7 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         @Override
         public void beginBlock(RequestBeginBlock req, StreamObserver responseObserver) {
             manager.begin();
+            blockchain.beginBlock(req.getHeader().getHeight());
             var resp = ResponseBeginBlock.newBuilder().build();
             responseObserver.onNext(resp);
             responseObserver.onCompleted();
@@ -135,9 +149,12 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
         @Override
         public void commit(RequestCommit req, StreamObserver responseObserver) {
+            byte[] hash = new byte[8];
+            blockchain.addNewBlock(hash, manager.currentTx());
             manager.commit();
+            ByteString appData = ByteString.copyFrom(hash);
             var resp = ResponseCommit.newBuilder()
-                    .setData(ByteString.copyFrom(new byte[8]))
+                    .setData(appData)
                     .build();
             responseObserver.onNext(resp);
             responseObserver.onCompleted();

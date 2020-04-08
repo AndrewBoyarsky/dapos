@@ -11,11 +11,11 @@ import java.nio.ByteBuffer;
 @NoArgsConstructor
 public class LastSuccessBlockData {
     private byte[] appHash;
-    private int height;
+    private long height;
 
     public byte[] toBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(appHash.length + 4);
-        buffer.putInt(height);
+        ByteBuffer buffer = ByteBuffer.allocate(appHash.length + 8);
+        buffer.putLong(height);
         buffer.put(appHash);
         return buffer.array();
     }
@@ -24,8 +24,8 @@ public class LastSuccessBlockData {
     public static LastSuccessBlockData fromBytes(byte[] bytes) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         LastSuccessBlockData lastSuccessBlockData = new LastSuccessBlockData();
-        lastSuccessBlockData.height = buffer.getInt();
-        lastSuccessBlockData.appHash = new byte[bytes.length - 4];
+        lastSuccessBlockData.height = buffer.getLong();
+        lastSuccessBlockData.appHash = new byte[bytes.length - 8];
         buffer.get(lastSuccessBlockData.appHash);
         return lastSuccessBlockData;
     }

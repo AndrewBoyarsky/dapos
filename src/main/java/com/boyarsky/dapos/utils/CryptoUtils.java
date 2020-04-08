@@ -1,5 +1,6 @@
 package com.boyarsky.dapos.utils;
 
+import com.boyarsky.dapos.account.AccountId;
 import com.boyarsky.dapos.account.Wallet;
 import org.bouncycastle.jcajce.provider.digest.RIPEMD160;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -95,7 +96,7 @@ public class CryptoUtils {
             byte[] publicKeyHash = sha256.digest(keyPair.getPublic().getEncoded());
             byte[] address = new byte[20];
             System.arraycopy(publicKeyHash, 12, address, 0, 20);
-            return new Wallet("0x" + Convert.toHexString(address), keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
+            return new Wallet(new AccountId(encodeEthAddress(address)), keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
@@ -145,11 +146,27 @@ public class CryptoUtils {
             byte[] addressBytes = new byte[25];
             System.arraycopy(ripeWithVersion, 0, addressBytes, 0, ripeWithVersion.length);
             System.arraycopy(secondSHA256, 0, addressBytes, ripeWithVersion.length, 4);
-            String encode = Base58.encode(addressBytes);
-            return new Wallet(encode, keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
+            return new Wallet(new AccountId(encodeBitcoinAddress(addressBytes)), keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static byte[] decodeBitcoinAddress(String address) {
+        return Base58.decode(address);
+    }
+
+    public static String encodeBitcoinAddress(byte[] bitcoinAddressBytes) {
+        return Base58.encode(bitcoinAddressBytes);
+    }
+
+
+    public static byte[] decodeEthAddress(String address) {
+        return Convert.parseHexString(address.substring(2));
+    }
+
+    public static String encodeEthAddress(byte[] ethAddressBytes) {
+        return "0x" + Convert.toHexString(ethAddressBytes);
     }
 
 //    public static ECPrivateKey getPrivateKey(byte[] key) {

@@ -20,6 +20,7 @@ public class Transaction {
     private byte[] data = new byte[0];
     private long amount;
     private long fee;
+    private long gasPrice;
     private byte[] signature;
 
     public String getRawTransaction() {

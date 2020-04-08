@@ -13,4 +13,7 @@ public class Account {
     private byte[] publicKey;
     private long balance;
     private long height;
+    public enum Type {
+        CONTRACT,ORDINARY, FEE_PROVIDER, MULTISIG
+    }
 }

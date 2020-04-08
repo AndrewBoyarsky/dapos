@@ -1,6 +1,7 @@
-package com.boyarsky.dapos.core.tx;
+package com.boyarsky.dapos.core.tx.type.validator;
 
-import com.boyarsky.dapos.core.TxType;
+import com.boyarsky.dapos.core.tx.Transaction;
+import com.boyarsky.dapos.core.tx.type.TxType;
 
 public interface TransactionTypeValidator {
 

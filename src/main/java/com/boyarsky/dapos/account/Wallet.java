@@ -5,9 +5,13 @@ import lombok.Data;
 
 @Data
 public class Wallet {
-    private final String account;
+    private final AccountId account;
     private final byte[] publicKey;
     private final byte[] privateKey;
+
+    public String getAppSpecificAccount() {
+        return account.getAppSpecificAccount();
+    }
 
     @Override
     public String toString() {
@@ -15,23 +19,5 @@ public class Wallet {
                 "account='" + account + '\'' +
                 ", publicKey=" + Convert.toHexString(publicKey) +
                 '}';
-    }
-
-    public String getAppAccount() {
-        if (isBitcoin()) {
-            return "dab" + account;
-        }
-        if (isEth()) {
-            return "det" + account;
-        }
-        throw new RuntimeException("Unknow wallet type");
-    }
-
-    public boolean isBitcoin() {
-        return account.startsWith("1");
-    }
-
-    public boolean isEth() {
-        return account.startsWith("0x");
     }
 }
