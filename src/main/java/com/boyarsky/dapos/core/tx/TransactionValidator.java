@@ -1,7 +1,9 @@
 package com.boyarsky.dapos.core.tx;
 
+import com.boyarsky.dapos.core.account.AccountService;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.validator.TransactionTypeValidator;
+import com.boyarsky.dapos.utils.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,28 +29,32 @@ public class TransactionValidator {
         });
     }
 
-    public int validate(Transaction tx) {
-        int type = tx.getType();
-        TxType txType;
-        try {
-            txType = TxType.ofCode(type);
-        } catch (IllegalArgumentException e) {
-            log.error("Unknown tx type for " + tx, e);
-            return -1;
+    public ValidationResult validate(Transaction tx) {
+        TransactionTypeValidator defaultValidator = validators.get(TxType.ALL);
+        if (defaultValidator != null) {
+            try {
+                defaultValidator.validate(tx);
+            } catch (TransactionTypeValidator.TxNotValidException e) {
+                return new ValidationResult("Invalid transaction (general validation does not pass):" + e.getMessage(), -1, tx, e);
+            } catch (Exception e) {
+                return new ValidationResult("Unknown general validation error:" + e.getMessage(), -2, tx, e);
+            }
+        } else {
+            log.warn("NO DEFAULT TX VALIDATOR DEFINED");
         }
+        TxType txType = tx.getType();
         TransactionTypeValidator validator = validators.get(txType);
+
         if (validator == null) {
-            return -2;
+            return new ValidationResult("Validator not exist for type" + txType, -5, tx, null);
         }
         try {
             validator.validate(tx);
         } catch (TransactionTypeValidator.TxNotValidException e) {
-            log.error("Invalid tx " + tx, e);
-            return e.getCode();
+            return new ValidationResult("Incorrect tx of type " + txType + " Details: " + e.getMessage(), e.getCode(), tx, e);
         } catch (Exception e) {
-            log.error("Unknown runtime error during tx validation: tx " + tx, e);
-            return -100;
+            return new ValidationResult("Unknown runtime error during tx validation " + e.getMessage(), -9, tx, e);
         }
-        return 0;
+        return new ValidationResult("Passed", 0, tx, null);
     }
 }

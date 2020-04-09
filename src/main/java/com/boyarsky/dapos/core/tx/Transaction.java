@@ -1,22 +1,26 @@
 package com.boyarsky.dapos.core.tx;
 
-import com.boyarsky.dapos.account.Account;
+import com.boyarsky.dapos.core.account.Account;
+import com.boyarsky.dapos.core.account.AccountId;
+import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.utils.Convert;
 import com.boyarsky.dapos.utils.CryptoUtils;
+import lombok.Getter;
 import lombok.ToString;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 @ToString
+@Getter
 public class Transaction {
     private static final byte TX_VERSION = 1;
     private String rawTransaction;
     private byte version;
     private long txId;
-    private int type;
-    private byte[] senderPublicKey;
-    private byte[] recipientPublicKey = new byte[0];
+    private TxType type;
+    private AccountId sender;
+    private AccountId recipient;
     private byte[] data = new byte[0];
     private long amount;
     private long fee;
@@ -35,17 +39,6 @@ public class Transaction {
         return txId;
     }
 
-    public int getType() {
-        return type;
-    }
-
-    public byte[] getSenderPublicKey() {
-        return senderPublicKey;
-    }
-
-    public byte[] getRecipientPublicKey() {
-        return recipientPublicKey;
-    }
 
     public byte[] getData() {
         return data;
@@ -64,13 +57,11 @@ public class Transaction {
         ByteBuffer buffer = ByteBuffer.wrap(rawTransaction);
         version = buffer.get();
         txId = buffer.getLong();
-        type = buffer.getInt();
-        senderPublicKey = new byte[88];
-        buffer.get(senderPublicKey);
+        type = TxType.ofCode(buffer.get());
+        sender = AccountId.fromBytes(buffer);
         byte recKeyExist = buffer.get();
         if (recKeyExist == 0) {
-            recipientPublicKey = new byte[88];
-            buffer.get(recipientPublicKey);
+            recipient = AccountId.fromBytes(buffer);
         }
         int dataLength = buffer.getInt();
         if (dataLength != 0) {
@@ -98,11 +89,11 @@ public class Transaction {
         if (!forSigning) {
             buffer.putLong(txId);
         }
-        buffer.putInt(type);
-        buffer.put(senderPublicKey);
-        if (recipientPublicKey.length != 0) {
+        buffer.put(type.getCode());
+        sender.putBytes(buffer);
+        if (recipient != null) {
             buffer.put((byte) 0);
-            buffer.put(recipientPublicKey);
+            recipient.putBytes(buffer);
         } else {
             buffer.put((byte) -1);
         }
@@ -127,16 +118,16 @@ public class Transaction {
     }
 
     public int size(boolean forSigning) {
-        return 1 + (forSigning ? 0 : 8) + 4 + 88 + (recipientPublicKey == null ? 0 : 88) + 1 + 4 + data.length + (amount == 0 ? 0 : 8) + 1 + (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : 74);
+        return 1 + (forSigning ? 0 : 8) + 1 + sender.size() + (recipient == null ? 0 : recipient.size()) + 1 + 4 + data.length + (amount == 0 ? 0 : 8) + 1 + (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : 74);
     }
 
 
-    public Transaction(byte version, long txId, int type, byte[] senderPublicKey, byte[] recipientPublicKey, byte[] data, long amount, long fee, byte[] signature) {
+    public Transaction(byte version, long txId, TxType type, AccountId sender, AccountId recipient, byte[] data, long amount, long fee, byte[] signature) {
         this.version = version;
         this.txId = txId;
         this.type = type;
-        this.senderPublicKey = senderPublicKey;
-        this.recipientPublicKey = recipientPublicKey;
+        this.sender = sender;
+        this.recipient = recipient;
         this.data = data;
         this.amount = amount;
         this.fee = fee;
@@ -145,23 +136,23 @@ public class Transaction {
 
     public static class TransactionBuilder {
         private byte version = TX_VERSION;
-        private int type;
-        private byte[] senderPublicKey;
-        private byte[] recipientPublicKey = new byte[0];
+        private TxType type;
+        private AccountId sender;
+        private AccountId recipient;
         private byte[] data = new byte[0];
         private long amount = 0;
         private long fee;
         private byte[] privateKey;
 
-        public TransactionBuilder(int type, byte[] senderPublicKey, byte[] privateKey, long fee) {
+        public TransactionBuilder(TxType type, AccountId sender, byte[] privateKey, long fee) {
             this.type = type;
-            this.senderPublicKey = senderPublicKey;
+            this.sender = sender;
             this.privateKey = privateKey;
             this.fee = fee;
         }
 
-        public TransactionBuilder recipientPublicKey(byte[] recipientPublicKey) {
-            this.recipientPublicKey = recipientPublicKey;
+        public TransactionBuilder recipientPublicKey(AccountId recipient) {
+            this.recipient = recipient;
             return this;
         }
 
@@ -181,7 +172,7 @@ public class Transaction {
         }
 
         public Transaction build() {
-            Transaction transaction = new Transaction(version, 0, type, senderPublicKey, recipientPublicKey, data, amount, fee, null);
+            Transaction transaction = new Transaction(version, 0, type, sender, recipient, data, amount, fee, null);
             byte[] bytes = transaction.bytes(true);
             transaction.signature = CryptoUtils.sign(privateKey, bytes);
             transaction.txId = new BigInteger(transaction.signature, 0, 8).longValueExact();

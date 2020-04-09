@@ -8,5 +8,5 @@ public interface TransactionTypeHandler {
 
     TxType type();
 
-    void handle(Transaction tx, AbstractAttachment attachment);
+    void handle(Transaction tx);
 }

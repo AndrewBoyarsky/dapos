@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.utils;
 
-import com.boyarsky.dapos.account.AccountId;
-import com.boyarsky.dapos.account.Wallet;
+import com.boyarsky.dapos.core.account.AccountId;
+import com.boyarsky.dapos.core.account.Wallet;
 import org.bouncycastle.jcajce.provider.digest.RIPEMD160;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 

@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx.type;
 
 public enum TxType {
-    PAYMENT(1),SET_FEE_PROVIDER(2), CHANGE_FEE_PROVIDER(3), CONTRACT(4), MESSAGE(5), CURRENCY(6);
+    PAYMENT(1),SET_FEE_PROVIDER(2), CHANGE_FEE_PROVIDER(3), CONTRACT(4), MESSAGE(5), CURRENCY(6), ALL(-1);
     private final byte code;
 
     TxType(int code) {

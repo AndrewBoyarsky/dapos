@@ -1,10 +1,9 @@
 package com.boyarsky.dapos.core;
 
 import com.apollocurrency.aplwallet.apl.util.StringUtils;
-import com.boyarsky.dapos.core.dao.BlockchainDao;
-import com.boyarsky.dapos.core.dao.model.LastSuccessBlockData;
-import com.boyarsky.dapos.core.tx.TransactionParser;
+import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.tx.TransactionProcessor;
+import com.boyarsky.dapos.core.tx.ValidationResult;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
@@ -55,11 +54,12 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
     @Override
         public void checkTx(RequestCheckTx req, StreamObserver<ResponseCheckTx> responseObserver) {
-        processor.checkTx(req.getTx().toByteArray());
-            var resp = ResponseCheckTx.newBuilder()
-                    .setCode(0)
+        ValidationResult validationResult = processor.checkTx(req.getTx().toByteArray());
+        var resp = ResponseCheckTx.newBuilder()
+                    .setCode(validationResult.getCode())
                     .setGasWanted(1)
                     .setGasUsed(1)
+                    .setLog(validationResult.getMessage())
                     .build();
             responseObserver.onNext(resp);
             responseObserver.onCompleted();

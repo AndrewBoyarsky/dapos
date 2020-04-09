@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx.type.attachment;
 
-import com.boyarsky.dapos.core.dao.model.PartyFeeConfig;
-import com.boyarsky.dapos.core.dao.model.State;
+import com.boyarsky.dapos.core.model.PartyFeeConfig;
+import com.boyarsky.dapos.core.model.State;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
