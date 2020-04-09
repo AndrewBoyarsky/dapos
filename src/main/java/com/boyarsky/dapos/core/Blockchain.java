@@ -5,7 +5,9 @@ import com.boyarsky.dapos.core.dao.model.LastSuccessBlockData;
 import jetbrains.exodus.entitystore.StoreTransaction;
 import jetbrains.exodus.env.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class Blockchain {
     private volatile long currentHeight;
     private BlockchainDao blockchainDao;
