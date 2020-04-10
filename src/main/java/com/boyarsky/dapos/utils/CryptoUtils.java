@@ -2,27 +2,35 @@ package com.boyarsky.dapos.utils;
 
 import com.boyarsky.dapos.core.account.AccountId;
 import com.boyarsky.dapos.core.account.Wallet;
+import org.bouncycastle.crypto.macs.HMac;
 import org.bouncycastle.jcajce.provider.digest.RIPEMD160;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyAgreement;
+import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -152,6 +160,62 @@ public class CryptoUtils {
         }
     }
 
+    public static EncryptedData encryptECDH(byte[] privKey, byte[] pubKey, byte[] message) {
+        ECPrivateKey privateKey = getPrivateKey(privKey);
+        PublicKey publicKey = getPublicKey(pubKey);
+        try {
+            KeyAgreement agreement = KeyAgreement.getInstance("ECDH", "BC");
+            agreement.init(privateKey);
+            agreement.doPhase(publicKey, true);
+
+            byte[] secret = agreement.generateSecret();
+            byte[] nonce = generateBytes(32);
+            byte[] secretKeyBytes = hmac(secret, nonce);
+            return new EncryptedData(encryptAes(message, secretKeyBytes), nonce);
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public static byte[] decryptECDH(byte[] privKey, byte[] pubKey, EncryptedData data) {
+        ECPrivateKey privateKey = getPrivateKey(privKey);
+        PublicKey publicKey = getPublicKey(pubKey);
+        try {
+            KeyAgreement agreement = KeyAgreement.getInstance("ECDH", "BC");
+            agreement.init(privateKey);
+            agreement.doPhase(publicKey, true);
+
+            byte[] secret = agreement.generateSecret();
+            byte[] nonce = data.getNonce();
+            byte[] secretKeyBytes = hmac(secret, nonce);
+            return decryptAes(data.getEncrypted(), secretKeyBytes);
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | InvalidKeyException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] hmac(byte[] key, byte[] message) {
+        try {
+            Mac mac  = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey = new SecretKeySpec(key, "HmacSHA256");
+            mac.init(secretKey);
+            return mac.doFinal(message);
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static PublicKey getPublicKey(byte[] key) {
+        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(key);
+        try {
+            KeyFactory generator = KeyFactory.getInstance("EC");
+            return generator.generatePublic(x509EncodedKeySpec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static byte[] decodeBitcoinAddress(String address) {
         return Base58.decode(address);
     }
@@ -169,15 +233,15 @@ public class CryptoUtils {
         return "0x" + Convert.toHexString(ethAddressBytes);
     }
 
-//    public static ECPrivateKey getPrivateKey(byte[] key) {
-//        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(key);
-//        try {
-//            KeyFactory factory = KeyFactory.getInstance("EC");
-//            return (ECPrivateKey) factory.generatePrivate(spec);
-//        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
+    public static ECPrivateKey getPrivateKey(byte[] key) {
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(key);
+        try {
+            KeyFactory factory = KeyFactory.getInstance("EC");
+            return (ECPrivateKey) factory.generatePrivate(spec);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static byte[] encryptAes(byte[] content, byte[] key) {
     byte[] iv = generateBytes(16);
