@@ -18,6 +18,7 @@
  import java.io.IOException;
  import java.nio.file.Files;
  import java.nio.file.Path;
+ import java.security.KeyPair;
  import java.security.MessageDigest;
  import java.time.Instant;
  import java.time.LocalDateTime;
@@ -74,6 +75,7 @@
          return save(pass, wallet);
      }
 
+     @Override
      public VerifiedWallet getWallet(String account, String password) {
          FileSearchResult file = findAppropriateFile(account);
          if (!file.status.isOK()) {
@@ -87,7 +89,9 @@
              String mac = Convert.toHexString(generateMac(encryptedPrivKey, key));
              if (mac.equalsIgnoreCase(storedWallet.getMac())) {
                  byte[] decrypted = CryptoUtils.decryptAes(encryptedPrivKey, key);
-                 return new VerifiedWallet(new Wallet(new AccountId(storedWallet.getAccount()), Convert.parseHexString(storedWallet.getPublicKey()), decrypted), Status.OK);
+                 String crypto = storedWallet.getCryptoAlgo();
+                 KeyPair keyPair = new KeyPair(CryptoUtils.getPublicKey(crypto, Convert.parseHexString(storedWallet.getPublicKey())), CryptoUtils.getPrivateKey(crypto, decrypted));
+                 return new VerifiedWallet(new Wallet(new AccountId(storedWallet.getAccount()), keyPair), Status.OK);
              } else {
                  return new VerifiedWallet(null, Status.BAD_CREDENTIALS);
              }
@@ -135,6 +139,12 @@
          return save(pass, wallet);
      }
 
+     @Override
+     public Wallet createEd25(String pass) {
+         Wallet wallet = CryptoUtils.generateEd25Wallet();
+         return save(pass, wallet);
+     }
+
      private PassphraseProtectedWallet save(String pass, Wallet wallet) {
          LocalDateTime currentTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(timeSource.getTime()), ZoneId.systemDefault());
          String keyPath = String.format(FORMAT, version, FORMATTER.format(currentTime), wallet.getAppSpecificAccount());
@@ -146,9 +156,9 @@
              pass = generator.generate();
          }
          byte[] encryptionKey = sha256().digest(pass.getBytes());
-         byte[] encryptedPrivateKey = CryptoUtils.encryptAes(wallet.getPrivateKey(), encryptionKey);
+         byte[] encryptedPrivateKey = CryptoUtils.encryptAes(wallet.getKeyPair().getPrivate().getEncoded(), encryptionKey);
          byte[] mac = generateMac(encryptedPrivateKey, encryptionKey);
-         StoredWallet storedWallet = new StoredWallet(wallet.getAppSpecificAccount(), Convert.toHexString(wallet.getPublicKey()), Convert.toHexString(encryptedPrivateKey), Convert.toHexString(mac), currentTime);
+         StoredWallet storedWallet = new StoredWallet(wallet.getAppSpecificAccount(), Convert.toHexString(wallet.getKeyPair().getPublic().getEncoded()), Convert.toHexString(encryptedPrivateKey), wallet.getKeyPair().getPublic().getAlgorithm(), Convert.toHexString(mac), currentTime);
          try {
              Files.write(keyFile, mapper.writeValueAsString(storedWallet).getBytes());
          } catch (IOException e) {

@@ -5,6 +5,7 @@ import com.boyarsky.dapos.utils.CryptoUtils;
 import com.boyarsky.dapos.core.TimeSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -16,6 +17,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyPair;
 import java.security.Security;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,9 +34,9 @@ class KeyStoreServiceTest {
     @Mock
     TimeSource timeSource;
     String bitcoinWalletFile = "v1_2020-03-30_22-58-35---dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4";
+
     @Test
     void testCreateBitcoin(@TempDir Path dir) throws IOException {
-        Security.addProvider(new BouncyCastleProvider());
         KeyStoreService keystore = new KeyStoreService(dir, timeSource, passphraseGenerator);
         long time = System.currentTimeMillis();
         doReturn(time).when(timeSource).getTime();
@@ -46,8 +48,26 @@ class KeyStoreServiceTest {
         assertEquals(1, files.size());
         StoredWallet wallet = new ObjectMapper().readValue(files.get(0).toFile(), StoredWallet.class);
         byte[] privateKey = CryptoUtils.decryptAes(Convert.parseHexString(wallet.getEncryptedPrivateKey()), sha256().digest("12345".getBytes()));
-        assertEquals(new PassphraseProtectedWallet(wallet.getAccount().substring(3), Convert.parseHexString(wallet.getPublicKey()), privateKey, "12345"), bitcoin);
+        assertEquals(new PassphraseProtectedWallet(wallet.getAccount().substring(3), CryptoUtils.getKeyPair(wallet.getCryptoAlgo(), privateKey, Convert.parseHexString(wallet.getPublicKey())), "12345"), bitcoin);
 
+    }
+
+    @Test
+    void testCreateEd25(@TempDir Path dir) throws IOException {
+        KeyStoreService keystore = new KeyStoreService(dir, timeSource, passphraseGenerator);
+        long time = System.currentTimeMillis();
+        doReturn(time).when(timeSource).getTime();
+        String mypass = "i'll be back";
+
+        PassphraseProtectedWallet ed25 = (PassphraseProtectedWallet) keystore.createEd25(mypass);
+
+        assertTrue(ed25.getAccount().isEd25());
+        List<Path> files = Files.walk(dir).filter(e-> !Files.isDirectory(e)).collect(Collectors.toList());
+        assertEquals(1, files.size());
+        StoredWallet wallet = new ObjectMapper().readValue(files.get(0).toFile(), StoredWallet.class);
+        byte[] privateKey = CryptoUtils.decryptAes(Convert.parseHexString(wallet.getEncryptedPrivateKey()), sha256().digest(mypass.getBytes()));
+        assertEquals(new PassphraseProtectedWallet(wallet.getAccount().substring(3), CryptoUtils.getKeyPair(wallet.getCryptoAlgo(), privateKey, Convert.parseHexString(wallet.getPublicKey())), mypass), ed25);
+        assertEquals("Ed25519",ed25.getKeyPair().getPublic().getAlgorithm());
     }
 
     @Test
@@ -55,6 +75,7 @@ class KeyStoreServiceTest {
         KeyStoreService keystore = new KeyStoreService(Paths.get(getClass().getClassLoader().getResource(bitcoinWalletFile).toURI()).getParent(), timeSource, passphraseGenerator);
         VerifiedWallet verified = keystore.getWallet("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", "12345");
         assertEquals(Status.OK, verified.getExtractStatus());
+        assertEquals("EC", verified.getWallet().getKeyPair().getPrivate().getAlgorithm());
         assertEquals("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", verified.getWallet().getAppSpecificAccount());
     }
 
@@ -92,6 +113,6 @@ class KeyStoreServiceTest {
         assertEquals(1, files.size());
         StoredWallet wallet = new ObjectMapper().readValue(files.get(0).toFile(), StoredWallet.class);
         byte[] privateKey = CryptoUtils.decryptAes(Convert.parseHexString(wallet.getEncryptedPrivateKey()), sha256().digest("passphrase".getBytes()));
-        assertEquals(bitcoin, new PassphraseProtectedWallet(wallet.getAccount().substring(3), Convert.parseHexString(wallet.getPublicKey()), privateKey, "12345"));
+        assertEquals(bitcoin, new PassphraseProtectedWallet(wallet.getAccount().substring(3), CryptoUtils.getKeyPair(wallet.getCryptoAlgo(), privateKey, Convert.parseHexString(wallet.getPublicKey())), "passphrase"));
     }
 }

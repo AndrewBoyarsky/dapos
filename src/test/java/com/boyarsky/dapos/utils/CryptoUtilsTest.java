@@ -1,10 +1,5 @@
 package com.boyarsky.dapos.utils;
 
-import com.boyarsky.dapos.core.account.Wallet;
-import org.bouncycastle.asn1.DEROctetString;
-import org.bouncycastle.asn1.edec.EdECObjectIdentifiers;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.Test;
 
@@ -13,11 +8,15 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
-import java.security.spec.PKCS8EncodedKeySpec;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CryptoUtilsTest {
 
@@ -41,30 +40,25 @@ class CryptoUtilsTest {
     }
 
     @Test
-    void testEncryptDecryptECDH() {
-        Wallet ethWallet = CryptoUtils.generateEthWallet();
-        Wallet bitcoinWallet = CryptoUtils.generateBitcoinWallet();
-        Wallet intruderWallet = CryptoUtils.generateBitcoinWallet();
+    void testEncryptDecryptECDH() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPair sender = CryptoUtils.secp256k1KeyPair();
+        KeyPair recipient = CryptoUtils.secp256k1KeyPair();
+        KeyPair intruder = CryptoUtils.secp256k1KeyPair();
         String secretMessage = "encrypted message";
-        EncryptedData encryptedData = CryptoUtils.encryptECDH(ethWallet.getPrivateKey(), bitcoinWallet.getPublicKey(), secretMessage.getBytes());
-        byte[] bytes = CryptoUtils.decryptECDH(bitcoinWallet.getPrivateKey(), ethWallet.getPublicKey(), encryptedData);
+        EncryptedData encryptedData = CryptoUtils.encryptECDH(sender.getPrivate(), recipient.getPublic(), secretMessage.getBytes());
+        byte[] bytes = CryptoUtils.decryptECDH(recipient.getPrivate(), sender.getPublic(), encryptedData);
         String decrypted = new String(bytes);
         assertEquals(secretMessage, decrypted);
 
-        assertThrows(RuntimeException.class, () -> CryptoUtils.decryptECDH(intruderWallet.getPrivateKey(), ethWallet.getPublicKey(), encryptedData));
+        assertThrows(RuntimeException.class, () -> CryptoUtils.decryptECDH(intruder.getPrivate(), sender.getPublic(), encryptedData));
     }
 
     @Test
     void testCompressPublicKey() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, IOException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
-        PublicKey aPublic = keyPair.getPublic();
-        byte[] encoded = aPublic.getEncoded();
-        System.out.println(Convert.toHexString(encoded));
         byte[] compressed = CryptoUtils.compress(keyPair.getPublic());
         assertEquals(33, compressed.length);
-//        304d300706052b8104000a03420004be6b70d2a334640b2e54c060aaa2272061bdaaaa858f5121f98e2a2148e6820e84200f37a013a8e7e4bf156b31727cdb205feabfe8cd862f2e8cef4a28ab808c
-//        304d300706052b8104000a03420004170f71f65d6fd8094bae2498cbfb1409fe810d5ac2916dc81b9a1f6448086cb326bcb22d8da00b7043e526a981ff968e1753be4cadc8b6706c2677d6d87c2f90
-        PublicKey key = CryptoUtils.uncompress(compressed);
+        PublicKey key = CryptoUtils.getPublicKey("EC", CryptoUtils.uncompress(compressed));
 
         assertArrayEquals(keyPair.getPublic().getEncoded(), key.getEncoded());
 
@@ -72,19 +66,27 @@ class CryptoUtilsTest {
         byte[] compressEd = CryptoUtils.compress(ed25519.getPublic());
         assertEquals(32, compressEd.length);
 
-        PublicKey uncompress = CryptoUtils.uncompress(compressEd);
+        PublicKey uncompress = CryptoUtils.getPublicKey("Ed25519", CryptoUtils.uncompress(compressEd));
 
         assertArrayEquals(ed25519.getPublic().getEncoded(), uncompress.getEncoded());
-
-
     }
 
     @Test
-    void testEncryptDecryptECDHDifferentCurves() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    void testX25519() throws NoSuchAlgorithmException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        KeyPair recipient = CryptoUtils.ed25519KeyPair();
+        PublicKey x25519RecipientPublic = CryptoUtils.toX25519(recipient.getPublic());
+        PrivateKey x25519RecipientPrivKey = CryptoUtils.toX25519(recipient.getPrivate());
+
         KeyPair sender = CryptoUtils.ed25519KeyPair();
-        KeyPair rec = CryptoUtils.ed25519KeyPair();
-        EncryptedData encryptedData = CryptoUtils.encryptX25519(sender.getPrivate().getEncoded(), rec.getPublic().getEncoded(), "123".getBytes());
-        byte[] data = CryptoUtils.decryptX25519(rec.getPrivate().getEncoded(), sender.getPublic().getEncoded(), encryptedData);
-        assertEquals("123".getBytes(), data);
+        PublicKey x25519SenderPublic = CryptoUtils.toX25519(sender.getPublic());
+        PrivateKey x25519SenderPrivKey = CryptoUtils.toX25519(sender.getPrivate());
+
+
+        String toDecrypt = "data data";
+        byte[] data = toDecrypt.getBytes();
+        EncryptedData encryptedData = CryptoUtils.encryptX25519(x25519SenderPrivKey, x25519RecipientPublic, data);
+        byte[] bytes = CryptoUtils.decryptX25519(x25519RecipientPrivKey, x25519SenderPublic, encryptedData);
+
+        assertEquals(toDecrypt, new String(bytes));
     }
 }

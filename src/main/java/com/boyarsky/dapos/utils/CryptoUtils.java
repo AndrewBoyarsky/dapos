@@ -2,9 +2,13 @@ package com.boyarsky.dapos.utils;
 
 import com.boyarsky.dapos.core.account.AccountId;
 import com.boyarsky.dapos.core.account.Wallet;
+import com.goterl.lazycode.lazysodium.LazySodiumJava;
+import com.goterl.lazycode.lazysodium.SodiumJava;
 import org.bouncycastle.asn1.ASN1Encodable;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.edec.EdECObjectIdentifiers;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.asn1.sec.SECObjectIdentifiers;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -13,6 +17,7 @@ import org.bouncycastle.asn1.x9.X9ObjectIdentifiers;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECNamedDomainParameters;
 import org.bouncycastle.jcajce.provider.asymmetric.EdEC;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPrivateKey;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jcajce.provider.asymmetric.util.ECUtil;
 import org.bouncycastle.jcajce.provider.digest.RIPEMD160;
@@ -52,6 +57,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 public class CryptoUtils {
+    private static LazySodiumJava lazySodiumJava = new LazySodiumJava(new SodiumJava());
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
@@ -73,45 +79,6 @@ public class CryptoUtils {
         }
     }
 
-//    public static ECPublicKey getPublicKey(byte[] publicKeyBytes) {
-//        // First we separate x and y of coordinates into separate variables
-//        byte[] x = new byte[32];
-//        byte[] y = new byte[32];
-//        System.arraycopy(publicKeyBytes, 1, x, 0, 32);
-//        System.arraycopy(publicKeyBytes, 33, y, 0, 32);
-//
-//        try {
-//            KeyFactory kf = KeyFactory.getInstance("EC");
-//
-//            AlgorithmParameters parameters = AlgorithmParameters.getInstance("EC");
-//            parameters.init(new ECGenParameterSpec("secp256k1"));
-//            java.security.spec.ECParameterSpec ecParameterSpec = parameters.getParameterSpec(java.security.spec.ECParameterSpec.class);
-//
-//            ECPublicKeySpec ecPublicKeySpec = new ECPublicKeySpec(new ECPoint(new BigInteger(x), new BigInteger(y)), ecParameterSpec);
-//            ECPublicKey ecPublicKey = (ECPublicKey) kf.generatePublic(ecPublicKeySpec);
-//            return ecPublicKey;
-//        } catch (NoSuchAlgorithmException | InvalidParameterSpecException | InvalidKeySpecException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
-//    public static ECPublicKey getPublicKey(BigInteger key) {
-//        try {
-//            KeyFactory keyFactory = KeyFactory.getInstance("EC", "BC");
-//            ECParameterSpec ecSpec = ECNamedCurveTable.getParameterSpec("secp256k1");
-//            if (key.bitLength() > ecSpec.getN().bitLength()) {
-//                System.out.println("Trim key " + key);
-//                key = key.mod(ecSpec.getN());
-//            }
-//            ECPoint Q = ecSpec.getG().multiply(key.abs());
-//
-//            ECPublicKeySpec pubSpec = new ECPublicKeySpec(Q, ecSpec);
-//            return (ECPublicKey) keyFactory.generatePublic(pubSpec);
-//        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
-//            throw new RuntimeException(e);
-//        }
-//    }
-
     public static Wallet generateEthWallet() {
         try {
             KeyPair keyPair = secp256k1KeyPair();
@@ -119,7 +86,24 @@ public class CryptoUtils {
             byte[] publicKeyHash = sha256.digest(keyPair.getPublic().getEncoded());
             byte[] address = new byte[20];
             System.arraycopy(publicKeyHash, 12, address, 0, 20);
-            return new Wallet(new AccountId(encodeEthAddress(address)), keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
+            return new Wallet(new AccountId(encodeEthAddress(address)), keyPair);
+        } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static KeyPair getKeyPair(String crypto, byte[] privKey, byte[] pubKey) {
+        return new KeyPair(getPublicKey(crypto, pubKey), getPrivateKey(crypto, privKey));
+    }
+
+    public static Wallet generateEd25Wallet() {
+        try {
+            KeyPair keyPair = ed25519KeyPair();
+            MessageDigest sha256 = keccak256();
+            byte[] publicKeyHash = sha256.digest(keyPair.getPublic().getEncoded());
+            byte[] address = new byte[16];
+            System.arraycopy(publicKeyHash, 0, address, 0, 16);
+            return new Wallet(new AccountId(encodeEd25Address(address)), keyPair);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
@@ -159,6 +143,11 @@ public class CryptoUtils {
         return g.generateKeyPair();
     }
 
+    public static KeyPair x25519KeyPair() throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
+        KeyPairGenerator g = KeyPairGenerator.getInstance("X25519", "BC");
+        return g.generateKeyPair();
+    }
+
     public static Wallet generateBitcoinWallet() {
         try {
             KeyPair keyPair = secp256k1KeyPair();
@@ -174,7 +163,7 @@ public class CryptoUtils {
             byte[] addressBytes = new byte[25];
             System.arraycopy(ripeWithVersion, 0, addressBytes, 0, ripeWithVersion.length);
             System.arraycopy(secondSHA256, 0, addressBytes, ripeWithVersion.length, 4);
-            return new Wallet(new AccountId(encodeBitcoinAddress(addressBytes)), keyPair.getPublic().getEncoded(), keyPair.getPrivate().getEncoded());
+            return new Wallet(new AccountId(encodeBitcoinAddress(addressBytes)), keyPair);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
@@ -190,34 +179,86 @@ public class CryptoUtils {
             BCECPublicKey key = (BCECPublicKey) publicKey;
             return key.getQ().getEncoded(true);
         } else {
-            throw new RuntimeException("Unable to compress " + publicKey);
+            throw new RuntimeException("Unable to compress public key " + publicKey);
         }
     }
 
-    public static PublicKey uncompress(byte[] key) throws IOException {
+
+    public static byte[] compress(PrivateKey privateKey) {
+        if (privateKey.getAlgorithm().equalsIgnoreCase("Ed25519")) {
+            byte[] encoded = privateKey.getEncoded();
+            byte[] compressed = new byte[32];
+            System.arraycopy(encoded, 16, compressed, 0, 32);
+            return compressed;
+        } else if (privateKey.getAlgorithm().equalsIgnoreCase("EC")) {
+            BCECPrivateKey key = (BCECPrivateKey) privateKey;
+            return key.getS().toByteArray();
+        } else {
+            throw new RuntimeException("Unable to compress private key " + privateKey);
+        }
+    }
+
+    public static PrivateKey toX25519(PrivateKey ed25519) {
+        byte[] compressed = compress(ed25519);
+        byte[] x25519Raw = toX25519Priv(compressed);
+        try {
+            KeyFactory factory = KeyFactory.getInstance("X25519", "BC");
+            return factory.generatePrivate(new PKCS8EncodedKeySpec(new PrivateKeyInfo(new AlgorithmIdentifier(EdECObjectIdentifiers.id_X25519), new DEROctetString(x25519Raw)).getEncoded()));
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | IOException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static PublicKey toX25519(PublicKey ed25519) {
+        byte[] compressed = compress(ed25519);
+        try {
+            byte[] x25519Raw = toX25519(compressed);
+            KeyFactory factory = KeyFactory.getInstance("X25519", "BC");
+            return factory.generatePublic(new X509EncodedKeySpec(new SubjectPublicKeyInfo(new AlgorithmIdentifier(EdECObjectIdentifiers.id_X25519), x25519Raw).getEncoded()));
+        } catch (NoSuchAlgorithmException | NoSuchProviderException | IOException | InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] toX25519Priv(byte[] ed25519PrivKey) {
+        byte[] x25519Priv = new byte[32];
+        lazySodiumJava.convertSecretKeyEd25519ToCurve25519(x25519Priv, ed25519PrivKey);
+        return x25519Priv;
+    }
+
+    public static byte[] uncompress(byte[] key) throws IOException {
         if (key.length == 33) {
             byte[] point = ECNamedCurveTable.getParameterSpec("secp256k1").getCurve().decodePoint(key).getEncoded(false);
             ASN1ObjectIdentifier secp256k1 = ECUtil.getNamedCurveOid("secp256k1");
             SubjectPublicKeyInfo publicKeyInfo = new SubjectPublicKeyInfo(new AlgorithmIdentifier(X9ECParameters.id_ecPublicKey, secp256k1), point);
-            byte[] derEncoded = publicKeyInfo.getEncoded();
-            System.out.println(Convert.toHexString(derEncoded));
-            return getPublicKey(derEncoded, false);
+            return publicKeyInfo.getEncoded();
+        } else if (key.length == 32) {
+            SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519), key);
+            return subjectPublicKeyInfo.getEncoded();
+        } else {
+            throw new RuntimeException("Unknown key format");
         }
-        SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519), key);
-        return getPublicKey(subjectPublicKeyInfo.getEncoded(), false);
     }
 
-    public static EncryptedData encryptECDH(byte[] privKey, byte[] pubKey, byte[] message) {
-        return encryptWithKeyAgreement("ECDH", privKey, pubKey, message);
+    public static byte[] toX25519(byte[] ed25519PubKey) throws IOException {
+        if (ed25519PubKey.length == 32) {
+            byte[] x25519 = new byte[32];
+            lazySodiumJava.convertPublicKeyEd25519ToCurve25519(x25519, ed25519PubKey);
+            return x25519;
+        } else {
+            throw new RuntimeException("Unknown key format");
+        }
     }
 
-    private static EncryptedData encryptWithKeyAgreement(String algorithm, byte[] privKey, byte[] pubKey, byte[] message) {
-        PrivateKey privateKey = getPrivateKey(privKey, true);
-        PublicKey publicKey = getPublicKey(pubKey, true);
+    public static EncryptedData encryptECDH(PrivateKey privateKey, PublicKey publicKey, byte[] message) {
+        return encryptWithKeyAgreement("ECDH", privateKey, publicKey, message);
+    }
+
+    private static EncryptedData encryptWithKeyAgreement(String algorithm, PrivateKey privKey, PublicKey pubKey, byte[] message) {
         try {
             KeyAgreement agreement = KeyAgreement.getInstance(algorithm, "BC");
-            agreement.init(privateKey);
-            agreement.doPhase(publicKey, true);
+            agreement.init(privKey);
+            agreement.doPhase(pubKey, true);
 
             byte[] secret = agreement.generateSecret();
             byte[] nonce = generateBytes(32);
@@ -229,25 +270,23 @@ public class CryptoUtils {
     }
 
 
-    public static EncryptedData encryptX25519(byte[] privKey, byte[] pubKey, byte[] message) {
-        return encryptWithKeyAgreement("X25519", privKey, pubKey, message);
+    public static EncryptedData encryptX25519(PrivateKey privateKey, PublicKey publicKey, byte[] message) {
+        return encryptWithKeyAgreement("X25519", privateKey, publicKey, message);
     }
 
 
-    public static byte[] decryptECDH(byte[] privKey, byte[] pubKey, EncryptedData data) {
+    public static byte[] decryptECDH(PrivateKey privKey, PublicKey pubKey, EncryptedData data) {
         return decryptWithKeyAgreement("ECDH", privKey, pubKey, data);
     }
-    public static byte[] decryptX25519(byte[] privKey, byte[] pubKey, EncryptedData data) {
+    public static byte[] decryptX25519(PrivateKey privKey, PublicKey pubKey, EncryptedData data) {
         return decryptWithKeyAgreement("X25519", privKey, pubKey, data);
     }
 
-    private static byte[] decryptWithKeyAgreement(String algorithm, byte[] privKey, byte[] pubKey, EncryptedData data) {
-        PrivateKey privateKey = getPrivateKey(privKey, true);
-        PublicKey publicKey = getPublicKey(pubKey, true);
+    private static byte[] decryptWithKeyAgreement(String algorithm, PrivateKey privKey, PublicKey pubKey, EncryptedData data) {
         try {
             KeyAgreement agreement = KeyAgreement.getInstance(algorithm, "BC");
-            agreement.init(privateKey);
-            agreement.doPhase(publicKey, true);
+            agreement.init(privKey);
+            agreement.doPhase(pubKey, true);
             byte[] secret = agreement.generateSecret();
             byte[] nonce = data.getNonce();
             byte[] secretKeyBytes = hmac(secret, nonce);
@@ -268,28 +307,13 @@ public class CryptoUtils {
         }
     }
 
-    public static PublicKey getPublicKey(byte[] key, boolean keyAgreement) {
+    public static PublicKey getPublicKey(String crypto, byte[] key) {
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(key);
         try {
-            KeyFactory generator = KeyFactory.getInstance("EC", "BC");
+            KeyFactory generator = KeyFactory.getInstance(crypto, "BC");
             return generator.generatePublic(x509EncodedKeySpec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
-            if (keyAgreement) {
-                try {
-                    KeyFactory factory = KeyFactory.getInstance("X25519", "BC");
-                    var x509KeySpec = new X509EncodedKeySpec(key);
-                    return factory.generatePublic(x509KeySpec);
-                } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            try {
-                KeyFactory factory = KeyFactory.getInstance("Ed25519", "BC");
-                var x509KeySpec = new X509EncodedKeySpec(key);
-                return factory.generatePublic(x509KeySpec);
-            } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException ex) {
-                throw new RuntimeException(ex);
-            }
+            throw new RuntimeException(e);
         }
     }
 
@@ -306,32 +330,24 @@ public class CryptoUtils {
         return Convert.parseHexString(address.substring(2));
     }
 
+    public static byte[] decodeEd25Address(String address) {
+        return Convert.parseHexString(address.substring(2));
+    }
+
     public static String encodeEthAddress(byte[] ethAddressBytes) {
         return "0x" + Convert.toHexString(ethAddressBytes);
     }
+    public static String encodeEd25Address(byte[] ethAddressBytes) {
+        return "25" + Convert.toHexString(ethAddressBytes);
+    }
 
-    public static PrivateKey getPrivateKey(byte[] key, boolean keyAgreement) {
+    public static PrivateKey getPrivateKey(String crypto, byte[] key) {
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(key);
         try {
-            KeyFactory factory = KeyFactory.getInstance("EC", "BC");
+            KeyFactory factory = KeyFactory.getInstance(crypto, "BC");
             return factory.generatePrivate(spec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
-            if (keyAgreement) {
-                try {
-                    KeyFactory factory = KeyFactory.getInstance("X25519", "BC");
-                    byte[] keyItself = new byte[32];
-                    System.arraycopy(key, 16, keyItself, 0, 32);
-                    return factory.generatePrivate(new SecretKeySpec(keyItself, "X25519"));
-                } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-            try {
-                KeyFactory factory = KeyFactory.getInstance("Ed25519", "BC");
-                return factory.generatePrivate(spec);
-            } catch (InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException ex) {
-                throw new RuntimeException(ex);
-            }
+            throw new RuntimeException(e);
         }
     }
 
