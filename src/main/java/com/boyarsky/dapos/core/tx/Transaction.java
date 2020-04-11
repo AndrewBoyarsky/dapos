@@ -20,12 +20,14 @@ public class Transaction {
     private long txId;
     private TxType type;
     private AccountId sender;
+    private byte[] senderPublicKey;
     private AccountId recipient;
     private byte[] data = new byte[0];
     private long amount;
     private long fee;
-    private long gasPrice;
     private byte[] signature;
+
+    private long gasPrice;
 
     public String getRawTransaction() {
         return rawTransaction;
@@ -58,7 +60,16 @@ public class Transaction {
         version = buffer.get();
         txId = buffer.getLong();
         type = TxType.ofCode(buffer.get());
-        sender = AccountId.fromBytes(buffer);
+        if (isFirst()) {
+            int pubSize = 33; // secp compressed
+            if (isEd()) {
+                pubSize = 32;
+            }
+            senderPublicKey = new byte[pubSize];
+            buffer.get(senderPublicKey);
+        } else {
+            sender = AccountId.fromBytes(buffer);
+        }
         byte recKeyExist = buffer.get();
         if (recKeyExist == 0) {
             recipient = AccountId.fromBytes(buffer);
@@ -76,7 +87,11 @@ public class Transaction {
         if (feeExist == 0) {
             fee = buffer.getLong();
         }
-        signature = new byte[74];
+        int sigSize = 72;
+        if (isEd()) {
+            sigSize = 64;
+        }
+        signature = new byte[sigSize];
         buffer.get(signature);
         if (buffer.position() != buffer.capacity()) {
             throw new RuntimeException("Incorrect deserialization procedure");
@@ -90,7 +105,14 @@ public class Transaction {
             buffer.putLong(txId);
         }
         buffer.put(type.getCode());
-        sender.putBytes(buffer);
+        if (senderPublicKey == null) {
+            buffer.put((byte) 1);
+            sender.putBytes(buffer);
+        } else {
+            buffer.put((byte) 2);
+            buffer.put((byte) senderPublicKey.length);
+            buffer.put(senderPublicKey);
+        }
         if (recipient != null) {
             buffer.put((byte) 0);
             recipient.putBytes(buffer);
@@ -112,17 +134,20 @@ public class Transaction {
             buffer.putLong(fee);
         }
         if (!forSigning) {
+            buffer.put((byte) signature.length);
             buffer.put(signature);
         }
         return buffer.array();
     }
 
     public int size(boolean forSigning) {
-        return 1 + (forSigning ? 0 : 8) + 1 + sender.size() + (recipient == null ? 0 : recipient.size()) + 1 + 4 + data.length + (amount == 0 ? 0 : 8) + 1 + (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : 74);
+        return 1 + (forSigning ? 0 : 8) + 1 + (isFirst() ? senderPublicKey.length : sender.size())  +
+                (recipient == null ? 0 : recipient.size()) + 1 + 4 + data.length + (amount == 0 ? 0 : 8) + 1 +
+                (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : signature.length);
     }
 
 
-    public Transaction(byte version, long txId, TxType type, AccountId sender, AccountId recipient, byte[] data, long amount, long fee, byte[] signature) {
+    public Transaction(byte version, long txId, TxType type, AccountId sender, byte[] senderPublicKey, AccountId recipient, byte[] data, long amount, long fee, byte[] signature) {
         this.version = version;
         this.txId = txId;
         this.type = type;
@@ -132,12 +157,13 @@ public class Transaction {
         this.amount = amount;
         this.fee = fee;
         this.signature = signature;
+        this.senderPublicKey = senderPublicKey;
     }
 
     public static class TransactionBuilder {
-        private byte version = TX_VERSION;
         private TxType type;
         private AccountId sender;
+        private byte[] senderPublicKey;
         private AccountId recipient;
         private byte[] data = new byte[0];
         private long amount = 0;
@@ -146,13 +172,19 @@ public class Transaction {
 
         public TransactionBuilder(TxType type, AccountId sender, byte[] privateKey, long fee) {
             this.type = type;
-            this.sender = sender;
             this.privateKey = privateKey;
+            this.sender = sender;
+            this.fee = fee;
+        }
+        public TransactionBuilder(TxType type, byte[] senderPublicKey, byte[] privateKey, long fee) {
+            this.type = type;
+            this.privateKey = privateKey;
+            this.senderPublicKey = senderPublicKey;
             this.fee = fee;
         }
 
-        public TransactionBuilder recipientPublicKey(AccountId recipient) {
-            this.recipient = recipient;
+        public TransactionBuilder sender(AccountId sender) {
+            this.sender = sender;
             return this;
         }
 
@@ -166,13 +198,20 @@ public class Transaction {
             return this;
         }
 
-        public TransactionBuilder version(byte version) {
-            this.version = version;
+        public TransactionBuilder recipient(AccountId id) {
+            this.recipient = id;
             return this;
         }
 
         public Transaction build() {
-            Transaction transaction = new Transaction(version, 0, type, sender, recipient, data, amount, fee, null);
+            byte version = 0;
+            if (senderPublicKey != null) {
+                version |= 1;
+            }
+            if (senderPublicKey != null && senderPublicKey.length == 32 || sender != null && sender.isEd25()) {
+                version |= 2;
+            }
+            Transaction transaction = new Transaction(version, 0, type, sender, senderPublicKey, recipient, data, amount, fee, null);
             byte[] bytes = transaction.bytes(true);
             transaction.signature = CryptoUtils.sign(privateKey, bytes);
             transaction.txId = new BigInteger(transaction.signature, 0, 8).longValueExact();
@@ -180,5 +219,11 @@ public class Transaction {
         }
     }
 
+    public boolean isEd() {
+        return (version & 2) == 2;
+    }
 
+    public boolean isFirst() {
+        return (version & 1 ) == 1;
+    }
 }
