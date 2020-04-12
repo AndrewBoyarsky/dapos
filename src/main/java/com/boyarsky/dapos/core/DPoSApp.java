@@ -2,6 +2,8 @@ package com.boyarsky.dapos.core;
 
 import com.apollocurrency.aplwallet.apl.util.StringUtils;
 import com.apollocurrency.aplwallet.apl.util.ThreadUtils;
+import com.boyarsky.dapos.core.config.BlockchainConfig;
+import com.boyarsky.dapos.core.config.HeightConfig;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.tx.TransactionProcessor;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
@@ -51,6 +53,10 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     private TransactionManager manager;
     @Autowired
     private QueryDispatcher dispatcher;
+    @Autowired
+    private Genesis genesis;
+    @Autowired
+    private BlockchainConfig config;
 
 
     @Override
@@ -88,8 +94,11 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
             LastSuccessBlockData lastBlock = blockchain.getLastBlock();
             ResponseInfo.Builder builder = ResponseInfo.newBuilder();
             if (lastBlock != null) {
+                config.init(lastBlock.getHeight());
                 builder.setLastBlockHeight(lastBlock.getHeight())
                         .setLastBlockAppHash(ByteString.copyFrom(lastBlock.getAppHash()));
+            } else {
+                config.init(0);
             }
             builder.setVersion(version)
                     .setAppVersion(protocolVersion);
@@ -104,23 +113,29 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
         @Override
         public void initChain(RequestInitChain request, StreamObserver<ResponseInitChain> responseObserver) {
-            responseObserver.onNext(ResponseInitChain.newBuilder().build());
+            genesis.initialize();
+            responseObserver.onNext(ResponseInitChain.newBuilder()
+                    .build());
             responseObserver.onCompleted();
         }
 
         @Override
         public void endBlock(RequestEndBlock request, StreamObserver<ResponseEndBlock> responseObserver) {
-            responseObserver.onNext(ResponseEndBlock.newBuilder()
-                    .setConsensusParamUpdates(ConsensusParams.newBuilder()
-                            .setBlock(BlockParams.newBuilder()
-                                    .setMaxGas(2)
-                                    .setMaxBytes(100 * 1024 * 1024)
-                                    .build())
-                            .setEvidence(EvidenceParams.newBuilder()
-                                    .setMaxAge(5)
-                                    .build())
-                            .build())
-                    .build());
+            boolean updated = config.tryUpdateForHeight(blockchain.getCurrentBlockHeight() + 1);
+            ResponseEndBlock.Builder builder = ResponseEndBlock.newBuilder();
+            if (updated) {
+                HeightConfig currentConfig = config.getCurrentConfig();
+                builder.setConsensusParamUpdates(ConsensusParams.newBuilder()
+                                .setBlock(BlockParams.newBuilder()
+                                        .setMaxGas(currentConfig.getMaxGas())
+                                        .setMaxBytes(currentConfig.getMaxSize())
+                                        .build())
+                                .setEvidence(EvidenceParams.newBuilder()
+                                        .setMaxAge(currentConfig.getMaxEvidenceAge())
+                                        .build())
+                                .build());
+            }
+            responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
         }
 

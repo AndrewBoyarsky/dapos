@@ -31,9 +31,11 @@ public interface TransactionTypeValidator {
             this.tx = tx;
             this.code = code;
         }
-
-        public TxNotValidException(String message, Transaction tx) {
-            this(message, tx, -1);
+        public TxNotValidException(String message, Transaction tx, int code, Throwable e) {
+            super(message, e);
+            this.tx = tx;
+            this.code = code;
         }
+
     }
 }

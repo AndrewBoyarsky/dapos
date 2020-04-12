@@ -10,6 +10,8 @@ import lombok.ToString;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.security.KeyPair;
+import java.security.PrivateKey;
 
 @ToString
 @Getter
@@ -67,6 +69,7 @@ public class Transaction {
             }
             senderPublicKey = new byte[pubSize];
             buffer.get(senderPublicKey);
+            sender = CryptoUtils.fromPublicKey(senderPublicKey, isBitcoin());
         } else {
             sender = AccountId.fromBytes(buffer);
         }
@@ -163,24 +166,17 @@ public class Transaction {
     public static class TransactionBuilder {
         private TxType type;
         private AccountId sender;
-        private byte[] senderPublicKey;
+        private KeyPair keyPair;
         private AccountId recipient;
         private byte[] data = new byte[0];
         private long amount = 0;
         private long fee;
-        private byte[] privateKey;
 
-        public TransactionBuilder(TxType type, AccountId sender, byte[] privateKey, long fee) {
+        public TransactionBuilder(TxType type, AccountId accountId, KeyPair keyPair, long fee) {
             this.type = type;
-            this.privateKey = privateKey;
-            this.sender = sender;
+            this.sender = accountId;
             this.fee = fee;
-        }
-        public TransactionBuilder(TxType type, byte[] senderPublicKey, byte[] privateKey, long fee) {
-            this.type = type;
-            this.privateKey = privateKey;
-            this.senderPublicKey = senderPublicKey;
-            this.fee = fee;
+            this.keyPair = keyPair;
         }
 
         public TransactionBuilder sender(AccountId sender) {
@@ -203,17 +199,20 @@ public class Transaction {
             return this;
         }
 
-        public Transaction build() {
+        public Transaction build(boolean first) {
             byte version = 0;
-            if (senderPublicKey != null) {
+            if (first) {
                 version |= 1;
             }
-            if (senderPublicKey != null && senderPublicKey.length == 32 || sender != null && sender.isEd25()) {
+            if (sender.isEd25()) {
                 version |= 2;
             }
-            Transaction transaction = new Transaction(version, 0, type, sender, senderPublicKey, recipient, data, amount, fee, null);
+            if (first && sender.isBitcoin()) {
+                version |= 4;
+            }
+            Transaction transaction = new Transaction(version, 0, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, data, amount, fee, null);
             byte[] bytes = transaction.bytes(true);
-            transaction.signature = CryptoUtils.sign(privateKey, bytes);
+            transaction.signature = CryptoUtils.sign(keyPair.getPrivate(), bytes);
             transaction.txId = new BigInteger(transaction.signature, 0, 8).longValueExact();
             return transaction;
         }
@@ -226,4 +225,9 @@ public class Transaction {
     public boolean isFirst() {
         return (version & 1 ) == 1;
     }
+
+    public boolean isBitcoin() {
+        return (version & 4 ) == 4;
+    }
+
 }

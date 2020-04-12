@@ -1,5 +1,6 @@
 package com.boyarsky.dapos.utils;
 
+import com.boyarsky.dapos.core.account.Account;
 import com.boyarsky.dapos.core.account.AccountId;
 import com.boyarsky.dapos.core.account.Wallet;
 import com.goterl.lazycode.lazysodium.LazySodiumJava;
@@ -72,14 +73,18 @@ public class CryptoUtils {
     public static Wallet generateEthWallet() {
         try {
             KeyPair keyPair = secp256k1KeyPair();
-            MessageDigest sha256 = keccak256();
-            byte[] publicKeyHash = sha256.digest(keyPair.getPublic().getEncoded());
-            byte[] address = new byte[20];
-            System.arraycopy(publicKeyHash, 12, address, 0, 20);
-            return new Wallet(new AccountId(encodeEthAddress(address)), keyPair);
+            return new Wallet(new AccountId(ethAddress(compress(keyPair.getPublic()))), keyPair);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String ethAddress(byte[] publicKey) {
+        MessageDigest sha256 = keccak256();
+        byte[] publicKeyHash = sha256.digest(publicKey);
+        byte[] address = new byte[20];
+        System.arraycopy(publicKeyHash, 12, address, 0, 20);
+        return encodeEthAddress(address);
     }
 
     public static KeyPair getKeyPair(String crypto, byte[] privKey, byte[] pubKey) {
@@ -89,35 +94,50 @@ public class CryptoUtils {
     public static Wallet generateEd25Wallet() {
         try {
             KeyPair keyPair = ed25519KeyPair();
-            MessageDigest sha256 = keccak256();
-            byte[] publicKeyHash = sha256.digest(keyPair.getPublic().getEncoded());
-            byte[] address = new byte[16];
-            System.arraycopy(publicKeyHash, 0, address, 0, 16);
-            return new Wallet(new AccountId(encodeEd25Address(address)), keyPair);
+            return new Wallet(new AccountId(ed25Address(compress(keyPair.getPublic()))), keyPair);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static boolean verifySignature(byte[] signature, byte[] publicKey, byte[] message) {
+    public static String ed25Address(byte[] publicKey) {
+        MessageDigest sha256 = keccak256();
+        byte[] publicKeyHash = sha256.digest(publicKey);
+        byte[] address = new byte[16];
+        System.arraycopy(publicKeyHash, 0, address, 0, 16);
+        return encodeEd25Address(address);
+    }
+
+    public static boolean verifySignature(byte[] signature, PublicKey publicKey, byte[] message) throws InvalidKeyException, SignatureException {
         try {
-            Signature instance = Signature.getInstance("SHA256withECDSA", "BC");
-            instance.initVerify(KeyFactory.getInstance("EC").generatePublic(new X509EncodedKeySpec(publicKey)));
+            Signature instance = createSignature(publicKey.getAlgorithm());
+            instance.initVerify(publicKey);
             instance.update(message);
             return instance.verify(signature);
-        } catch (InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException  e) {
+            throw new RuntimeException("FATAL ERROR. BC is not registered properly.", e);
+        }
+    }
+
+    public static byte[] sign(PrivateKey key, byte[] message) {
+        try {
+
+            Signature instance = createSignature(key.getAlgorithm());
+            instance.initSign(key);
+            instance.update(message);
+            return instance.sign();
+        } catch (InvalidKeyException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static byte[] sign(byte[] privKey, byte[] message) {
-        try {
-            Signature instance = Signature.getInstance("SHA256withECDSA", "BC");
-            instance.initSign(KeyFactory.getInstance("EC").generatePrivate(new PKCS8EncodedKeySpec(privKey)));
-            instance.update(message);
-            return instance.sign();
-        } catch (InvalidKeyException | InvalidKeySpecException | NoSuchAlgorithmException | NoSuchProviderException | SignatureException e) {
-            throw new RuntimeException(e);
+    private static Signature createSignature(String algo) throws NoSuchProviderException, NoSuchAlgorithmException {
+        if (algo.equals("EC")) {
+            return Signature.getInstance("SHA256withECDSA", "BC");
+        } else if (algo.equals("Ed25519")) {
+            return Signature.getInstance("Ed25519", "BC");
+        } else {
+            throw new RuntimeException("Unsupported key algo: " + algo);
         }
     }
 
@@ -141,22 +161,27 @@ public class CryptoUtils {
     public static Wallet generateBitcoinWallet() {
         try {
             KeyPair keyPair = secp256k1KeyPair();
-            MessageDigest sha256 = sha256();
-            MessageDigest ripeMd = ripemd160();
-            byte[] sha256PublicKey = sha256.digest(keyPair.getPublic().getEncoded());
-            byte[] ripeMdSha256 = ripeMd.digest(sha256PublicKey);
-            byte[] ripeWithVersion = new byte[21];
-            System.arraycopy(ripeMdSha256, 0, ripeWithVersion, 1, ripeMdSha256.length);
-            ripeWithVersion[0] = 0; // mainnet
-            byte[] firstSHA256 = sha256.digest(ripeWithVersion);
-            byte[] secondSHA256 = sha256.digest(firstSHA256);
-            byte[] addressBytes = new byte[25];
-            System.arraycopy(ripeWithVersion, 0, addressBytes, 0, ripeWithVersion.length);
-            System.arraycopy(secondSHA256, 0, addressBytes, ripeWithVersion.length, 4);
-            return new Wallet(new AccountId(encodeBitcoinAddress(addressBytes)), keyPair);
+            String address = bitcoinAddress(compress(keyPair.getPublic()));
+            return new Wallet(new AccountId(address), keyPair);
         } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String bitcoinAddress(byte[] publicKey) {
+        MessageDigest sha256 = sha256();
+        MessageDigest ripeMd = ripemd160();
+        byte[] sha256PublicKey = sha256.digest(publicKey);
+        byte[] ripeMdSha256 = ripeMd.digest(sha256PublicKey);
+        byte[] ripeWithVersion = new byte[21];
+        System.arraycopy(ripeMdSha256, 0, ripeWithVersion, 1, ripeMdSha256.length);
+        ripeWithVersion[0] = 0; // mainnet
+        byte[] firstSHA256 = sha256.digest(ripeWithVersion);
+        byte[] secondSHA256 = sha256.digest(firstSHA256);
+        byte[] addressBytes = new byte[25];
+        System.arraycopy(ripeWithVersion, 0, addressBytes, 0, ripeWithVersion.length);
+        System.arraycopy(secondSHA256, 0, addressBytes, ripeWithVersion.length, 4);
+        return encodeBitcoinAddress(addressBytes);
     }
 
     public static byte[] compress(PublicKey publicKey) {
@@ -227,6 +252,20 @@ public class CryptoUtils {
             return subjectPublicKeyInfo.getEncoded();
         } else {
             throw new RuntimeException("Unknown key format");
+        }
+    }
+
+    public static AccountId fromPublicKey(byte[] pubKey, boolean isBitcoin) {
+        if (pubKey.length == 33) {
+            if (isBitcoin) {
+                return new AccountId(bitcoinAddress(pubKey));
+            } else {
+                return new AccountId(ethAddress(pubKey));
+            }
+        } else if (pubKey.length == 32) {
+            return new AccountId(ed25Address(pubKey));
+        } else {
+            throw new RuntimeException("Invalid pub key");
         }
     }
 
@@ -303,6 +342,15 @@ public class CryptoUtils {
             KeyFactory generator = KeyFactory.getInstance(crypto, "BC");
             return generator.generatePublic(x509EncodedKeySpec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static PublicKey getUncompressedPublicKey(boolean isEd, byte[] publicKey) {
+        try {
+            byte[] uncompress = uncompress(publicKey);
+            return getPublicKey(isEd ? "Ed25519" : "EC", uncompress);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

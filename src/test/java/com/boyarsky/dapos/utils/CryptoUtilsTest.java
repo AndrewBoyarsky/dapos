@@ -24,19 +24,30 @@ class CryptoUtilsTest {
         Security.addProvider(new BouncyCastleProvider());
     }
     @Test
-    void testSignVerify() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    void testSignVerifySecp256k1() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
-        byte[] signature = CryptoUtils.sign(keyPair.getPrivate().getEncoded(), "Text to sign".getBytes());
-        boolean verified = CryptoUtils.verifySignature(signature, keyPair.getPublic().getEncoded(), "Text to sign".getBytes());
-        assertTrue(verified);
+        testSignVerify(keyPair);
     }
+
 
     @Test
     void testSignVerify_changed_message() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
-        byte[] signature = CryptoUtils.sign(keyPair.getPrivate().getEncoded(), "Text to sign".getBytes());
-        boolean verified = CryptoUtils.verifySignature(signature, keyPair.getPublic().getEncoded(), "Text to sig".getBytes());
+        byte[] signature = CryptoUtils.sign(keyPair.getPrivate(), "Text to sign".getBytes());
+        boolean verified = CryptoUtils.verifySignature(signature, keyPair.getPublic(), "Text to sig".getBytes());
         assertFalse(verified);
+    }
+
+    @Test
+    void testSignVerify_ed25519() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+        KeyPair keyPair = CryptoUtils.ed25519KeyPair();
+        testSignVerify(keyPair);
+    }
+
+    private void testSignVerify(KeyPair keyPair) {
+        byte[] signature = CryptoUtils.sign(keyPair.getPrivate(), "Text to sign".getBytes());
+        boolean verified = CryptoUtils.verifySignature(signature, keyPair.getPublic(), "Text to sign".getBytes());
+        assertTrue(verified);
     }
 
     @Test
