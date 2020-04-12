@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.core.tx;
 
-import com.boyarsky.dapos.core.account.Account;
 import com.boyarsky.dapos.core.account.AccountId;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.utils.Convert;
@@ -11,7 +10,6 @@ import lombok.ToString;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 
 @ToString
 @Getter

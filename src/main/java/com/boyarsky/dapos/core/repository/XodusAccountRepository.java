@@ -42,12 +42,10 @@ public class XodusAccountRepository implements AccountRepository {
             if (entity == null) {
                 return null;
             }
-            Account account = new Account();
-
-            return account;
+            return map(entity);
         } finally {
             if (beginTransaction) {
-                tx.commit();
+                tx.abort();
             }
         }
     }
@@ -58,12 +56,9 @@ public class XodusAccountRepository implements AccountRepository {
 
     @Override
     public void save(Account account) {
-        StoreTransaction tx = manager.currentTx();
-        boolean beginTransaction = false;
-
+        StoreTransaction tx = manager.currentTx(); // TODO try to inject transaction via Spring AOP or just manage transactions outside the main code
         if (tx == null) {
-            tx = store.beginTransaction();
-            beginTransaction = true;
+            throw new IllegalStateException("Not in transaction");
         }
         try {
             Entity entity;
@@ -80,10 +75,6 @@ public class XodusAccountRepository implements AccountRepository {
         } catch (Exception e) {
             tx.revert();
             throw new RuntimeException(e);
-        } finally {
-            if (beginTransaction) {
-                tx.commit();
-            }
         }
     }
 
@@ -94,6 +85,7 @@ public class XodusAccountRepository implements AccountRepository {
         acc.setCryptoId(AccountId.fromBytes(Convert.parseHexString((String) entity.getProperty("id"))));
         acc.setPublicKey(Convert.parseHexString((String) entity.getProperty("publicKey")));
         acc.setType(Account.Type.fromCode((Byte) entity.getProperty("type")));
+        acc.setHeight((Long) entity.getProperty("height"));
         return acc;
     }
 
@@ -115,7 +107,7 @@ public class XodusAccountRepository implements AccountRepository {
             return accounts;
         } finally {
             if (beginTransaction) {
-                tx.commit();
+                tx.abort();
             }
         }
     }

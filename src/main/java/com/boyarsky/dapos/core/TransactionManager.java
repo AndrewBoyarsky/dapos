@@ -2,9 +2,6 @@ package com.boyarsky.dapos.core;
 
 import jetbrains.exodus.entitystore.PersistentEntityStore;
 import jetbrains.exodus.entitystore.StoreTransaction;
-import jetbrains.exodus.env.Environment;
-import jetbrains.exodus.env.Store;
-import jetbrains.exodus.env.Transaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,10 +25,12 @@ public class TransactionManager {
 
     public void rollback() {
         requireBeganTx().abort();
+        clearTx();
     }
 
     public void commit() {
         boolean commit = requireBeganTx().commit();
+        clearTx();
         if (!commit) {
             throw new RuntimeException("Unable to commit changes for " + txn);
         }
@@ -46,6 +45,10 @@ public class TransactionManager {
             throw new RuntimeException("Transaction should be begun");
         }
         return txn.get();
+    }
+
+    private void clearTx() {
+        txn.set(null);
     }
 
 }

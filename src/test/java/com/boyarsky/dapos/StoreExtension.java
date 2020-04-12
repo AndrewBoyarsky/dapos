@@ -17,6 +17,15 @@ public class StoreExtension implements BeforeAllCallback, AfterAllCallback, Befo
     PersistentEntityStore store;
     File tempDir;
     StoreTransaction currentTransaction;
+    boolean startTx = true;
+
+    public StoreExtension(boolean startTx) {
+        this.startTx = startTx;
+    }
+
+    public StoreExtension() {
+    }
+
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         tempDir = Files.createTempDirectory("tempstore").toFile();
@@ -37,12 +46,16 @@ public class StoreExtension implements BeforeAllCallback, AfterAllCallback, Befo
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        currentTransaction = store.beginTransaction();
+        if (startTx) {
+            currentTransaction = store.beginTransaction();
+        }
     }
 
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
-        currentTransaction.abort();
-        store.clear();
+        if (startTx) {
+            currentTransaction.abort();
+            store.clear();
+        }
     }
 }

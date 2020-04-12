@@ -2,14 +2,17 @@ package com.boyarsky.dapos.core.account;
 
 import com.boyarsky.dapos.core.model.BlockchainEntity;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+import java.util.Arrays;
+import java.util.Objects;
+
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
 public class Account extends BlockchainEntity {
     private AccountId cryptoId;
     private byte[] publicKey;
@@ -37,5 +40,24 @@ public class Account extends BlockchainEntity {
             }
             throw new RuntimeException("unable to find type for code " + code);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        Account account = (Account) o;
+        return balance == account.balance &&
+                Objects.equals(cryptoId, account.cryptoId) &&
+                Arrays.equals(publicKey, account.publicKey) &&
+                type == account.type;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(super.hashCode(), cryptoId, balance, type);
+        result = 31 * result + Arrays.hashCode(publicKey);
+        return result;
     }
 }
