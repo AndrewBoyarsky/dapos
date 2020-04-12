@@ -5,12 +5,14 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
+import java.security.SignatureException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,14 +26,14 @@ class CryptoUtilsTest {
         Security.addProvider(new BouncyCastleProvider());
     }
     @Test
-    void testSignVerifySecp256k1() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    void testSignVerifySecp256k1() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
         testSignVerify(keyPair);
     }
 
 
     @Test
-    void testSignVerify_changed_message() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    void testSignVerify_changed_message() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
         byte[] signature = CryptoUtils.sign(keyPair.getPrivate(), "Text to sign".getBytes());
         boolean verified = CryptoUtils.verifySignature(signature, keyPair.getPublic(), "Text to sig".getBytes());
@@ -39,13 +41,14 @@ class CryptoUtilsTest {
     }
 
     @Test
-    void testSignVerify_ed25519() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
+    void testSignVerify_ed25519() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.ed25519KeyPair();
         testSignVerify(keyPair);
     }
 
-    private void testSignVerify(KeyPair keyPair) {
+    private void testSignVerify(KeyPair keyPair) throws SignatureException, InvalidKeyException {
         byte[] signature = CryptoUtils.sign(keyPair.getPrivate(), "Text to sign".getBytes());
+        System.out.println(Convert.toHexString(signature));
         boolean verified = CryptoUtils.verifySignature(signature, keyPair.getPublic(), "Text to sign".getBytes());
         assertTrue(verified);
     }

@@ -121,7 +121,6 @@ public class CryptoUtils {
 
     public static byte[] sign(PrivateKey key, byte[] message) {
         try {
-
             Signature instance = createSignature(key.getAlgorithm());
             instance.initSign(key);
             instance.update(message);

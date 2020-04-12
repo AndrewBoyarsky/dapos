@@ -108,12 +108,9 @@ public class Transaction {
             buffer.putLong(txId);
         }
         buffer.put(type.getCode());
-        if (senderPublicKey == null) {
-            buffer.put((byte) 1);
+        if (!isFirst()) {
             sender.putBytes(buffer);
         } else {
-            buffer.put((byte) 2);
-            buffer.put((byte) senderPublicKey.length);
             buffer.put(senderPublicKey);
         }
         if (recipient != null) {
@@ -137,7 +134,6 @@ public class Transaction {
             buffer.putLong(fee);
         }
         if (!forSigning) {
-            buffer.put((byte) signature.length);
             buffer.put(signature);
         }
         return buffer.array();
@@ -179,11 +175,6 @@ public class Transaction {
             this.keyPair = keyPair;
         }
 
-        public TransactionBuilder sender(AccountId sender) {
-            this.sender = sender;
-            return this;
-        }
-
         public TransactionBuilder data(byte[] data) {
             this.data = data;
             return this;
@@ -213,6 +204,8 @@ public class Transaction {
             Transaction transaction = new Transaction(version, 0, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, data, amount, fee, null);
             byte[] bytes = transaction.bytes(true);
             transaction.signature = CryptoUtils.sign(keyPair.getPrivate(), bytes);
+            System.out.println(Convert.toHexString(transaction.signature));
+            System.out.println("Sig length:" + transaction.signature.length);
             transaction.txId = new BigInteger(transaction.signature, 0, 8).longValueExact();
             return transaction;
         }
