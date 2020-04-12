@@ -90,11 +90,7 @@ public class Transaction {
         if (feeExist == 0) {
             fee = buffer.getLong();
         }
-        int sigSize = 72;
-        if (isEd()) {
-            sigSize = 64;
-        }
-        signature = new byte[sigSize];
+        signature = new byte[64];
         buffer.get(signature);
         if (buffer.position() != buffer.capacity()) {
             throw new RuntimeException("Incorrect deserialization procedure");
@@ -142,7 +138,7 @@ public class Transaction {
     public int size(boolean forSigning) {
         return 1 + (forSigning ? 0 : 8) + 1 + (isFirst() ? senderPublicKey.length : sender.size())  +
                 (recipient == null ? 0 : recipient.size()) + 1 + 4 + data.length + (amount == 0 ? 0 : 8) + 1 +
-                (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : signature.length);
+                (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : 64);
     }
 
 
@@ -203,9 +199,7 @@ public class Transaction {
             }
             Transaction transaction = new Transaction(version, 0, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, data, amount, fee, null);
             byte[] bytes = transaction.bytes(true);
-            transaction.signature = CryptoUtils.sign(keyPair.getPrivate(), bytes);
-            System.out.println(Convert.toHexString(transaction.signature));
-            System.out.println("Sig length:" + transaction.signature.length);
+            transaction.signature = CryptoUtils.compressSignature(CryptoUtils.sign(keyPair.getPrivate(), bytes));
             transaction.txId = new BigInteger(transaction.signature, 0, 8).longValueExact();
             return transaction;
         }

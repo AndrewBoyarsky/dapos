@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.security.InvalidKeyException;
 import java.security.SignatureException;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,6 +26,27 @@ class TransactionTest {
         assertTrue(tx.isBitcoin());
         assertFalse(tx.isEd());
         assertTrue(tx.isFirst());
+        boolean verified = CryptoUtils.verifySignature(CryptoUtils.uncompressSignature(tx.getSignature()), senderWallet.getKeyPair().getPublic(), tx.bytes(true));
+        assertTrue(verified);
+        byte[] bytes = tx.bytes(false);
+        Transaction recreatedTx = new Transaction(bytes);
+        assertEquals(tx.getTxId(), recreatedTx.getTxId());
+        assertArrayEquals(tx.getSignature(), recreatedTx.getSignature());
+    }
+
+    @Test
+    void testCreate_senderAccountEd25_no_amount_no_recipient() throws SignatureException, InvalidKeyException {
+        Wallet senderWallet = CryptoUtils.generateEd25Wallet();
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.CHANGE_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 1);
+        byte[] someData = new byte[32];
+        new Random().nextBytes(someData);
+        Transaction tx = builder
+                .data(someData)
+                .build(false);
+        assertEquals(2, tx.getVersion());
+        assertFalse(tx.isBitcoin());
+        assertTrue(tx.isEd());
+        assertFalse(tx.isFirst());
         boolean verified = CryptoUtils.verifySignature(tx.getSignature(), senderWallet.getKeyPair().getPublic(), tx.bytes(true));
         assertTrue(verified);
         byte[] bytes = tx.bytes(false);
@@ -32,5 +54,49 @@ class TransactionTest {
         assertEquals(tx.getTxId(), recreatedTx.getTxId());
         assertArrayEquals(tx.getSignature(), recreatedTx.getSignature());
     }
+
+    @Test
+    void testCreate_firstPublicKeyEd25() throws SignatureException, InvalidKeyException {
+        Wallet senderWallet = CryptoUtils.generateEd25Wallet();
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, senderWallet.getAccount(), senderWallet.getKeyPair(), 0);
+        byte[] someData = new byte[2];
+        new Random().nextBytes(someData);
+        Transaction tx = builder
+                .amount(10)
+                .data(someData)
+                .build(true);
+        assertEquals(3, tx.getVersion());
+        assertFalse(tx.isBitcoin());
+        assertTrue(tx.isEd());
+        assertTrue(tx.isFirst());
+        boolean verified = CryptoUtils.verifySignature(tx.getSignature(), senderWallet.getKeyPair().getPublic(), tx.bytes(true));
+        assertTrue(verified);
+        byte[] bytes = tx.bytes(false);
+        Transaction recreatedTx = new Transaction(bytes);
+        assertEquals(tx.getTxId(), recreatedTx.getTxId());
+        assertArrayEquals(tx.getSignature(), recreatedTx.getSignature());
+    }
+
+
+    @Test
+    void testCreate_senderAccountEth_no_data() throws SignatureException, InvalidKeyException {
+        Wallet senderWallet = CryptoUtils.generateEthWallet();
+        Wallet recipientWallet = CryptoUtils.generateBitcoinWallet();
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.CHANGE_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 100);
+        Transaction tx = builder
+                .recipient(recipientWallet.getAccount())
+                .build(false);
+        assertEquals(0, tx.getVersion());
+        assertFalse(tx.isBitcoin());
+        assertFalse(tx.isEd());
+        assertFalse(tx.isFirst());
+        boolean verified = CryptoUtils.verifySignature(CryptoUtils.uncompressSignature(tx.getSignature()), senderWallet.getKeyPair().getPublic(), tx.bytes(true));
+        assertTrue(verified);
+        byte[] bytes = tx.bytes(false);
+        Transaction recreatedTx = new Transaction(bytes);
+        assertEquals(tx.getTxId(), recreatedTx.getTxId());
+        assertArrayEquals(tx.getSignature(), recreatedTx.getSignature());
+    }
+
 
 }

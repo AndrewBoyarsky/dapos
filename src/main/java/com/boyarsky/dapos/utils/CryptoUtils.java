@@ -130,6 +130,59 @@ public class CryptoUtils {
         }
     }
 
+    public static byte[] compressSignature(byte[] signature) {
+        if (signature.length == 64) {
+            return signature;
+        }
+        byte[] compressed = new byte[64];
+        if (signature[3] == 32) {
+            System.arraycopy(signature, 4, compressed, 0, 32);
+        } else {
+            System.arraycopy(signature, 5, compressed, 0, 32);
+        }
+        int pos = 3 + signature[3] + 2;
+        if (signature[pos] == 32) {
+            System.arraycopy(signature, pos + 1, compressed, 32, 32);
+        } else {
+            System.arraycopy(signature, pos + 2, compressed, 32, 32);
+        }
+        return compressed;
+    }
+
+    public static byte[] uncompressSignature(byte[] signature) {
+        int additionalSize = 0;
+        if (signature[0] < 0) {
+            additionalSize++;
+        }
+        if (signature[32] < 0) {
+            additionalSize++;
+        }
+        byte[] uncompressed = new byte[70 + additionalSize];
+        uncompressed[0] = 48;
+        uncompressed[1] = (byte) (uncompressed.length - 2);
+        uncompressed[2] = 2;
+        int firstStartPos;
+        if (signature[0] < 0) {
+            uncompressed[3] = 33;
+            firstStartPos = 5;
+        } else {
+            uncompressed[3] = 32;
+            firstStartPos = 4;
+        }
+        System.arraycopy(signature, 0, uncompressed, firstStartPos, 32);
+        int secondPos = firstStartPos + 32;
+        uncompressed[secondPos] = 2;
+        if (signature[32] < 0) {
+            uncompressed[++secondPos] = 33;
+            ++secondPos;
+        } else {
+            uncompressed[++secondPos] = 32;
+        }
+        secondPos++;
+        System.arraycopy(signature, 32, uncompressed, secondPos, 32);
+        return uncompressed;
+    }
+
     private static Signature createSignature(String algo) throws NoSuchProviderException, NoSuchAlgorithmException {
         if (algo.equals("EC")) {
             return Signature.getInstance("SHA256withECDSA", "BC");

@@ -1,6 +1,7 @@
 package com.boyarsky.dapos.utils;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -25,7 +26,7 @@ class CryptoUtilsTest {
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
-    @Test
+    @RepeatedTest(value = 10)
     void testSignVerifySecp256k1() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
         testSignVerify(keyPair);
@@ -48,9 +49,14 @@ class CryptoUtilsTest {
 
     private void testSignVerify(KeyPair keyPair) throws SignatureException, InvalidKeyException {
         byte[] signature = CryptoUtils.sign(keyPair.getPrivate(), "Text to sign".getBytes());
-        System.out.println(Convert.toHexString(signature));
         boolean verified = CryptoUtils.verifySignature(signature, keyPair.getPublic(), "Text to sign".getBytes());
+        byte[] compressed = CryptoUtils.compressSignature(signature);
+        assertEquals(64, compressed.length);
+        byte[] restored = CryptoUtils.uncompressSignature(compressed);
+        assertArrayEquals(signature, restored);
         assertTrue(verified);
+        boolean verifiedRestored = CryptoUtils.verifySignature(restored, keyPair.getPublic(), "Text to sign".getBytes());
+        assertTrue(verifiedRestored);
     }
 
     @Test

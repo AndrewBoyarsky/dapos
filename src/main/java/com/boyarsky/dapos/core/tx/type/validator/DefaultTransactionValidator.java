@@ -23,7 +23,6 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
 
     @Override
     public void validate(Transaction tx) throws TxNotValidException {
-        byte[] bytesToVerify = tx.bytes(true);
         Account account = service.get(tx.getSender());
         if (account == null && !tx.isFirst() ) {
             throw new TxNotValidException("Sender account is not exist, required sender public key in transaction body", tx, -11);
@@ -39,7 +38,12 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
         }
         boolean verified;
         try {
-            verified = CryptoUtils.verifySignature(tx.getSignature(), verifKey, bytesToVerify);
+            byte[] sig = tx.getSignature();
+            if (!tx.isEd()) {
+                sig = CryptoUtils.uncompressSignature(sig);
+            }
+            byte[] signableBytes = tx.bytes(true);
+            verified = CryptoUtils.verifySignature(sig, verifKey, signableBytes);
         } catch (InvalidKeyException e) {
             throw new TxNotValidException("Incorrect public key", tx, -13, e);
         } catch (SignatureException e) {
