@@ -1,0 +1,10 @@
+{
+  "chainName": "Dapos mainnet",
+  "chainId": "1",
+  "heightConfigs": [
+    {
+      "height": 0,
+      "maxEvidenceAge": -1,
+    }
+  ]
+}

@@ -1,9 +1,10 @@
 package com.boyarsky.dapos.core;
 
 import com.apollocurrency.aplwallet.apl.util.StringUtils;
+import com.apollocurrency.aplwallet.apl.util.ThreadUtils;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.tx.TransactionProcessor;
-import com.boyarsky.dapos.core.tx.ValidationResult;
+import com.boyarsky.dapos.core.tx.ProcessingResult;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
@@ -53,17 +54,17 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
 
     @Override
-        public void checkTx(RequestCheckTx req, StreamObserver<ResponseCheckTx> responseObserver) {
-        ValidationResult validationResult = processor.checkTx(req.getTx().toByteArray());
-        var resp = ResponseCheckTx.newBuilder()
-                    .setCode(validationResult.getCode())
-                    .setGasWanted(1)
-                    .setGasUsed(1)
-                    .setLog(validationResult.getMessage())
-                    .build();
-            responseObserver.onNext(resp);
-            responseObserver.onCompleted();
-        }
+    public void checkTx(RequestCheckTx req, StreamObserver<ResponseCheckTx> responseObserver) {
+        ResponseCheckTx.Builder respBuilder = ResponseCheckTx.newBuilder();
+        ProcessingResult result = processor.parseAndValidate(req.getTx().toByteArray());
+        respBuilder
+                .setCode(result.getCode())
+                .setGasWanted(1)
+                .setGasUsed(1)
+                .setLog(result.getMessage());
+        responseObserver.onNext(respBuilder.build());
+        responseObserver.onCompleted();
+    }
 
         @Override
         public void echo(RequestEcho request, StreamObserver<ResponseEcho> responseObserver) {
@@ -134,16 +135,14 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
         @Override
         public void deliverTx(RequestDeliverTx req, StreamObserver responseObserver) {
-            var tx = req.getTx(); // validate txs here
-//            int code = validate(tx);
-            int code = 0;
-            if (code == 0) {
-               // persist transactions here
-            }
-            var resp = ResponseDeliverTx.newBuilder()
-                    .setCode(code)
-                    .build();
-            responseObserver.onNext(resp);
+            ResponseCheckTx.Builder respBuilder = ResponseCheckTx.newBuilder();
+            ProcessingResult parsingResult = processor.tryDeliver(req.getTx().toByteArray());
+                        respBuilder
+                                .setCode(parsingResult.getCode())
+                                .setGasWanted(1)
+                                .setGasUsed(1)
+                                .setLog(parsingResult.getMessage());
+            responseObserver.onNext(respBuilder.build());
             responseObserver.onCompleted();
         }
 

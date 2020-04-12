@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ValidationResult {
+public class ProcessingResult {
     private String message;
     private int code;
     private Transaction tx;

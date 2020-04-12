@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Blockchain {
     private volatile long currentHeight;
-    private BlockchainRepository blockchainRepository;
+    private final BlockchainRepository blockchainRepository;
 
     @Autowired
     public Blockchain(BlockchainRepository blockchainRepository) {
