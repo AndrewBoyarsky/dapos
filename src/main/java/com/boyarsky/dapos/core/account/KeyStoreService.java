@@ -20,6 +20,7 @@
  import java.nio.file.Path;
  import java.security.KeyPair;
  import java.security.MessageDigest;
+ import java.security.spec.InvalidKeySpecException;
  import java.time.Instant;
  import java.time.LocalDateTime;
  import java.time.ZoneId;
@@ -96,7 +97,7 @@
                  return new VerifiedWallet(null, Status.BAD_CREDENTIALS);
              }
 
-         } catch (IOException e) {
+         } catch (IOException | InvalidKeySpecException e) {
              throw new RuntimeException(e);
          }
      }

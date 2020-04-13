@@ -58,7 +58,6 @@ public class Transaction {
         this.rawTransaction = Convert.toHexString(rawTransaction);
         ByteBuffer buffer = ByteBuffer.wrap(rawTransaction);
         version = buffer.get();
-        txId = buffer.getLong();
         type = TxType.ofCode(buffer.get());
         if (isFirst()) {
             int pubSize = 33; // secp compressed
@@ -90,6 +89,7 @@ public class Transaction {
         }
         signature = new byte[64];
         buffer.get(signature);
+        idFromSignature();
         if (buffer.position() != buffer.capacity()) {
             throw new RuntimeException("Incorrect deserialization procedure");
         }
@@ -98,9 +98,6 @@ public class Transaction {
     public byte[] bytes(boolean forSigning) {
         ByteBuffer buffer = ByteBuffer.allocate(size(forSigning));
         buffer.put(version);
-        if (!forSigning) {
-            buffer.putLong(txId);
-        }
         buffer.put(type.getCode());
         if (!isFirst()) {
             sender.putBytes(buffer);
@@ -133,16 +130,8 @@ public class Transaction {
         return buffer.array();
     }
 
-    public int size(boolean forSigning) {
-        return 1 + (forSigning ? 0 : 8) + 1 + (isFirst() ? senderPublicKey.length : sender.size())  +
-                (recipient == null ? 0 : recipient.size()) + 1 + 4 + data.length + (amount == 0 ? 0 : 8) + 1 +
-                (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : 64);
-    }
-
-
-    public Transaction(byte version, long txId, TxType type, AccountId sender, byte[] senderPublicKey, AccountId recipient, byte[] data, long amount, long fee, byte[] signature) {
+    public Transaction(byte version, TxType type, AccountId sender, byte[] senderPublicKey, AccountId recipient, byte[] data, long amount, long fee, byte[] signature) {
         this.version = version;
-        this.txId = txId;
         this.type = type;
         this.sender = sender;
         this.recipient = recipient;
@@ -151,6 +140,16 @@ public class Transaction {
         this.fee = fee;
         this.signature = signature;
         this.senderPublicKey = senderPublicKey;
+    }
+
+    public int size(boolean forSigning) {
+        return 1 + 1 + (isFirst() ? senderPublicKey.length : sender.size()) +
+                (recipient == null ? 0 : recipient.size()) + 1 + 4 + data.length + (amount == 0 ? 0 : 8) + 1 +
+                (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : 64);
+    }
+
+    private void idFromSignature() {
+        txId = new BigInteger(CryptoUtils.sha256().digest(signature), 0, 8).longValueExact();
     }
 
     public static class TransactionBuilder {
@@ -195,10 +194,10 @@ public class Transaction {
             if (first && sender.isBitcoin()) {
                 version |= 4;
             }
-            Transaction transaction = new Transaction(version, 0, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, data, amount, fee, null);
+            Transaction transaction = new Transaction(version, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, data, amount, fee, null);
             byte[] bytes = transaction.bytes(true);
             transaction.signature = CryptoUtils.compressSignature(CryptoUtils.sign(keyPair.getPrivate(), bytes));
-            transaction.txId = new BigInteger(transaction.signature, 0, 8).longValueExact();
+            transaction.idFromSignature();
             return transaction;
         }
     }

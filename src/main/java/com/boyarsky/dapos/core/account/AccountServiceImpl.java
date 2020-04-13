@@ -30,6 +30,19 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public void transferMoney(AccountId sender, AccountId recipient, long amount) {
+        Account recAccount = get(recipient);
+        Account senderAccount = get(sender);
+        if (recAccount == null) {
+            recAccount = new Account(recipient, null, 0, Account.Type.ORDINARY);
+        }
+        recAccount.setBalance(recAccount.getBalance() + amount);
+        senderAccount.setBalance(senderAccount.getBalance() - amount);
+        save(recAccount);
+        save(senderAccount);
+    }
+
+    @Override
     public void save(Account account) {
         repository.save(account);
     }

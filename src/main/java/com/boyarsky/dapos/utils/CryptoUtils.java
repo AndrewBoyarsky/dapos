@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.utils;
 
-import com.boyarsky.dapos.core.account.Account;
 import com.boyarsky.dapos.core.account.AccountId;
 import com.boyarsky.dapos.core.account.Wallet;
 import com.goterl.lazycode.lazysodium.LazySodiumJava;
@@ -87,7 +86,7 @@ public class CryptoUtils {
         return encodeEthAddress(address);
     }
 
-    public static KeyPair getKeyPair(String crypto, byte[] privKey, byte[] pubKey) {
+    public static KeyPair getKeyPair(String crypto, byte[] privKey, byte[] pubKey) throws InvalidKeySpecException {
         return new KeyPair(getPublicKey(crypto, pubKey), getPrivateKey(crypto, privKey));
     }
 
@@ -293,17 +292,22 @@ public class CryptoUtils {
         return x25519Priv;
     }
 
-    public static byte[] uncompress(byte[] key) throws IOException {
-        if (key.length == 33) {
-            byte[] point = ECNamedCurveTable.getParameterSpec("secp256k1").getCurve().decodePoint(key).getEncoded(false);
-            ASN1ObjectIdentifier secp256k1 = ECUtil.getNamedCurveOid("secp256k1");
-            SubjectPublicKeyInfo publicKeyInfo = new SubjectPublicKeyInfo(new AlgorithmIdentifier(X9ECParameters.id_ecPublicKey, secp256k1), point);
-            return publicKeyInfo.getEncoded();
-        } else if (key.length == 32) {
-            SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519), key);
-            return subjectPublicKeyInfo.getEncoded();
-        } else {
-            throw new RuntimeException("Unknown key format");
+    public static byte[] uncompress(byte[] key) throws InvalidKeyException {
+        try {
+            if (key.length == 33) {
+                byte[] point = ECNamedCurveTable.getParameterSpec("secp256k1").getCurve().decodePoint(key).getEncoded(false);
+                ASN1ObjectIdentifier secp256k1 = ECUtil.getNamedCurveOid("secp256k1");
+                SubjectPublicKeyInfo publicKeyInfo = new SubjectPublicKeyInfo(new AlgorithmIdentifier(X9ECParameters.id_ecPublicKey, secp256k1), point);
+                return publicKeyInfo.getEncoded();
+            } else if (key.length == 32) {
+                SubjectPublicKeyInfo subjectPublicKeyInfo = new SubjectPublicKeyInfo(new AlgorithmIdentifier(EdECObjectIdentifiers.id_Ed25519), key);
+                return subjectPublicKeyInfo.getEncoded();
+            } else {
+                throw new InvalidKeyException("Unknown key format: " + Convert.toHexString(key));
+            }
+        } catch (IOException e) {
+            // invalid encoding, should never happens
+            throw new RuntimeException("Invalid key encoding: " + Convert.toHexString(key));
         }
     }
 
@@ -388,22 +392,23 @@ public class CryptoUtils {
         }
     }
 
-    public static PublicKey getPublicKey(String crypto, byte[] key) {
+    public static PublicKey getPublicKey(String crypto, byte[] key) throws InvalidKeySpecException {
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(key);
         try {
             KeyFactory generator = KeyFactory.getInstance(crypto, "BC");
             return generator.generatePublic(x509EncodedKeySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException | NoSuchProviderException e) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static PublicKey getUncompressedPublicKey(boolean isEd, byte[] publicKey) {
+    public static PublicKey getUncompressedPublicKey(byte[] publicKey) throws InvalidKeyException {
+        byte[] uncompress = uncompress(publicKey);
+        String keySpec = publicKey.length == 32 ? "Ed25519" : "EC";
         try {
-            byte[] uncompress = uncompress(publicKey);
-            return getPublicKey(isEd ? "Ed25519" : "EC", uncompress);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            return getPublicKey(keySpec, uncompress);
+        } catch (InvalidKeySpecException e) { // should never happens
+            throw new RuntimeException("Incorrect public key spec: detected - " + keySpec, e);
         }
     }
 

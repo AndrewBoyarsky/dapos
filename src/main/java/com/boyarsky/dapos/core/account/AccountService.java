@@ -8,6 +8,8 @@ public interface AccountService {
 
     List<Account> getAll();
 
+    void transferMoney(AccountId sender, AccountId recipient, long amount);
+
     void save(Account account);
 
 }

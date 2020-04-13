@@ -16,6 +16,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,7 @@ class KeyStoreServiceTest {
     String bitcoinWalletFile = "v1_2020-03-30_22-58-35---dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4";
 
     @Test
-    void testCreateBitcoin(@TempDir Path dir) throws IOException {
+    void testCreateBitcoin(@TempDir Path dir) throws IOException, InvalidKeySpecException {
         KeyStoreService keystore = new KeyStoreService(dir, timeSource, passphraseGenerator);
         long time = System.currentTimeMillis();
         doReturn(time).when(timeSource).getTime();
@@ -68,7 +69,7 @@ class KeyStoreServiceTest {
     }
 
     @Test
-    void testCreateEd25(@TempDir Path dir) throws IOException {
+    void testCreateEd25(@TempDir Path dir) throws IOException, InvalidKeySpecException {
         KeyStoreService keystore = new KeyStoreService(dir, timeSource, passphraseGenerator);
         long time = System.currentTimeMillis();
         doReturn(time).when(timeSource).getTime();
@@ -77,7 +78,7 @@ class KeyStoreServiceTest {
         PassphraseProtectedWallet ed25 = (PassphraseProtectedWallet) keystore.createEd25(mypass);
 
         assertTrue(ed25.getAccount().isEd25());
-        List<Path> files = Files.walk(dir).filter(e-> !Files.isDirectory(e)).collect(Collectors.toList());
+        List<Path> files = Files.walk(dir).filter(e -> !Files.isDirectory(e)).collect(Collectors.toList());
         assertEquals(1, files.size());
         StoredWallet wallet = new ObjectMapper().readValue(files.get(0).toFile(), StoredWallet.class);
         byte[] privateKey = CryptoUtils.decryptAes(Convert.parseHexString(wallet.getEncryptedPrivateKey()), sha256().digest(mypass.getBytes()));
@@ -117,14 +118,14 @@ class KeyStoreServiceTest {
     }
 
     @Test
-    void createEthereum(@TempDir Path dir) throws IOException {
+    void createEthereum(@TempDir Path dir) throws IOException, InvalidKeySpecException {
         KeyStoreService keystore = new KeyStoreService(dir, timeSource, passphraseGenerator);
         long time = System.currentTimeMillis();
         doReturn(time).when(timeSource).getTime();
         PassphraseProtectedWallet bitcoin = keystore.createEthereum("passphrase");
 
         assertTrue(bitcoin.getAccount().isEth());
-        List<Path> files = Files.walk(dir).filter(e-> !Files.isDirectory(e)).collect(Collectors.toList());
+        List<Path> files = Files.walk(dir).filter(e -> !Files.isDirectory(e)).collect(Collectors.toList());
         assertEquals(1, files.size());
         StoredWallet wallet = new ObjectMapper().readValue(files.get(0).toFile(), StoredWallet.class);
         byte[] privateKey = CryptoUtils.decryptAes(Convert.parseHexString(wallet.getEncryptedPrivateKey()), sha256().digest("passphrase".getBytes()));

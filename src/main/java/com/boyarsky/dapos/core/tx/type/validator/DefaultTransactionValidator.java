@@ -24,17 +24,24 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
     @Override
     public void validate(Transaction tx) throws TxNotValidException {
         Account account = service.get(tx.getSender());
-        if (account == null && !tx.isFirst() ) {
-            throw new TxNotValidException("Sender account is not exist, required sender public key in transaction body", tx, -11);
+        if (account == null) {
+            throw new TxNotValidException("Sender account does not exist: " + tx.getSender().toString(), tx, -11);
         }
-        if (account != null && tx.isFirst()) {
-            throw new TxNotValidException("Tx must not contain sender's public key when sender's account already has assigned key", tx, -12);
+        if (account.getPublicKey() == null && !tx.isFirst()) {
+            throw new TxNotValidException("Sender's account public key is not exist, required sender public key in transaction body", tx, -12);
+        }
+        if (account.getPublicKey() != null && tx.isFirst()) {
+            throw new TxNotValidException("Tx must not contain sender's public key when sender's account already has assigned key", tx, -13);
         }
         PublicKey verifKey;
-        if (tx.isFirst()) {
-            verifKey = CryptoUtils.getUncompressedPublicKey(tx.isEd(), tx.getSenderPublicKey());
-        } else {
-            verifKey = CryptoUtils.getUncompressedPublicKey(tx.isEd(), account.getPublicKey());
+        try {
+            if (tx.isFirst()) {
+                verifKey = CryptoUtils.getUncompressedPublicKey(tx.getSenderPublicKey());
+            } else {
+                verifKey = CryptoUtils.getUncompressedPublicKey(account.getPublicKey());
+            }
+        } catch (InvalidKeyException e) {
+            throw new TxNotValidException("Incorrect public key provided", tx, -14, e);
         }
         boolean verified;
         try {
@@ -43,18 +50,19 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
                 sig = CryptoUtils.uncompressSignature(sig);
             }
             byte[] signableBytes = tx.bytes(true);
-            verified = CryptoUtils.verifySignature(sig, verifKey, signableBytes);
-        } catch (InvalidKeyException e) {
-            throw new TxNotValidException("Incorrect public key", tx, -13, e);
+            verified = CryptoUtils.verifySignature(sig, verifKey, signableBytes); // choose sig algo by public key
+        } catch (InvalidKeyException e) { // should never happens
+            throw new TxNotValidException("FATAL ERROR! Inappropriate public key provided for signature verification", tx, -15, e);
         } catch (SignatureException e) {
-            throw new TxNotValidException("Invalid signature format provided", tx, -14, e);
+            throw new TxNotValidException("Invalid signature format provided", tx, -16, e);
         }
         if (!verified) {
-            throw new TxNotValidException("Incorrect signature", tx, -11);
+            throw new TxNotValidException("Incorrect signature", tx, -17);
         }
+
         long balance = account.getBalance();
         if (balance < tx.getAmount()) {
-            throw new TxNotValidException("Not sufficient funds, got " + balance + ", expected " + tx.getAmount(), tx, -12);
+            throw new TxNotValidException("Not sufficient funds, got " + balance + ", expected " + tx.getAmount(), tx, -18);
         }
     }
 

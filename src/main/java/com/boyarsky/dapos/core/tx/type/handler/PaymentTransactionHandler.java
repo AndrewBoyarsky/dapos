@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.core.tx.type.handler;
 
-import com.boyarsky.dapos.core.account.Account;
 import com.boyarsky.dapos.core.account.AccountId;
 import com.boyarsky.dapos.core.account.AccountService;
 import com.boyarsky.dapos.core.tx.Transaction;
@@ -22,11 +21,6 @@ public class PaymentTransactionHandler implements TransactionTypeHandler {
         long amount = tx.getAmount();
         AccountId recipient = tx.getRecipient();
         AccountId sender = tx.getSender();
-        Account recAccount = accountService.get(recipient);
-        Account senderAccount = accountService.get(sender);
-        recAccount.setBalance(recAccount.getBalance() + amount);
-        senderAccount.setBalance(senderAccount.getBalance() - amount);
-        accountService.save(recAccount);
-        accountService.save(senderAccount);
+        accountService.transferMoney(sender, recipient, amount);
     }
 }
