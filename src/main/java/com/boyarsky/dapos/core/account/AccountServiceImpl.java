@@ -31,7 +31,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void transferMoney(AccountId sender, AccountId recipient, long amount) {
-        Account recAccount = get(recipient);
+        Account recAccount = repository.find(recipient);
         Account senderAccount = get(sender);
         if (recAccount == null) {
             recAccount = new Account(recipient, null, 0, Account.Type.ORDINARY);

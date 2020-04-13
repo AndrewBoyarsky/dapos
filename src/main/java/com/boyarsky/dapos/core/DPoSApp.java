@@ -30,6 +30,7 @@ import types.RequestSetOption;
 import types.ResponseBeginBlock;
 import types.ResponseCheckTx;
 import types.ResponseCommit;
+import types.ResponseDeliverTx;
 import types.ResponseEcho;
 import types.ResponseEndBlock;
 import types.ResponseFlush;
@@ -145,53 +146,53 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
             responseObserver.onCompleted();
         }
 
-        @Override
-        public void beginBlock(RequestBeginBlock req, StreamObserver responseObserver) {
-            manager.begin();
-            blockchain.beginBlock(req.getHeader().getHeight());
-            var resp = ResponseBeginBlock.newBuilder().build();
-            responseObserver.onNext(resp);
-            responseObserver.onCompleted();
-        }
+    @Override
+    public void beginBlock(RequestBeginBlock req, StreamObserver<ResponseBeginBlock> responseObserver) {
+        manager.begin();
+        blockchain.beginBlock(req.getHeader().getHeight());
+        var resp = ResponseBeginBlock.newBuilder().build();
+        responseObserver.onNext(resp);
+        responseObserver.onCompleted();
+    }
 
-        @Override
-        public void deliverTx(RequestDeliverTx req, StreamObserver responseObserver) {
-            ResponseCheckTx.Builder respBuilder = ResponseCheckTx.newBuilder();
-            ProcessingResult parsingResult = processor.tryDeliver(req.getTx().toByteArray());
-                        respBuilder
-                                .setCode(parsingResult.getCode())
-                                .setGasWanted(1)
-                                .setGasUsed(1)
-                                .setLog(parsingResult.getMessage());
-            responseObserver.onNext(respBuilder.build());
-            responseObserver.onCompleted();
-        }
+    @Override
+    public void deliverTx(RequestDeliverTx req, StreamObserver<ResponseDeliverTx> responseObserver) {
+        ResponseDeliverTx.Builder respBuilder = ResponseDeliverTx.newBuilder();
+        ProcessingResult parsingResult = processor.tryDeliver(req.getTx().toByteArray());
+        respBuilder
+                .setCode(parsingResult.getCode())
+                .setGasWanted(1)
+                .setGasUsed(1)
+                .setLog(parsingResult.getMessage());
+        responseObserver.onNext(respBuilder.build());
+        responseObserver.onCompleted();
+    }
 
-        @Override
-        public void commit(RequestCommit req, StreamObserver responseObserver) {
-            byte[] hash = new byte[8];
-            blockchain.addNewBlock(hash, manager.currentTx());
-            manager.commit();
-            ByteString appData = ByteString.copyFrom(hash);
-            var resp = ResponseCommit.newBuilder()
-                    .setData(appData)
-                    .build();
-            responseObserver.onNext(resp);
-            responseObserver.onCompleted();
-        }
+    @Override
+    public void commit(RequestCommit req, StreamObserver<ResponseCommit> responseObserver) {
+        byte[] hash = new byte[8];
+        blockchain.addNewBlock(hash, manager.currentTx());
+        manager.commit();
+        ByteString appData = ByteString.copyFrom(hash);
+        var resp = ResponseCommit.newBuilder()
+                .setData(appData)
+                .build();
+        responseObserver.onNext(resp);
+        responseObserver.onCompleted();
+    }
 
-        @Override
-        public void query(RequestQuery req, StreamObserver responseObserver) {
-            var k = req.getData().toByteArray();
-            var builder = ResponseQuery.newBuilder();
-            String result = dispatcher.dispatch(req.getPath(), k);
-            if (StringUtils.isBlank(result)) {
-                builder.setLog("does not exist");
-            } else {
-                builder.setLog("exists");
-                builder.setKey(ByteString.copyFrom(k));
-                builder.setValue(ByteString.copyFrom(result, StandardCharsets.UTF_8));
-            }
+    @Override
+    public void query(RequestQuery req, StreamObserver<ResponseQuery> responseObserver) {
+        var k = req.getData().toByteArray();
+        var builder = ResponseQuery.newBuilder();
+        String result = dispatcher.dispatch(req.getPath(), k);
+        if (StringUtils.isBlank(result)) {
+            builder.setLog("does not exist");
+        } else {
+            builder.setLog("exists");
+            builder.setKey(ByteString.copyFrom(k));
+            builder.setValue(ByteString.copyFrom(result, StandardCharsets.UTF_8));
+        }
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
         }
