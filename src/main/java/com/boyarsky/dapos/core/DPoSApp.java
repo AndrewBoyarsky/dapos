@@ -1,12 +1,12 @@
 package com.boyarsky.dapos.core;
 
 import com.apollocurrency.aplwallet.apl.util.StringUtils;
-import com.apollocurrency.aplwallet.apl.util.ThreadUtils;
 import com.boyarsky.dapos.core.config.BlockchainConfig;
 import com.boyarsky.dapos.core.config.HeightConfig;
+import com.boyarsky.dapos.core.genesis.Genesis;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
-import com.boyarsky.dapos.core.tx.TransactionProcessor;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
+import com.boyarsky.dapos.core.tx.TransactionProcessor;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,6 @@ import types.RequestSetOption;
 import types.ResponseBeginBlock;
 import types.ResponseCheckTx;
 import types.ResponseCommit;
-import types.ResponseDeliverTx;
 import types.ResponseEcho;
 import types.ResponseEndBlock;
 import types.ResponseFlush;
@@ -113,7 +112,14 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
         @Override
         public void initChain(RequestInitChain request, StreamObserver<ResponseInitChain> responseObserver) {
-            genesis.initialize();
+            manager.begin();
+            try {
+                genesis.initialize();
+                manager.commit();
+            } catch (Exception e) {
+                log.error("Genesis init error", e);
+                manager.rollback();
+            }
             responseObserver.onNext(ResponseInitChain.newBuilder()
                     .build());
             responseObserver.onCompleted();

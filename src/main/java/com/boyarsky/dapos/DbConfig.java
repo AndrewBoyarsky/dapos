@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 @Configuration
 public class DbConfig {
@@ -27,12 +26,12 @@ public class DbConfig {
         this.dbPath = dbPath;
     }
 
-    @Bean
+    @Bean // default destroy method (close)
     public Environment env() throws IOException, InterruptedException {
         return Environments.newInstance(dbPath.toAbsolutePath().toString());
     }
 
-    @Bean
+    @Bean // destroy method is registered by default (close() method)
     public PersistentEntityStore store() throws IOException, InterruptedException {
         return PersistentEntityStores.newInstance(env(), "MAIN");
     }

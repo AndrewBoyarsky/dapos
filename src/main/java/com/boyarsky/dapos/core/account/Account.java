@@ -1,6 +1,7 @@
 package com.boyarsky.dapos.core.account;
 
 import com.boyarsky.dapos.core.model.BlockchainEntity;
+import com.boyarsky.dapos.utils.Convert;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -59,5 +60,16 @@ public class Account extends BlockchainEntity {
         int result = Objects.hash(super.hashCode(), cryptoId, balance, type);
         result = 31 * result + Arrays.hashCode(publicKey);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Account{" +
+                "cryptoId=" + cryptoId.getOrigAccount() +
+                ", publicKey=" + Convert.toHexString(publicKey) +
+                ", balance=" + balance +
+                ", type=" + type +
+                ", height=" + getHeight() +
+                '}';
     }
 }

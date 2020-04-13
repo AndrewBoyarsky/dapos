@@ -1,11 +1,10 @@
 package com.boyarsky.dapos.core.account;
 
+import com.boyarsky.dapos.core.TimeSource;
+import com.boyarsky.dapos.core.TimeSourceImpl;
 import com.boyarsky.dapos.utils.Convert;
 import com.boyarsky.dapos.utils.CryptoUtils;
-import com.boyarsky.dapos.core.TimeSource;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -17,8 +16,6 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyPair;
-import java.security.Security;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,12 +41,30 @@ class KeyStoreServiceTest {
         PassphraseProtectedWallet bitcoin = keystore.createBitcoin(null);
 
         assertTrue(bitcoin.getAccount().isBitcoin());
-        List<Path> files = Files.walk(dir).filter(e-> !Files.isDirectory(e)).collect(Collectors.toList());
+        List<Path> files = Files.walk(dir).filter(e -> !Files.isDirectory(e)).collect(Collectors.toList());
         assertEquals(1, files.size());
         StoredWallet wallet = new ObjectMapper().readValue(files.get(0).toFile(), StoredWallet.class);
         byte[] privateKey = CryptoUtils.decryptAes(Convert.parseHexString(wallet.getEncryptedPrivateKey()), sha256().digest("12345".getBytes()));
         assertEquals(new PassphraseProtectedWallet(wallet.getAccount().substring(3), CryptoUtils.getKeyPair(wallet.getCryptoAlgo(), privateKey, Convert.parseHexString(wallet.getPublicKey())), "12345"), bitcoin);
 
+    }
+
+
+    //    @Test
+    void testGenerateAccounts(@TempDir Path dir) {
+        KeyStoreService service = new KeyStoreService(dir, new TimeSourceImpl(), passphraseGenerator);
+        Wallet acc1 = service.createEd25("12345");
+        Wallet acc2 = service.createEd25("12345");
+        Wallet acc3 = service.createBitcoin("12345");
+        Wallet acc4 = service.createEthereum("12345");
+        List<Account> accounts = List.of(new Account(acc1.getAccount(), CryptoUtils.compress(acc1.getKeyPair().getPublic()), 1000, Account.Type.ORDINARY),
+                new Account(acc2.getAccount(), CryptoUtils.compress(acc2.getKeyPair().getPublic()), 1000, Account.Type.ORDINARY),
+                new Account(acc3.getAccount(), CryptoUtils.compress(acc3.getKeyPair().getPublic()), 1000, Account.Type.ORDINARY),
+                new Account(acc4.getAccount(), CryptoUtils.compress(acc4.getKeyPair().getPublic()), 1000, Account.Type.ORDINARY)
+        );
+        for (Account account : accounts) {
+            System.out.println(account);
+        }
     }
 
     @Test
