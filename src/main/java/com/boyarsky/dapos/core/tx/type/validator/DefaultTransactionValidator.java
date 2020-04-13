@@ -36,9 +36,9 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
         PublicKey verifKey;
         try {
             if (tx.isFirst()) {
-                verifKey = CryptoUtils.getUncompressedPublicKey(tx.getSenderPublicKey());
+                verifKey = CryptoUtils.getUncompressedPublicKey(tx.isEd(), tx.getSenderPublicKey());
             } else {
-                verifKey = CryptoUtils.getUncompressedPublicKey(account.getPublicKey());
+                verifKey = CryptoUtils.getUncompressedPublicKey(tx.isEd(), account.getPublicKey());
             }
         } catch (InvalidKeyException e) {
             throw new TxNotValidException("Incorrect public key provided", tx, -14, e);
@@ -50,7 +50,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
                 sig = CryptoUtils.uncompressSignature(sig);
             }
             byte[] signableBytes = tx.bytes(true);
-            verified = CryptoUtils.verifySignature(sig, verifKey, signableBytes); // choose sig algo by public key
+            verified = CryptoUtils.verifySignature(tx.isEd(), sig, verifKey, signableBytes);
         } catch (InvalidKeyException e) { // should never happens
             throw new TxNotValidException("FATAL ERROR! Inappropriate public key provided for signature verification", tx, -15, e);
         } catch (SignatureException e) {

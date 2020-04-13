@@ -15,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 
 @ExtendWith(MockitoExtension.class)
 class DefaultTransactionValidatorTest {
@@ -101,15 +100,24 @@ class DefaultTransactionValidatorTest {
         Wallet wallet = CryptoUtils.generateBitcoinWallet();
         Wallet anotherWallet = CryptoUtils.generateEd25Wallet();
         Transaction invalidTx = new Transaction((byte) 1, TxType.PAYMENT, wallet.getAccount(), CryptoUtils.compress(anotherWallet.getKeyPair().getPublic()), null, new byte[0], 20, 10, null);
-        Transaction invalidTxSpy = spy(invalidTx);
-        byte[] bytes = invalidTx.bytes(true);
-        byte[] sig = CryptoUtils.sign(wallet.getKeyPair().getPrivate(), bytes);
-        doReturn(sig).when(invalidTxSpy).getSignature();
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(invalidTx.getSender());
 
-        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(invalidTxSpy));
+        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(invalidTx));
 
         assertEquals(-14, ex.getCode());
+    }
+
+    @Test
+    void validate_insufficient_balance() {
+        Wallet wallet = CryptoUtils.generateEd25Wallet();
+        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, wallet.getAccount(), wallet.getKeyPair(), 0)
+                .amount(100)
+                .build(false);
+        doReturn(new Account(wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), 99, Account.Type.ORDINARY)).when(service).get(tx.getSender());
+
+        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(tx));
+
+        assertEquals(-18, ex.getCode());
     }
 
 }

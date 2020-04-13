@@ -51,11 +51,11 @@ class CryptoUtilsTest {
     private void testSignVerify(KeyPair keyPair) throws SignatureException, InvalidKeyException {
         byte[] signature = CryptoUtils.sign(keyPair.getPrivate(), "Text to sign".getBytes());
         boolean verified = CryptoUtils.verifySignature(signature, keyPair.getPublic(), "Text to sign".getBytes());
+        assertTrue(verified);
         byte[] compressed = CryptoUtils.compressSignature(signature);
         assertEquals(64, compressed.length);
-        byte[] restored = CryptoUtils.uncompressSignature(compressed);
+        byte[] restored = signature.length > 64 ? CryptoUtils.uncompressSignature(compressed) : compressed;
         assertArrayEquals(signature, restored);
-        assertTrue(verified);
         boolean verifiedRestored = CryptoUtils.verifySignature(restored, keyPair.getPublic(), "Text to sign".getBytes());
         assertTrue(verifiedRestored);
     }
@@ -79,7 +79,7 @@ class CryptoUtilsTest {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
         byte[] compressed = CryptoUtils.compress(keyPair.getPublic());
         assertEquals(33, compressed.length);
-        PublicKey key = CryptoUtils.getPublicKey("EC", CryptoUtils.uncompress(compressed));
+        PublicKey key = CryptoUtils.getPublicKey("EC", CryptoUtils.uncompress("EC", compressed));
 
         assertArrayEquals(keyPair.getPublic().getEncoded(), key.getEncoded());
 
@@ -87,7 +87,7 @@ class CryptoUtilsTest {
         byte[] compressEd = CryptoUtils.compress(ed25519.getPublic());
         assertEquals(32, compressEd.length);
 
-        PublicKey uncompress = CryptoUtils.getPublicKey("Ed25519", CryptoUtils.uncompress(compressEd));
+        PublicKey uncompress = CryptoUtils.getPublicKey("Ed25519", CryptoUtils.uncompress("Ed25519", compressEd));
 
         assertArrayEquals(ed25519.getPublic().getEncoded(), uncompress.getEncoded());
     }
