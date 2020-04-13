@@ -1,11 +1,10 @@
 package com.boyarsky.dapos.core.tx.type.attachment;
 
 import com.boyarsky.dapos.core.tx.ByteSerializable;
-import lombok.Data;
 
 import java.nio.ByteBuffer;
 
-@Data
+
 public abstract class AbstractAttachment implements ByteSerializable {
     private byte version;
 

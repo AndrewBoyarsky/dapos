@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -16,7 +18,7 @@ import java.util.Map;
 public class PartyFeeConfig implements ByteSerializable {
     private boolean whitelistAll;
     private FeeConfig rootConfig;
-    private Map<AccountId, FeeConfig> configs = new LinkedHashMap<>();
+    private Map<FeeConfig, List<AccountId>> configs = new LinkedHashMap<>();
 
     public PartyFeeConfig(ByteBuffer buffer) {
         whitelistAll = buffer.get() == 1;
@@ -26,16 +28,34 @@ public class PartyFeeConfig implements ByteSerializable {
                 rootConfig = new FeeConfig(buffer);
             }
         } else {
-            short whitelistedSize = buffer.getShort();
-            for (int i = 0; i < whitelistedSize; i++) {
-                configs.put(AccountId.fromBytes(buffer), new FeeConfig(buffer));
+            short feeConfigs = buffer.getShort();
+            for (int i = 0; i < feeConfigs; i++) {
+                FeeConfig feeConfig = new FeeConfig(buffer);
+                short accountsNumber = buffer.getShort();
+                List<AccountId> accounts = new ArrayList<>();
+                for (int j = 0; j < accountsNumber; j++) {
+                    accounts.add(AccountId.fromBytes(buffer));
+                }
+                configs.put(feeConfig, accounts);
             }
         }
     }
 
     @Override
     public int size() {
-        return 1 + (whitelistAll ? 1 : 0) + (rootConfig == null ? 0 :  rootConfig.size()) + (whitelistAll ? 0 : 2 + configs.entrySet().stream().mapToInt((e)-> e.getKey().size() + e.getValue().size()).sum());
+        return 1 +
+                (whitelistAll ? 1 : 0) +
+                (rootConfig == null ? 0 : rootConfig.size()) +
+                (whitelistAll ? 0 : 2 +
+                        configs.entrySet()
+                                .stream()
+                                .mapToInt((e) ->
+                                        e.getKey()
+                                                .size() + 2 + e.getValue()
+                                                .stream()
+                                                .mapToInt(AccountId::size)
+                                                .sum())
+                                .sum());
     }
 
     @Override
@@ -53,7 +73,10 @@ public class PartyFeeConfig implements ByteSerializable {
             buffer.putShort((short) configs.size());
             configs.forEach((key, v)-> {
                 key.putBytes(buffer);
-                v.putBytes(buffer);
+                buffer.putShort((short) v.size());
+                for (AccountId accountId : v) {
+                    accountId.putBytes(buffer);
+                }
             });
         }
     }
