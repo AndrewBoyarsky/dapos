@@ -25,27 +25,28 @@ public class TransactionValidator {
             }
             this.validators.put(t, l.get(0));
         });
+        TransactionTypeValidator defaultValidator = this.validators.get(TxType.ALL);
+        if (defaultValidator == null) {
+            throw new RuntimeException("Default validator is not registered");
+        }
     }
 
     public ProcessingResult validate(Transaction tx) {
-        TransactionTypeValidator defaultValidator = validators.get(TxType.ALL);
-        if (defaultValidator != null) {
-            try {
-                defaultValidator.validate(tx);
-            } catch (TransactionTypeValidator.TxNotValidException e) {
-                return new ProcessingResult("Invalid transaction (general validation does not pass):" + e.getMessage(), -1, tx, e);
-            } catch (Exception e) {
-                return new ProcessingResult("Unknown general validation error:" + e.getMessage(), -2, tx, e);
-            }
-        } else {
-            log.warn("NO DEFAULT TX VALIDATOR DEFINED");
-        }
         TxType txType = tx.getType();
         TransactionTypeValidator validator = validators.get(txType);
 
         if (validator == null) {
-            return new ProcessingResult("Validator not exist for type" + txType, -5, tx, null);
+            return new ProcessingResult("Validator not exist for type" + txType, -1, tx, null);
         }
+        TransactionTypeValidator defaultValidator = validators.get(TxType.ALL);
+        try {
+            defaultValidator.validate(tx);
+        } catch (TransactionTypeValidator.TxNotValidException e) {
+            return new ProcessingResult("Invalid transaction (general validation does not pass):" + e.getMessage(), e.getCode(), tx, e);
+        } catch (Exception e) {
+            return new ProcessingResult("Unknown general validation error:" + e.getMessage(), -2, tx, e);
+        }
+
         try {
             validator.validate(tx);
         } catch (TransactionTypeValidator.TxNotValidException e) {
