@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.core.tx.type.handler;
 
-import com.boyarsky.dapos.core.account.AccountId;
 import com.boyarsky.dapos.core.account.AccountService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
@@ -18,9 +17,6 @@ public class PaymentTransactionHandler implements TransactionTypeHandler {
 
     @Override
     public void handle(Transaction tx) {
-        long amount = tx.getAmount();
-        AccountId recipient = tx.getRecipient();
-        AccountId sender = tx.getSender();
-        accountService.transferMoney(sender, recipient, amount);
+
     }
 }

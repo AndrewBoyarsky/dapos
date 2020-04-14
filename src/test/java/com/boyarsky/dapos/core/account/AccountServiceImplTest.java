@@ -10,9 +10,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceImplTest {
@@ -76,6 +79,40 @@ class AccountServiceImplTest {
         verify(repository).save(expected1);
         assertEquals(50, expected1.getBalance());
         assertEquals(151, expected2.getBalance());
+    }
+
+    @Test
+    void burnMoney() {
+        doReturn(expected1).when(repository).find(id1);
+
+        service.transferMoney(id1, null, 50);
+
+        verify(repository).save(expected1);
+        verifyNoMoreInteractions(repository);
+        assertEquals(50, expected1.getBalance());
+    }
+
+    @Test
+    void assignPublicKey_alreadyAssigned() {
+        doReturn(expected1).when(repository).find(id1);
+
+        boolean assigned = service.assignPublicKey(id1, expected1.getPublicKey());
+
+        verifyNoMoreInteractions(repository);
+        assertFalse(assigned);
+    }
+
+
+    @Test
+    void assignPublicKey() {
+        doReturn(expected1).when(repository).find(id1);
+        expected1.setPublicKey(null);
+
+        boolean assigned = service.assignPublicKey(id1, new byte[64]);
+
+        verify(repository).save(expected1);
+        assertEquals(64, expected1.getPublicKey().length);
+        assertTrue(assigned);
     }
 
 

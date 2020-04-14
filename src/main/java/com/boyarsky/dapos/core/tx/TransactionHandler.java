@@ -1,12 +1,8 @@
 package com.boyarsky.dapos.core.tx;
 
-import com.boyarsky.dapos.core.account.Account;
-import com.boyarsky.dapos.core.account.AccountService;
 import com.boyarsky.dapos.core.tx.type.TxHandlingException;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.handler.TransactionTypeHandler;
-import com.boyarsky.dapos.core.tx.type.validator.TransactionTypeValidator;
-import com.boyarsky.dapos.utils.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,11 +16,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TransactionHandler {
     private final Map<TxType, TransactionTypeHandler> handlers = new HashMap<>();
-    private AccountService service;
 
     @Autowired
-    public TransactionHandler(AccountService service, List<TransactionTypeHandler> handlers) {
-        this.service = service;
+    public TransactionHandler(List<TransactionTypeHandler> handlers) {
         Map<TxType, List<TransactionTypeHandler>> validatorMap = handlers.stream().collect(Collectors.groupingBy(TransactionTypeHandler::type));
         validatorMap.forEach((t, l) -> {
             if (l.size() > 1) {
@@ -39,7 +33,7 @@ public class TransactionHandler {
         if (defaultHandler != null) {
             defaultHandler.handle(tx);
         } else {
-            log.warn("DEFAULT TX HANDLER DOES NOT EXIST");
+            throw new TxHandlingException("Default tx handler for all types is not defined", tx);
         }
         TransactionTypeHandler handler = handlers.get(tx.getType());
         if (handler == null) {

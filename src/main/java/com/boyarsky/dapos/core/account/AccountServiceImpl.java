@@ -25,20 +25,33 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public boolean assignPublicKey(AccountId accountId, byte[] publicKey) {
+        Account account = get(accountId);
+        if (account.getPublicKey() != null) {
+            return false;
+        }
+        account.setPublicKey(publicKey);
+        save(account);
+        return true;
+    }
+
+    @Override
     public List<Account> getAll() {
         return repository.getAll();
     }
 
     @Override
     public void transferMoney(AccountId sender, AccountId recipient, long amount) {
-        Account recAccount = repository.find(recipient);
         Account senderAccount = get(sender);
-        if (recAccount == null) {
-            recAccount = new Account(recipient, null, 0, Account.Type.ORDINARY);
+        if (recipient != null) {
+            Account recAccount = repository.find(recipient);
+            if (recAccount == null) {
+                recAccount = new Account(recipient, null, 0, Account.Type.ORDINARY);
+            }
+            recAccount.setBalance(recAccount.getBalance() + amount);
+            save(recAccount);
         }
-        recAccount.setBalance(recAccount.getBalance() + amount);
         senderAccount.setBalance(senderAccount.getBalance() - amount);
-        save(recAccount);
         save(senderAccount);
     }
 
