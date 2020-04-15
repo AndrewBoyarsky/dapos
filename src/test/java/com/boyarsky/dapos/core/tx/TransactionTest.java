@@ -19,7 +19,7 @@ class TransactionTest {
     void testCreate_pubKeyBitcoin() throws SignatureException, InvalidKeyException {
         Wallet senderWallet = CryptoUtils.generateBitcoinWallet();
         Wallet recipientWallet = CryptoUtils.generateBitcoinWallet();
-        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, senderWallet.getAccount(), senderWallet.getKeyPair(), 0);
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, senderWallet.getAccount(), senderWallet.getKeyPair(), 0, 0);
         byte[] emptyData = new byte[20];
         Transaction tx = builder.amount(100)
                 .recipient(recipientWallet.getAccount())
@@ -40,7 +40,7 @@ class TransactionTest {
     @Test
     void testCreate_senderAccountEd25_no_amount_no_recipient() throws SignatureException, InvalidKeyException {
         Wallet senderWallet = CryptoUtils.generateEd25Wallet();
-        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.SET_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 1);
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.SET_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 1, 2);
         byte[] someData = new byte[32];
         new Random().nextBytes(someData);
         Transaction tx = builder
@@ -61,7 +61,7 @@ class TransactionTest {
     @Test
     void testCreate_firstPublicKeyEd25() throws SignatureException, InvalidKeyException {
         Wallet senderWallet = CryptoUtils.generateEd25Wallet();
-        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, senderWallet.getAccount(), senderWallet.getKeyPair(), 0);
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, senderWallet.getAccount(), senderWallet.getKeyPair(), 0, 2);
         byte[] someData = new byte[2];
         new Random().nextBytes(someData);
         Transaction tx = builder
@@ -85,7 +85,7 @@ class TransactionTest {
     void testCreate_senderAccountEth_no_data() throws SignatureException, InvalidKeyException {
         Wallet senderWallet = CryptoUtils.generateEthWallet();
         Wallet recipientWallet = CryptoUtils.generateBitcoinWallet();
-        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.SET_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 100);
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.SET_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 100, 200);
         Transaction tx = builder
                 .recipient(recipientWallet.getAccount())
                 .build(false);

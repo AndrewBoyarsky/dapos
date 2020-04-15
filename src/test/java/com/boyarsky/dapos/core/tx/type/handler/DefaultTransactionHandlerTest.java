@@ -29,8 +29,8 @@ class DefaultTransactionHandlerTest {
 
     @Test
     void handle_burnMoney_noTransferZeroAmount() {
-        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], recipientId, new byte[0], 0, 1, null);
-
+        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], recipientId, new byte[0], 0, 1, 1, null);
+        tx.setGasUsed(1);
         handler.handle(tx);
 
         verify(service).assignPublicKey(senderId, new byte[32]);
@@ -40,24 +40,24 @@ class DefaultTransactionHandlerTest {
 
     @Test
     void handle_noTransferNoRecipient() {
-        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], null, new byte[0], 1, 0, null);
-
+        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], null, new byte[0], 1, 2, 5, null);
+        tx.setGasUsed(5);
         handler.handle(tx);
 
         verify(service).assignPublicKey(senderId, new byte[32]);
-        verify(service).transferMoney(senderId, null, 0);
+        verify(service).transferMoney(senderId, null, 10);
         verifyNoMoreInteractions(service);
     }
 
     @Test
     void handle_withTransfer() {
-        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], recipientId, new byte[0], 1, 2, null);
-
+        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], recipientId, new byte[0], 1, 2, 100, null);
+        tx.setGasUsed(2);
         handler.handle(tx);
 
         verify(service).assignPublicKey(senderId, new byte[32]);
         verify(service).transferMoney(senderId, recipientId, 1);
-        verify(service).transferMoney(senderId, null, 2);
+        verify(service).transferMoney(senderId, null, 4);
         verifyNoMoreInteractions(service);
     }
 }

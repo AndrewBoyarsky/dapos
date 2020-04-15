@@ -24,36 +24,11 @@ public class Transaction {
     private AccountId recipient;
     private byte[] data = new byte[0];
     private long amount;
-    private long fee;
     private byte[] signature;
+    private int gasPrice;
+    private int maxGas;
 
-    private long gasPrice;
-    private long maxGas;
-
-    public String getRawTransaction() {
-        return rawTransaction;
-    }
-
-    public byte getVersion() {
-        return version;
-    }
-
-    public long getTxId() {
-        return txId;
-    }
-
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public long getAmount() {
-        return amount;
-    }
-
-    public byte[] getSignature() {
-        return signature;
-    }
+    private int gasUsed;
 
     public Transaction(byte[] rawTransaction) {
         this.rawTransaction = Convert.toHexString(rawTransaction);
@@ -84,16 +59,56 @@ public class Transaction {
         if (amountExist == 0) {
             amount = buffer.getLong();
         }
-        byte feeExist = buffer.get();
-        if (feeExist == 0) {
-            fee = buffer.getLong();
-        }
+        gasPrice = buffer.getInt();
+        maxGas = buffer.getInt();
         signature = new byte[64];
         buffer.get(signature);
         idFromSignature();
         if (buffer.position() != buffer.capacity()) {
             throw new RuntimeException("Incorrect deserialization procedure");
         }
+    }
+
+    public String getRawTransaction() {
+        return rawTransaction;
+    }
+
+    public byte getVersion() {
+        return version;
+    }
+
+    public long getTxId() {
+        return txId;
+    }
+
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public long getAmount() {
+        return amount;
+    }
+
+    public byte[] getSignature() {
+        return signature;
+    }
+
+    public Transaction(byte version, TxType type, AccountId sender, byte[] senderPublicKey, AccountId recipient, byte[] data, long amount, int gasPrice, int maxGas, byte[] signature) {
+        this.version = version;
+        this.type = type;
+        this.sender = sender;
+        this.recipient = recipient;
+        this.data = data;
+        this.amount = amount;
+        this.gasPrice = gasPrice;
+        this.maxGas = maxGas;
+        this.signature = signature;
+        this.senderPublicKey = senderPublicKey;
+    }
+
+    public void setGasUsed(int gasUsed) {
+        this.gasUsed = gasUsed;
     }
 
     public byte[] bytes(boolean forSigning) {
@@ -119,38 +134,38 @@ public class Transaction {
             buffer.put((byte) 0);
             buffer.putLong(amount);
         }
-        if (fee == 0) {
-            buffer.put((byte) -1);
-        } else {
-            buffer.put((byte) 0);
-            buffer.putLong(fee);
-        }
+        buffer.putInt(gasPrice);
+        buffer.putInt(maxGas);
         if (!forSigning) {
             buffer.put(signature);
         }
         return buffer.array();
     }
 
-    public Transaction(byte version, TxType type, AccountId sender, byte[] senderPublicKey, AccountId recipient, byte[] data, long amount, long fee, byte[] signature) {
-        this.version = version;
-        this.type = type;
-        this.sender = sender;
-        this.recipient = recipient;
-        this.data = data;
-        this.amount = amount;
-        this.fee = fee;
-        this.signature = signature;
-        this.senderPublicKey = senderPublicKey;
-    }
-
     public int size(boolean forSigning) {
         return 1 + 1 + (isFirst() ? senderPublicKey.length : sender.size()) +
                 (recipient == null ? 0 : recipient.size()) + 1 + 4 + data.length + (amount == 0 ? 0 : 8) + 1 +
-                (fee == 0 ? 0 : 8) + 1 + (forSigning ? 0 : 64);
+                4 + 4 + (forSigning ? 0 : 64);
     }
 
     private void idFromSignature() {
         txId = new BigInteger(CryptoUtils.sha256().digest(signature), 0, 8).longValueExact();
+    }
+
+    public long getFee() {
+        return gasUsed * gasPrice;
+    }
+
+    public boolean isEd() {
+        return (version & 2) == 2;
+    }
+
+    public boolean isFirst() {
+        return (version & 1) == 1;
+    }
+
+    public boolean isBitcoin() {
+        return (version & 4) == 4;
     }
 
     public static class TransactionBuilder {
@@ -160,12 +175,14 @@ public class Transaction {
         private AccountId recipient;
         private byte[] data = new byte[0];
         private long amount = 0;
-        private long fee;
+        private int maxGas;
+        private int gasPrice;
 
-        public TransactionBuilder(TxType type, AccountId accountId, KeyPair keyPair, long fee) {
+        public TransactionBuilder(TxType type, AccountId accountId, KeyPair keyPair, int gasPrice, int maxGas) {
             this.type = type;
             this.sender = accountId;
-            this.fee = fee;
+            this.gasPrice = gasPrice;
+            this.maxGas = maxGas;
             this.keyPair = keyPair;
         }
 
@@ -195,24 +212,11 @@ public class Transaction {
             if (first && sender.isBitcoin()) {
                 version |= 4;
             }
-            Transaction transaction = new Transaction(version, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, data, amount, fee, null);
+            Transaction transaction = new Transaction(version, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, data, amount, gasPrice, maxGas, null);
             byte[] bytes = transaction.bytes(true);
             transaction.signature = CryptoUtils.compressSignature(CryptoUtils.sign(keyPair.getPrivate(), bytes));
             transaction.idFromSignature();
             return transaction;
         }
     }
-
-    public boolean isEd() {
-        return (version & 2) == 2;
-    }
-
-    public boolean isFirst() {
-        return (version & 1 ) == 1;
-    }
-
-    public boolean isBitcoin() {
-        return (version & 4 ) == 4;
-    }
-
 }

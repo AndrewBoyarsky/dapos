@@ -5,13 +5,13 @@
     {
       "height": 0,
       "maxSize": 1000000,
-      "maxGas": 100,
+      "maxGas": 2000,
       "maxEvidenceAge": 10
     },
     {
       "height": 20,
       "maxSize": 1000,
-      "maxGas": 10,
+      "maxGas": 3000,
       "maxEvidenceAge": 5
     }
   ]
