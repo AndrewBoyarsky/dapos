@@ -9,7 +9,10 @@ import java.security.InvalidKeyException;
 import java.security.SignatureException;
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TransactionTest {
     @Test
@@ -37,7 +40,7 @@ class TransactionTest {
     @Test
     void testCreate_senderAccountEd25_no_amount_no_recipient() throws SignatureException, InvalidKeyException {
         Wallet senderWallet = CryptoUtils.generateEd25Wallet();
-        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.CHANGE_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 1);
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.SET_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 1);
         byte[] someData = new byte[32];
         new Random().nextBytes(someData);
         Transaction tx = builder
@@ -82,7 +85,7 @@ class TransactionTest {
     void testCreate_senderAccountEth_no_data() throws SignatureException, InvalidKeyException {
         Wallet senderWallet = CryptoUtils.generateEthWallet();
         Wallet recipientWallet = CryptoUtils.generateBitcoinWallet();
-        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.CHANGE_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 100);
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.SET_FEE_PROVIDER, senderWallet.getAccount(), senderWallet.getKeyPair(), 100);
         Transaction tx = builder
                 .recipient(recipientWallet.getAccount())
                 .build(false);

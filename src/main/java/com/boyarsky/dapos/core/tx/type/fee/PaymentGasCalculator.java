@@ -1,8 +1,7 @@
 package com.boyarsky.dapos.core.tx.type.fee;
 
-import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.Transaction;
-import org.springframework.stereotype.Component;
+import com.boyarsky.dapos.core.tx.type.TxType;
 
 
 public class PaymentGasCalculator implements GasCalculator {
@@ -14,6 +13,6 @@ public class PaymentGasCalculator implements GasCalculator {
 
     @Override
     public long gasRequired(Transaction tx) {
-        return 100_000;
+        return 0;
     }
 }

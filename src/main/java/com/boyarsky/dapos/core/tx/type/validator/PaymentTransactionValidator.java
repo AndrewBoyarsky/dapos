@@ -11,9 +11,6 @@ public class PaymentTransactionValidator implements TransactionTypeValidator {
 
     @Override
     public void validate(Transaction tx) throws TxNotValidException {
-        if (tx.getRecipient() == null) {
-            throw new TxNotValidException("Recipient required for PAYMENT tx", tx, 11);
-        }
     }
 
     @Override

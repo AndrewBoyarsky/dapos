@@ -64,9 +64,10 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         ResponseCheckTx.Builder respBuilder = ResponseCheckTx.newBuilder();
         ProcessingResult result = processor.parseAndValidate(req.getTx().toByteArray());
         respBuilder
-                .setCode(result.getCode())
-                .setGasWanted(1)
-                .setGasUsed(1)
+                .setCode(result.getCode().getCode())
+                .setCodespace(result.getCode().getCodeSpace())
+                .setGasWanted(result.getGasData().getWanted())
+                .setGasUsed(result.getGasData().getUsed())
                 .setLog(result.getMessage());
         responseObserver.onNext(respBuilder.build());
         responseObserver.onCompleted();
@@ -160,9 +161,10 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         ResponseDeliverTx.Builder respBuilder = ResponseDeliverTx.newBuilder();
         ProcessingResult parsingResult = processor.tryDeliver(req.getTx().toByteArray());
         respBuilder
-                .setCode(parsingResult.getCode())
-                .setGasWanted(1)
-                .setGasUsed(1)
+                .setCode(parsingResult.getCode().getCode())
+                .setCodespace(parsingResult.getCode().getCodeSpace())
+                .setGasWanted(parsingResult.getGasData().getWanted())
+                .setGasUsed(parsingResult.getGasData().getUsed())
                 .setLog(parsingResult.getMessage());
         responseObserver.onNext(respBuilder.build());
         responseObserver.onCompleted();

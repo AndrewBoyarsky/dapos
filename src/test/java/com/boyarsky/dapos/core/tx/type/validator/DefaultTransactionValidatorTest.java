@@ -3,6 +3,7 @@ package com.boyarsky.dapos.core.tx.type.validator;
 import com.boyarsky.dapos.core.account.Account;
 import com.boyarsky.dapos.core.account.AccountService;
 import com.boyarsky.dapos.core.account.Wallet;
+import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.utils.CryptoUtils;
@@ -45,9 +46,9 @@ class DefaultTransactionValidatorTest {
                 .amount(100)
                 .build(true);
 
-        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(tx));
+        TxNotValidException ex = assertThrows(TxNotValidException.class, () -> validator.validate(tx));
 
-        assertEquals(-11, ex.getCode());
+        assertEquals(ErrorCodes.SENDER_NOT_EXIST, ex.getCode());
     }
 
     @Test
@@ -56,9 +57,9 @@ class DefaultTransactionValidatorTest {
         Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, wallet.getAccount(), wallet.getKeyPair(), 0).build(true);
         doReturn(new Account(wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), 100, Account.Type.ORDINARY)).when(service).get(tx.getSender());
 
-        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(tx));
+        TxNotValidException ex = assertThrows(TxNotValidException.class, () -> validator.validate(tx));
 
-        assertEquals(-13, ex.getCode());
+        assertEquals(ErrorCodes.PUB_KEY_FOR_OLD_ACC, ex.getCode());
     }
 
     @Test
@@ -67,9 +68,9 @@ class DefaultTransactionValidatorTest {
         Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, wallet.getAccount(), wallet.getKeyPair(), 0).build(false);
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(tx.getSender());
 
-        TransactionTypeValidator.TxNotValidException exception = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(tx));
+        TxNotValidException exception = assertThrows(TxNotValidException.class, () -> validator.validate(tx));
 
-        assertEquals(-12, exception.getCode());
+        assertEquals(ErrorCodes.NO_PUB_KEY_FOR_NEW_ACC, exception.getCode());
     }
 
     @Test
@@ -78,9 +79,9 @@ class DefaultTransactionValidatorTest {
         Transaction invalidTx = new Transaction((byte) 1, TxType.PAYMENT, wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), null, new byte[0], 0, 0, new byte[64]);
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(invalidTx.getSender());
 
-        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(invalidTx));
+        TxNotValidException ex = assertThrows(TxNotValidException.class, () -> validator.validate(invalidTx));
 
-        assertEquals(-16, ex.getCode());
+        assertEquals(ErrorCodes.WRONG_SIG_FORMAT, ex.getCode());
     }
 
     @Test
@@ -90,9 +91,9 @@ class DefaultTransactionValidatorTest {
         Transaction invalidTx = new Transaction((byte) 1, TxType.PAYMENT, wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), null, new byte[0], 0, 0, fakeSignature);
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(invalidTx.getSender());
 
-        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(invalidTx));
+        TxNotValidException ex = assertThrows(TxNotValidException.class, () -> validator.validate(invalidTx));
 
-        assertEquals(-17, ex.getCode());
+        assertEquals(ErrorCodes.BAD_SIG, ex.getCode());
     }
 
     @Test
@@ -102,9 +103,9 @@ class DefaultTransactionValidatorTest {
         Transaction invalidTx = new Transaction((byte) 1, TxType.PAYMENT, wallet.getAccount(), CryptoUtils.compress(anotherWallet.getKeyPair().getPublic()), null, new byte[0], 20, 10, null);
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(invalidTx.getSender());
 
-        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(invalidTx));
+        TxNotValidException ex = assertThrows(TxNotValidException.class, () -> validator.validate(invalidTx));
 
-        assertEquals(-14, ex.getCode());
+        assertEquals(ErrorCodes.INCORRECT_PUB_KEY, ex.getCode());
     }
 
     @Test
@@ -115,9 +116,9 @@ class DefaultTransactionValidatorTest {
                 .build(false);
         doReturn(new Account(wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), 99, Account.Type.ORDINARY)).when(service).get(tx.getSender());
 
-        TransactionTypeValidator.TxNotValidException ex = assertThrows(TransactionTypeValidator.TxNotValidException.class, () -> validator.validate(tx));
+        TxNotValidException ex = assertThrows(TxNotValidException.class, () -> validator.validate(tx));
 
-        assertEquals(-18, ex.getCode());
+        assertEquals(ErrorCodes.NOT_ENOUGH_MONEY, ex.getCode());
     }
 
 }

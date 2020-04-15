@@ -1,12 +1,12 @@
 package com.boyarsky.dapos.core.tx.type;
 
+import com.boyarsky.dapos.core.tx.ErrorCode;
 import com.boyarsky.dapos.core.tx.Transaction;
+import com.boyarsky.dapos.core.tx.TxException;
 
-public class TxHandlingException extends RuntimeException {
-    private Transaction tx;
+public class TxHandlingException extends TxException {
 
-    public TxHandlingException(String message, Transaction tx) {
-        super(message);
-        this.tx = tx;
+    public TxHandlingException(String message, Throwable cause, Transaction tx, ErrorCode code) {
+        super(message, cause, tx, code);
     }
 }

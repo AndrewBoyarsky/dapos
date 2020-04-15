@@ -28,6 +28,7 @@ public class Transaction {
     private byte[] signature;
 
     private long gasPrice;
+    private long maxGas;
 
     public String getRawTransaction() {
         return rawTransaction;

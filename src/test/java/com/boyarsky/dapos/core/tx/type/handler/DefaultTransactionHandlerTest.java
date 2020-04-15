@@ -29,7 +29,7 @@ class DefaultTransactionHandlerTest {
 
     @Test
     void handle_burnMoney_noTransferZeroAmount() {
-        Transaction tx = new Transaction((byte) 1, TxType.CHANGE_FEE_PROVIDER, senderId, new byte[32], recipientId, new byte[0], 0, 1, null);
+        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], recipientId, new byte[0], 0, 1, null);
 
         handler.handle(tx);
 
@@ -40,7 +40,7 @@ class DefaultTransactionHandlerTest {
 
     @Test
     void handle_noTransferNoRecipient() {
-        Transaction tx = new Transaction((byte) 1, TxType.CHANGE_FEE_PROVIDER, senderId, new byte[32], null, new byte[0], 1, 0, null);
+        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], null, new byte[0], 1, 0, null);
 
         handler.handle(tx);
 
@@ -51,7 +51,7 @@ class DefaultTransactionHandlerTest {
 
     @Test
     void handle_withTransfer() {
-        Transaction tx = new Transaction((byte) 1, TxType.CHANGE_FEE_PROVIDER, senderId, new byte[32], recipientId, new byte[0], 1, 2, null);
+        Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], recipientId, new byte[0], 1, 2, null);
 
         handler.handle(tx);
 

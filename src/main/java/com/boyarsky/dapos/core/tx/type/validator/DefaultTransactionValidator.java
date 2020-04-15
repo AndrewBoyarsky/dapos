@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.tx.type.validator;
 
 import com.boyarsky.dapos.core.account.Account;
 import com.boyarsky.dapos.core.account.AccountService;
+import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.utils.CryptoUtils;
@@ -25,13 +26,13 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
     public void validate(Transaction tx) throws TxNotValidException {
         Account account = service.get(tx.getSender());
         if (account == null) {
-            throw new TxNotValidException("Sender account does not exist: " + tx.getSender().toString(), tx, -11);
+            throw new TxNotValidException("Sender account does not exist: " + tx.getSender().toString(), null, tx, ErrorCodes.SENDER_NOT_EXIST);
         }
         if (account.getPublicKey() == null && !tx.isFirst()) {
-            throw new TxNotValidException("Sender's account public key is not exist, required sender public key in transaction body", tx, -12);
+            throw new TxNotValidException("Sender's account public key is not exist, required sender public key in transaction body", null, tx, ErrorCodes.NO_PUB_KEY_FOR_NEW_ACC);
         }
         if (account.getPublicKey() != null && tx.isFirst()) {
-            throw new TxNotValidException("Tx must not contain sender's public key when sender's account already has assigned key", tx, -13);
+            throw new TxNotValidException("Tx must not contain sender's public key when sender's account already has assigned key", null, tx, ErrorCodes.PUB_KEY_FOR_OLD_ACC);
         }
         PublicKey verifKey;
         try {
@@ -41,7 +42,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
                 verifKey = CryptoUtils.getUncompressedPublicKey(tx.isEd(), account.getPublicKey());
             }
         } catch (InvalidKeyException e) {
-            throw new TxNotValidException("Incorrect public key provided", tx, -14, e);
+            throw new TxNotValidException("Incorrect public key provided", e, tx, ErrorCodes.INCORRECT_PUB_KEY);
         }
         boolean verified;
         try {
@@ -52,17 +53,17 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
             byte[] signableBytes = tx.bytes(true);
             verified = CryptoUtils.verifySignature(tx.isEd(), sig, verifKey, signableBytes);
         } catch (InvalidKeyException e) { // should never happens
-            throw new TxNotValidException("FATAL ERROR! Inappropriate public key provided for signature verification", tx, -15, e);
+            throw new TxNotValidException("FATAL ERROR! Inappropriate public key provided for signature verification", e, tx, ErrorCodes.FATAL_INCORRECT_PUB_KEY);
         } catch (SignatureException e) {
-            throw new TxNotValidException("Invalid signature format provided", tx, -16, e);
+            throw new TxNotValidException("Invalid signature format provided", e, tx, ErrorCodes.WRONG_SIG_FORMAT);
         }
         if (!verified) {
-            throw new TxNotValidException("Incorrect signature", tx, -17);
+            throw new TxNotValidException("Incorrect signature", null, tx, ErrorCodes.BAD_SIG);
         }
 
         long balance = account.getBalance();
         if (balance < tx.getAmount()) {
-            throw new TxNotValidException("Not sufficient funds, got " + balance + ", expected " + tx.getAmount(), tx, -18);
+            throw new TxNotValidException("Not sufficient funds, got " + balance + ", expected " + tx.getAmount(), null, tx, ErrorCodes.NOT_ENOUGH_MONEY);
         }
     }
 

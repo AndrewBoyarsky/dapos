@@ -31,7 +31,7 @@ class KeyStoreServiceTest {
     PassphraseGenerator passphraseGenerator;
     @Mock
     TimeSource timeSource;
-    String bitcoinWalletFile = "v1_2020-03-30_22-58-35---dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4";
+    String bitcoinWalletFile = "v1_2020-03-30_22-58-35---dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4";
 
     @Test
     void testCreateBitcoin(@TempDir Path dir) throws IOException, InvalidKeySpecException {
@@ -89,24 +89,24 @@ class KeyStoreServiceTest {
     @Test
     void testGetWallet() throws URISyntaxException {
         KeyStoreService keystore = new KeyStoreService(Paths.get(getClass().getClassLoader().getResource(bitcoinWalletFile).toURI()).getParent(), timeSource, passphraseGenerator);
-        VerifiedWallet verified = keystore.getWallet("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", "12345");
+        VerifiedWallet verified = keystore.getWallet("dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", "12345");
         assertEquals(Status.OK, verified.getExtractStatus());
         assertEquals("EC", verified.getWallet().getKeyPair().getPrivate().getAlgorithm());
-        assertEquals("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", verified.getWallet().getAppSpecificAccount());
+        assertEquals("dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", verified.getWallet().getAppSpecificAccount());
     }
 
 
     @Test
     void testGetWallet_incorrectPass() throws URISyntaxException {
         KeyStoreService keystore = new KeyStoreService(Paths.get(getClass().getClassLoader().getResource(bitcoinWalletFile).toURI()).getParent(), timeSource, passphraseGenerator);
-        VerifiedWallet verified = keystore.getWallet("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", "1234");
+        VerifiedWallet verified = keystore.getWallet("dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", "1234");
         assertEquals(Status.BAD_CREDENTIALS, verified.getExtractStatus());
     }
 
     @Test
     void testGetWallet_notFound() throws URISyntaxException {
         KeyStoreService keystore = new KeyStoreService(Paths.get(getClass().getClassLoader().getResource(bitcoinWalletFile).toURI()).getParent(), timeSource, passphraseGenerator);
-        VerifiedWallet verified = keystore.getWallet("dab19SGWN7jeX7S6P3ay4hEyH6qDfkDzALab4", "1234");
+        VerifiedWallet verified = keystore.getWallet("dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALab4", "1234");
         assertEquals(Status.NOT_FOUND, verified.getExtractStatus());
     }
 
