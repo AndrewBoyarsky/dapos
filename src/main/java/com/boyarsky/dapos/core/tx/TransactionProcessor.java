@@ -42,10 +42,12 @@ public class TransactionProcessor {
         if (!validationResult.getCode().isOk()) {
             return validationResult;
         }
+        validationResult.getTx().setGasUsed(validationResult.getGasData().getUsed());
         ProcessingResult deliverResult = deliverTx(validationResult.getTx());
         if (!deliverResult.getCode().isOk()) {
             logErrorResult(deliverResult, tx, "Deliver error");
         }
+        deliverResult.setGasData(validationResult.getGasData());
         return deliverResult;
     }
 
@@ -68,7 +70,7 @@ public class TransactionProcessor {
     }
 
     public ProcessingResult estimateTx(Transaction tx) {
-        long gasUsed;
+        int gasUsed;
         try {
             gasUsed = gasCalculator.calculateGas(tx);
         } catch (GasCalculationException e) {

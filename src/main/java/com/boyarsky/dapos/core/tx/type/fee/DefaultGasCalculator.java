@@ -2,9 +2,11 @@ package com.boyarsky.dapos.core.tx.type.fee;
 
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
+import org.springframework.stereotype.Component;
 
+@Component
 public class DefaultGasCalculator implements GasCalculator {
-    static final long BASE_TX_GAS = 1000;
+    static final int BASE_TX_GAS = 1000;
 
     @Override
     public TxType type() {
@@ -12,8 +14,8 @@ public class DefaultGasCalculator implements GasCalculator {
     }
 
     @Override
-    public long gasRequired(Transaction tx) {
-        long gas = BASE_TX_GAS;
+    public int gasRequired(Transaction tx) {
+        int gas = BASE_TX_GAS;
         if (tx.isFirst()) {
             gas += 100;
         }

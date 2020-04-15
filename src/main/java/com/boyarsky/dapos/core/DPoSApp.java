@@ -95,14 +95,15 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
             LastSuccessBlockData lastBlock = blockchain.getLastBlock();
             ResponseInfo.Builder builder = ResponseInfo.newBuilder();
             if (lastBlock != null) {
+                log.info("Current block {}", lastBlock.getHeight());
                 config.init(lastBlock.getHeight());
                 builder.setLastBlockHeight(lastBlock.getHeight())
                         .setLastBlockAppHash(ByteString.copyFrom(lastBlock.getAppHash()));
             } else {
-                config.init(0);
+                log.warn("No block committed yet");
             }
-            builder.setVersion(version)
-                    .setAppVersion(protocolVersion);
+            responseObserver.onNext(builder.setVersion(version)
+                    .setAppVersion(protocolVersion).build());
             responseObserver.onCompleted();
         }
 
@@ -116,36 +117,45 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         public void initChain(RequestInitChain request, StreamObserver<ResponseInitChain> responseObserver) {
             manager.begin();
             try {
+                log.info("Applying genesis");
                 genesis.initialize();
                 manager.commit();
             } catch (Exception e) {
                 log.error("Genesis init error", e);
                 manager.rollback();
             }
+            log.info("Genesis applied");
+            config.init(1);
             responseObserver.onNext(ResponseInitChain.newBuilder()
+                    .setConsensusParams(map(config.getCurrentConfig()))
                     .build());
             responseObserver.onCompleted();
         }
 
-        @Override
-        public void endBlock(RequestEndBlock request, StreamObserver<ResponseEndBlock> responseObserver) {
-            boolean updated = config.tryUpdateForHeight(blockchain.getCurrentBlockHeight() + 1);
-            ResponseEndBlock.Builder builder = ResponseEndBlock.newBuilder();
-            if (updated) {
-                HeightConfig currentConfig = config.getCurrentConfig();
-                builder.setConsensusParamUpdates(ConsensusParams.newBuilder()
-                                .setBlock(BlockParams.newBuilder()
-                                        .setMaxGas(currentConfig.getMaxGas())
-                                        .setMaxBytes(currentConfig.getMaxSize())
-                                        .build())
-                                .setEvidence(EvidenceParams.newBuilder()
-                                        .setMaxAge(currentConfig.getMaxEvidenceAge())
-                                        .build())
-                                .build());
-            }
-            responseObserver.onNext(builder.build());
-            responseObserver.onCompleted();
+    @Override
+    public void endBlock(RequestEndBlock request, StreamObserver<ResponseEndBlock> responseObserver) {
+        boolean updated = config.tryUpdateForHeight(blockchain.getCurrentBlockHeight() + 1);
+        ResponseEndBlock.Builder builder = ResponseEndBlock.newBuilder();
+        if (updated) {
+            HeightConfig currentConfig = config.getCurrentConfig();
+            log.info("Updation config to: " + currentConfig);
+            builder.setConsensusParamUpdates(map(currentConfig));
         }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+    }
+
+    private ConsensusParams map(HeightConfig config) {
+        return (ConsensusParams.newBuilder()
+                .setBlock(BlockParams.newBuilder()
+                        .setMaxGas(config.getMaxGas())
+                        .setMaxBytes(config.getMaxSize())
+                        .build())
+                .setEvidence(EvidenceParams.newBuilder()
+                        .setMaxAge(config.getMaxEvidenceAge())
+                        .build())
+                .build());
+    }
 
     @Override
     public void beginBlock(RequestBeginBlock req, StreamObserver<ResponseBeginBlock> responseObserver) {

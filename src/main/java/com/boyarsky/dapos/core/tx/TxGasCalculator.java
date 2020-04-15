@@ -18,8 +18,8 @@ public class TxGasCalculator {
         this.calculators.putAll(calculators);
     }
 
-    public long calculateGas(Transaction tx) throws GasCalculationException {
-        long gas = this.calculators.get(TxType.ALL).gasRequired(tx);
+    public int calculateGas(Transaction tx) throws GasCalculationException {
+        int gas = this.calculators.get(TxType.ALL).gasRequired(tx);
         GasCalculator gasCalculator = this.calculators.get(tx.getType());
         gas += gasCalculator.gasRequired(tx);
         return gas;

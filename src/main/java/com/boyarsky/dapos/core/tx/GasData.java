@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GasData {
-    private long used;
-    private long wanted;
+    private int used;
+    private int wanted;
 }

@@ -2,7 +2,6 @@ package com.boyarsky.dapos.core.config;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -16,7 +15,7 @@ public class BlockchainConfig {
 
 
     public BlockchainConfig(ChainSpec spec) {
-        Map<Long, HeightConfig> map = spec.getConfigs().stream().collect(Collectors.toMap(HeightConfig::getHeight, Function.identity()));
+        Map<Long, HeightConfig> map = spec.getHeightConfigs().stream().collect(Collectors.toMap(HeightConfig::getHeight, Function.identity()));
         updateHeights.addAll(map.keySet());
         this.allConfigs.putAll(map);
     }

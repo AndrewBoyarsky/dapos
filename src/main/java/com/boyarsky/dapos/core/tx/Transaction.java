@@ -30,6 +30,14 @@ public class Transaction {
 
     private int gasUsed;
 
+    public int getGasPrice() {
+        return gasPrice;
+    }
+
+    public int getMaxGas() {
+        return maxGas;
+    }
+
     public Transaction(byte[] rawTransaction) {
         this.rawTransaction = Convert.toHexString(rawTransaction);
         ByteBuffer buffer = ByteBuffer.wrap(rawTransaction);

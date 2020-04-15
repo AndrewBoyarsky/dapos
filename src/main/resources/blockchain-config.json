@@ -3,15 +3,15 @@
   "chainId": "1",
   "heightConfigs": [
     {
-      "height": 0,
-      "maxSize": 1000000,
-      "maxGas": 2000,
+      "height": 1,
+      "maxSize": 10000,
+      "maxGas": 10000,
       "maxEvidenceAge": 10
     },
     {
       "height": 20,
-      "maxSize": 1000,
-      "maxGas": 3000,
+      "maxSize": 20000,
+      "maxGas": 15000,
       "maxEvidenceAge": 5
     }
   ]
