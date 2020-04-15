@@ -21,7 +21,7 @@ public class Account extends BlockchainEntity {
     private Type type;
 
     public enum Type {
-        CONTRACT(-1), ORDINARY(1);
+        CONTRACT(-1), ORDINARY(1), NODE(2);
 
         Type(int code) {
             this.code = (byte) code;

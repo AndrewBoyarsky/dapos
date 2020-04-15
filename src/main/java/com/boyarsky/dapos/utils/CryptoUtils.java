@@ -105,12 +105,30 @@ public class CryptoUtils {
         }
     }
 
+    public static Wallet generateValidatorWallet() {
+        try {
+            KeyPair keyPair = ed25519KeyPair();
+            return new Wallet(new AccountId(validatorAddress(compress(keyPair.getPublic()))), keyPair);
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String ed25Address(byte[] publicKey) {
-        MessageDigest sha256 = keccak256();
-        byte[] publicKeyHash = sha256.digest(publicKey);
+        MessageDigest digest = keccak256();
+        byte[] publicKeyHash = digest.digest(publicKey);
         byte[] address = new byte[16];
         System.arraycopy(publicKeyHash, 0, address, 0, 16);
         return encodeEd25Address(address);
+    }
+
+    public static String validatorAddress(byte[] publicKey) {
+        MessageDigest sha256 = sha256();
+        byte[] publicKeyHash = sha256.digest(publicKey);
+        byte[] address = new byte[21];
+        System.arraycopy(publicKeyHash, 0, address, 1, 20);
+        address[0] = 0x11;
+        return encodeValidatorAddress(address);
     }
 
     public static boolean verifySignature(byte[] signature, PublicKey publicKey, byte[] message) throws InvalidKeyException, SignatureException {
@@ -459,6 +477,14 @@ public class CryptoUtils {
 
     public static String encodeBitcoinAddress(byte[] bitcoinAddressBytes) {
         return Base58.encode(bitcoinAddressBytes);
+    }
+
+    public static String encodeValidatorAddress(byte[] addressBytes) {
+        return "nn" + Convert.toHexString(addressBytes);
+    }
+
+    public static byte[] decodeValidatorAddress(String address) {
+        return Convert.parseHexString(address.substring(2));
     }
 
 

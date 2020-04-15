@@ -1,5 +1,6 @@
 package com.boyarsky.dapos.utils;
 
+import com.boyarsky.dapos.core.account.Wallet;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,13 @@ class CryptoUtilsTest {
         assertArrayEquals(signature, restored);
         boolean verifiedRestored = CryptoUtils.verifySignature(restored, keyPair.getPublic(), "Text to sign".getBytes());
         assertTrue(verifiedRestored);
+    }
+
+    @Test
+    void createValidatorWallet() {
+        Wallet wallet = CryptoUtils.generateValidatorWallet();
+        assertEquals("Ed25519", wallet.getKeyPair().getPrivate().getAlgorithm());
+        assertTrue(wallet.getAccount().isVal());
     }
 
     @Test

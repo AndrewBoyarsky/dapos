@@ -15,37 +15,10 @@ public class AccountId {
     }
 
     public AccountId(String origAccount) {
-        if (origAccount.toLowerCase().startsWith("dab") || origAccount.toLowerCase().startsWith("det") || origAccount.toLowerCase().startsWith("dap")) {
+        if (origAccount.toLowerCase().startsWith("dbt") || origAccount.toLowerCase().startsWith("det") || origAccount.toLowerCase().startsWith("dap") || origAccount.toLowerCase().startsWith("dav")) {
             origAccount = origAccount.substring(3);
         }
         this.origAccount = origAccount;
-    }
-
-    public void putBytes(ByteBuffer buffer) {
-        if (isBitcoin()) {
-            buffer.put((byte) 1);
-            buffer.put(CryptoUtils.decodeBitcoinAddress(origAccount));
-        } else if (isEth()){
-            buffer.put((byte) 2);
-            buffer.put(CryptoUtils.decodeEthAddress(origAccount));
-        } else if (isEd25()) {
-            buffer.put((byte) 3);
-            buffer.put(CryptoUtils.decodeEd25Address(origAccount));
-        } else {
-            throw new RuntimeException("Incorrect address type");
-        }
-    }
-
-    public byte[] getAddressBytes() {
-        if (isBitcoin()) {
-            return CryptoUtils.decodeBitcoinAddress(origAccount);
-        } else if (isEth()) {
-            return CryptoUtils.decodeEthAddress(origAccount);
-        } else if (isEd25()) {
-            return CryptoUtils.decodeEd25Address(origAccount);
-        } else {
-            throw new RuntimeException("Incorrect address type");
-        }
     }
 
     public static AccountId fromBytes(ByteBuffer buffer) {
@@ -63,11 +36,16 @@ public class AccountId {
             byte[] ed25Bytes = new byte[16];
             buffer.get(ed25Bytes);
             accountId.origAccount = CryptoUtils.encodeEd25Address(ed25Bytes);
+        } else if (addressType == 4) {
+            byte[] validatorBytes = new byte[21];
+            buffer.get(validatorBytes);
+            accountId.origAccount = CryptoUtils.encodeValidatorAddress(validatorBytes);
         } else {
             throw new RuntimeException("Incorrect address type");
         }
         return accountId;
     }
+
     public static AccountId fromBytes(byte[] bytes) {
         AccountId accountId = new AccountId();
         if (bytes.length == 25) {
@@ -76,13 +54,45 @@ public class AccountId {
             accountId.origAccount = CryptoUtils.encodeEthAddress(bytes);
         } else if (bytes.length == 16) {
             accountId.origAccount = CryptoUtils.encodeEd25Address(bytes);
-        } else
-         {
+        } else if (bytes.length == 21) {
+            accountId.origAccount = CryptoUtils.encodeValidatorAddress(bytes);
+        } else {
             throw new RuntimeException("Incorrect address type");
         }
         return accountId;
     }
 
+    public void putBytes(ByteBuffer buffer) {
+        if (isBitcoin()) {
+            buffer.put((byte) 1);
+            buffer.put(CryptoUtils.decodeBitcoinAddress(origAccount));
+        } else if (isEth()) {
+            buffer.put((byte) 2);
+            buffer.put(CryptoUtils.decodeEthAddress(origAccount));
+        } else if (isEd25()) {
+            buffer.put((byte) 3);
+            buffer.put(CryptoUtils.decodeEd25Address(origAccount));
+        } else if (isVal()) {
+            buffer.put((byte) 4);
+            buffer.put(CryptoUtils.decodeValidatorAddress(origAccount));
+        } else {
+            throw new RuntimeException("Incorrect address type");
+        }
+    }
+
+    public byte[] getAddressBytes() {
+        if (isBitcoin()) {
+            return CryptoUtils.decodeBitcoinAddress(origAccount);
+        } else if (isEth()) {
+            return CryptoUtils.decodeEthAddress(origAccount);
+        } else if (isEd25()) {
+            return CryptoUtils.decodeEd25Address(origAccount);
+        } else if (isVal()) {
+            return CryptoUtils.decodeValidatorAddress(origAccount);
+        } else {
+            throw new RuntimeException("Incorrect address type");
+        }
+    }
 
     public int size() {
         if (isBitcoin()) {
@@ -91,6 +101,8 @@ public class AccountId {
             return 21;
         } else if (isEd25()) {
             return 17;
+        } else if (isVal()) {
+            return 22;
         } else {
             throw new RuntimeException("Incorrect address type");
         }
@@ -99,13 +111,16 @@ public class AccountId {
 
     public String getAppSpecificAccount() {
         if (isBitcoin()) {
-            return "dab" + origAccount;
+            return "dbt" + origAccount;
         }
         if (isEth()) {
             return "det" + origAccount;
         }
         if (isEd25()) {
             return "dap" + origAccount;
+        }
+        if (isVal()) {
+            return "dav" + origAccount;
         }
         throw new RuntimeException("Unknown acc type");
     }
@@ -120,5 +135,9 @@ public class AccountId {
 
     public boolean isEd25() {
         return origAccount.startsWith("25") && origAccount.length() == 34;
+    }
+
+    public boolean isVal() {
+        return origAccount.startsWith("nn11") && origAccount.length() == 44;
     }
 }

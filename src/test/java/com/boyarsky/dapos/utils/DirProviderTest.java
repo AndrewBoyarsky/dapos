@@ -1,5 +1,6 @@
 package com.boyarsky.dapos.utils;
 
+import com.apollocurrency.aplwallet.apl.util.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DirProviderTest {
     static Path tempDir;
 
-    static {
-        try {
-            tempDir = Files.createTempDirectory("dirprov-test");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Autowired
     DirProvider provider;
     @Autowired
@@ -52,11 +45,14 @@ class DirProviderTest {
         assertTrue(Files.exists(dataDir));
         assertEquals(tempDir.resolve(".dapos/app-db"), dbDir);
         assertTrue(Files.exists(dbDir));
+        FileUtils.clearDirectorySilently(tempDir);
+        FileUtils.deleteFileIfExistsQuietly(tempDir);
     }
 
     public static class Config {
         @Bean
         DirProvider prov() throws IOException {
+            tempDir = Files.createTempDirectory("dirprov-test");
             return new DirProviderImpl(tempDir.toAbsolutePath().toString());
         }
     }
