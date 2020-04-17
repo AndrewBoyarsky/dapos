@@ -1,6 +1,8 @@
 package com.boyarsky.dapos.utils;
 
-import com.boyarsky.dapos.core.account.Wallet;
+import com.boyarsky.dapos.core.crypto.CryptoUtils;
+import com.boyarsky.dapos.core.crypto.EncryptedData;
+import com.boyarsky.dapos.core.model.keystore.Wallet;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;

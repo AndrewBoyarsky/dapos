@@ -1,6 +1,9 @@
 package com.boyarsky.dapos.utils;
 
 import com.apollocurrency.aplwallet.apl.util.FileUtils;
+import com.boyarsky.dapos.config.DirConfiguration;
+import com.boyarsky.dapos.env.DirProvider;
+import com.boyarsky.dapos.env.DirProviderImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;

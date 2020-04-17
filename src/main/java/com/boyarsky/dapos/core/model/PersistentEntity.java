@@ -9,5 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PersistentEntity {
-    private EntityId id;
+    private EntityId dbId;
 }

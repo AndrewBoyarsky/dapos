@@ -1,6 +1,6 @@
 package com.boyarsky.dapos.core.model;
 
-import com.boyarsky.dapos.core.account.AccountId;
+import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.repository.XodusSerializable;
 import com.boyarsky.dapos.core.tx.ByteSerializable;
 import lombok.AllArgsConstructor;

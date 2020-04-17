@@ -1,15 +1,13 @@
 package com.boyarsky.dapos.core.repository;
 
-import com.boyarsky.dapos.StoreExtension;
-import com.boyarsky.dapos.core.TransactionManager;
-import com.boyarsky.dapos.core.account.Account;
-import com.boyarsky.dapos.core.account.Wallet;
-import com.boyarsky.dapos.utils.CryptoUtils;
-import jetbrains.exodus.entitystore.PersistentEntityStore;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import com.boyarsky.dapos.core.crypto.CryptoUtils;
+import com.boyarsky.dapos.core.model.account.Account;
+import com.boyarsky.dapos.core.model.keystore.Wallet;
+import com.boyarsky.dapos.core.repository.account.AccountRepository;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 import java.util.Random;
@@ -17,23 +15,11 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class XodusAccountRepositoryTest {
-    private XodusAccountRepository repository;
-    private TransactionManager manager;
-    private PersistentEntityStore store;
-    @RegisterExtension
-    static StoreExtension extension = new StoreExtension(false);
-    @BeforeEach
-    void setup() {
-        store = extension.getStore();
-        manager = new TransactionManager(store);
-        repository = new XodusAccountRepository(store, manager);
-    }
-
-    @AfterEach
-    void cleanup() {
-
-    }
+@ComponentScan("com.boyarsky.dapos.core.repository.account")
+@ContextConfiguration(classes = {RepoTest.Config.class, XodusAccountRepositoryTest.class})
+public class XodusAccountRepositoryTest extends RepoTest {
+    @Autowired
+    AccountRepository repository;
 
     @Test
     void saveAndFind() {
@@ -76,6 +62,8 @@ class XodusAccountRepositoryTest {
 
     @Test
     void delete() {
+        manager.begin();
         assertThrows(UnsupportedOperationException.class, () -> repository.delete(generateAcc()));
+        manager.rollback();
     }
 }

@@ -1,12 +1,12 @@
 package com.boyarsky.dapos.core.tx.type.validator;
 
-import com.boyarsky.dapos.core.account.Account;
-import com.boyarsky.dapos.core.account.AccountService;
-import com.boyarsky.dapos.core.account.Wallet;
+import com.boyarsky.dapos.core.crypto.CryptoUtils;
+import com.boyarsky.dapos.core.model.account.Account;
+import com.boyarsky.dapos.core.model.keystore.Wallet;
+import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.utils.CryptoUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

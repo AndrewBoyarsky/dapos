@@ -1,20 +1,22 @@
 package com.boyarsky.dapos.core.tx;
 
-import com.boyarsky.dapos.core.account.AccountId;
+import com.boyarsky.dapos.core.crypto.CryptoUtils;
+import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.tx.type.TxType;
+import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
 import com.boyarsky.dapos.utils.Convert;
-import com.boyarsky.dapos.utils.CryptoUtils;
 import lombok.Getter;
 import lombok.ToString;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
+import java.util.HashMap;
+import java.util.Map;
 
 @ToString
 @Getter
 public class Transaction {
-    private static final byte TX_VERSION = 1;
     private String rawTransaction;
     private byte version;
     private long txId;
@@ -29,13 +31,14 @@ public class Transaction {
     private int maxGas;
 
     private int gasUsed;
+    private final Map<Class<? extends AbstractAttachment>, AbstractAttachment> attachments = new HashMap<>();
 
-    public int getGasPrice() {
-        return gasPrice;
+    public <T extends AbstractAttachment> T getAttachment(Class<T> clazz) {
+        return (T) attachments.get(clazz);
     }
 
-    public int getMaxGas() {
-        return maxGas;
+    public <T extends AbstractAttachment> void putAttachment(T attachment) {
+        attachments.put(attachment.getClass(), attachment);
     }
 
     public Transaction(byte[] rawTransaction) {

@@ -1,6 +1,11 @@
 package com.boyarsky.dapos.core.account;
 
-import com.boyarsky.dapos.core.repository.AccountRepository;
+import com.boyarsky.dapos.core.model.account.Account;
+import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.repository.account.AccountRepository;
+import com.boyarsky.dapos.core.service.account.AccountService;
+import com.boyarsky.dapos.core.service.account.AccountServiceImpl;
+import com.boyarsky.dapos.core.service.account.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

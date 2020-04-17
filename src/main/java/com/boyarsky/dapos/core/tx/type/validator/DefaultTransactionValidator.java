@@ -1,11 +1,11 @@
 package com.boyarsky.dapos.core.tx.type.validator;
 
-import com.boyarsky.dapos.core.account.Account;
-import com.boyarsky.dapos.core.account.AccountService;
+import com.boyarsky.dapos.core.crypto.CryptoUtils;
+import com.boyarsky.dapos.core.model.account.Account;
+import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.utils.CryptoUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +24,9 @@ public class DefaultTransactionValidator implements TransactionTypeValidator{
 
     @Override
     public void validate(Transaction tx) throws TxNotValidException {
+        if (tx.getType() == TxType.ALL) {
+            throw new TxNotValidException("Tx should be of concreate type, not 'ALL'", null, tx, ErrorCodes.UNDEFINED_TYPE);
+        }
         Account account = service.get(tx.getSender());
         if (account == null) {
             throw new TxNotValidException("Sender account does not exist: " + tx.getSender().toString(), null, tx, ErrorCodes.SENDER_NOT_EXIST);

@@ -5,6 +5,7 @@ import com.boyarsky.dapos.core.config.BlockchainConfig;
 import com.boyarsky.dapos.core.config.HeightConfig;
 import com.boyarsky.dapos.core.genesis.Genesis;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
+import com.boyarsky.dapos.core.service.Blockchain;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
 import com.boyarsky.dapos.core.tx.TransactionProcessor;
 import com.google.protobuf.ByteString;

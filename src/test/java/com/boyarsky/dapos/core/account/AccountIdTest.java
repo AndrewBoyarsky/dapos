@@ -1,5 +1,6 @@
 package com.boyarsky.dapos.core.account;
 
+import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.utils.Base58;
 import com.boyarsky.dapos.utils.Convert;
 import org.junit.jupiter.api.Test;

@@ -1,8 +1,8 @@
 package com.boyarsky.dapos.core.tx;
 
-import com.boyarsky.dapos.core.account.Wallet;
+import com.boyarsky.dapos.core.crypto.CryptoUtils;
+import com.boyarsky.dapos.core.model.keystore.Wallet;
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.utils.CryptoUtils;
 import org.junit.jupiter.api.Test;
 
 import java.security.InvalidKeyException;

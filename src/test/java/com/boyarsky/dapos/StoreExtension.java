@@ -1,6 +1,8 @@
 package com.boyarsky.dapos;
 
 import com.apollocurrency.aplwallet.apl.util.FileUtils;
+import com.boyarsky.dapos.core.repository.ComparableByteArray;
+import com.boyarsky.dapos.core.repository.ComparableByteArrayBinding;
 import jetbrains.exodus.entitystore.PersistentEntityStore;
 import jetbrains.exodus.entitystore.PersistentEntityStores;
 import jetbrains.exodus.entitystore.StoreTransaction;
@@ -30,6 +32,7 @@ public class StoreExtension implements BeforeAllCallback, AfterAllCallback, Befo
     public void beforeAll(ExtensionContext context) throws Exception {
         tempDir = Files.createTempDirectory("tempstore").toFile();
         store = PersistentEntityStores.newInstance(tempDir);
+        store.executeInExclusiveTransaction((tx) -> store.registerCustomPropertyType(tx, ComparableByteArray.class, new ComparableByteArrayBinding()));
     }
 
     public PersistentEntityStore getStore() {

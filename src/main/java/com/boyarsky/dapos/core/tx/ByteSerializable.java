@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.core.tx;
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 public interface ByteSerializable {
@@ -18,7 +17,8 @@ public interface ByteSerializable {
         }
         return buffer.getLong();
     }
-    static void putDefaultLong(ByteBuffer buffer, long l,byte defaultValue) {
+
+    static void putDefaultLong(ByteBuffer buffer, long l, byte defaultValue) {
         if (l == defaultValue) {
             buffer.put(defaultValue);
         } else {
@@ -27,9 +27,23 @@ public interface ByteSerializable {
         }
     }
 
+    static boolean getBoolean(ByteBuffer buffer) {
+        byte b = buffer.get();
+        return b == 0;
+    }
+
+    static void putBoolean(ByteBuffer buffer, boolean b) {
+        if (b) {
+            buffer.put((byte) 0);
+        } else {
+            buffer.put((byte) -1);
+        }
+    }
+
     static int intSize(int l, byte defaultValue) {
         return l == defaultValue ? 1 : 4;
     }
+
     static int getDefaultInt(ByteBuffer buffer, int defaultValue) {
         byte b = buffer.get();
         if (b == defaultValue) {

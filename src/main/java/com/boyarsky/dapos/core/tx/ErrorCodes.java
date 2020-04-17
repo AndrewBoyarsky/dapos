@@ -4,6 +4,7 @@ public class ErrorCodes {
     public static final ErrorCode OK = new ErrorCode(0);
 
     public static final String DEFAULT_VALIDATION = "Default Validation";
+    public static final ErrorCode UNDEFINED_TYPE = new ErrorCode(DEFAULT_VALIDATION, -10);
     public static final ErrorCode SENDER_NOT_EXIST = new ErrorCode(DEFAULT_VALIDATION, -11);
     public static final ErrorCode NO_PUB_KEY_FOR_NEW_ACC = new ErrorCode(DEFAULT_VALIDATION, -12);
     public static final ErrorCode PUB_KEY_FOR_OLD_ACC = new ErrorCode(DEFAULT_VALIDATION, -13);
@@ -21,6 +22,11 @@ public class ErrorCodes {
     public static final ErrorCode NOT_ENOUGH_GAS = new ErrorCode(VALIDATION, -100);
     public static final ErrorCode FAILED_GAS_CALC = new ErrorCode(VALIDATION, -101);
     public static final ErrorCode UNKNOWN_GAS_CALC_ERROR = new ErrorCode(VALIDATION, -102);
+
+    public static final String MESSAGE_VALIDATION = "Message Validation";
+    public static final ErrorCode RECIPIENT_NULL_DH = new ErrorCode(MESSAGE_VALIDATION, 42);
+    public static final ErrorCode RECIPIENT_DB_MISSING = new ErrorCode(MESSAGE_VALIDATION, 43);
+    public static final ErrorCode RECIPIENT_PK_MISSING = new ErrorCode(MESSAGE_VALIDATION, 44);
 
     public static final String TX_HANDLING = "Transaction Handling";
     public static final ErrorCode HANDLING_ERROR = new ErrorCode(TX_HANDLING, 127);

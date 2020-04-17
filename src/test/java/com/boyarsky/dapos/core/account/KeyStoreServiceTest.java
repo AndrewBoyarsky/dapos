@@ -2,8 +2,16 @@ package com.boyarsky.dapos.core.account;
 
 import com.boyarsky.dapos.core.TimeSource;
 import com.boyarsky.dapos.core.TimeSourceImpl;
+import com.boyarsky.dapos.core.crypto.CryptoUtils;
+import com.boyarsky.dapos.core.model.account.Account;
+import com.boyarsky.dapos.core.model.keystore.Status;
+import com.boyarsky.dapos.core.model.keystore.StoredWallet;
+import com.boyarsky.dapos.core.model.keystore.VerifiedWallet;
+import com.boyarsky.dapos.core.model.keystore.Wallet;
+import com.boyarsky.dapos.core.service.keystore.KeyStoreService;
+import com.boyarsky.dapos.core.service.keystore.PassphraseGenerator;
+import com.boyarsky.dapos.core.service.keystore.PassphraseProtectedWallet;
 import com.boyarsky.dapos.utils.Convert;
-import com.boyarsky.dapos.utils.CryptoUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +28,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.boyarsky.dapos.utils.CryptoUtils.sha256;
+import static com.boyarsky.dapos.core.crypto.CryptoUtils.sha256;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;

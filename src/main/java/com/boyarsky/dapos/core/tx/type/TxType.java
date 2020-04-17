@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx.type;
 
 public enum TxType {
-    PAYMENT(1), SET_FEE_PROVIDER(2), DELEGATE(7), CLAIM(8), ALL(-1);
+    PAYMENT(1), SET_FEE_PROVIDER(2), VALIDATOR(3), MESSAGE(4), DELEGATE(7), CLAIM(8), ALL(-1);
     private final byte code;
 
     TxType(int code) {

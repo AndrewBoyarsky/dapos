@@ -3,7 +3,7 @@ package com.boyarsky.dapos.utils;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import static com.boyarsky.dapos.utils.CryptoUtils.sha256;
+import static com.boyarsky.dapos.core.crypto.CryptoUtils.sha256;
 
 public class Base58 {
     public static final char[] ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz".toCharArray();
