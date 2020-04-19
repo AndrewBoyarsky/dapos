@@ -184,7 +184,7 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     @Override
     public void commit(RequestCommit req, StreamObserver<ResponseCommit> responseObserver) {
         byte[] hash = new byte[8];
-        blockchain.addNewBlock(hash, manager.currentTx());
+        blockchain.addNewBlock(hash);
         manager.commit();
         ByteString appData = ByteString.copyFrom(hash);
         var resp = ResponseCommit.newBuilder()

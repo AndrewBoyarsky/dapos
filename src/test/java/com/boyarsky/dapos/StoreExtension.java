@@ -52,13 +52,14 @@ public class StoreExtension implements BeforeAllCallback, AfterAllCallback, Befo
         if (startTx) {
             currentTransaction = store.beginTransaction();
         }
+        store.executeInExclusiveTransaction((tx) -> store.registerCustomPropertyType(tx, ComparableByteArray.class, new ComparableByteArrayBinding()));
     }
 
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
         if (startTx) {
             currentTransaction.abort();
-            store.clear();
         }
+        store.clear();
     }
 }

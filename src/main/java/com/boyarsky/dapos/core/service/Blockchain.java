@@ -2,7 +2,6 @@ package com.boyarsky.dapos.core.service;
 
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.repository.BlockchainRepository;
-import jetbrains.exodus.entitystore.StoreTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,8 +23,8 @@ public class Blockchain {
         this.currentHeight = height;
     }
 
-    public void addNewBlock(byte[] hash, StoreTransaction txn) {
-        blockchainRepository.insert(new LastSuccessBlockData(hash, currentHeight), txn);
+    public void addNewBlock(byte[] hash) {
+        blockchainRepository.insert(new LastSuccessBlockData(hash, currentHeight));
     }
 
     public LastSuccessBlockData getLastBlock() {

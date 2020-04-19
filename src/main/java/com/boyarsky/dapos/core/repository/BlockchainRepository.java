@@ -1,31 +1,31 @@
 package com.boyarsky.dapos.core.repository;
 
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
+import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
 import jetbrains.exodus.entitystore.EntityIterable;
-import jetbrains.exodus.entitystore.PersistentEntityStore;
 import jetbrains.exodus.entitystore.StoreTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BlockchainRepository {
-    public static final String storeName = "blockchain";
-    private static final String lastBlockDataKey = "lastBlock";
-    private PersistentEntityStore store;
+    private static final String storeName = "lastBlock";
+    private XodusRepoContext context;
 
     @Autowired
-    public BlockchainRepository(PersistentEntityStore store) {
-        this.store = store;
+    public BlockchainRepository(XodusRepoContext context) {
+        this.context = context;
     }
 
+    @Transactional(readonly = true)
     public LastSuccessBlockData getLastBlock() {
-        return store.computeInReadonlyTransaction(this::getLastBlock);
+        return getLastBlock(context.getTx());
     }
 
     public LastSuccessBlockData getLastBlock(StoreTransaction txn) {
-        EntityIterable all = txn.getAll(lastBlockDataKey);
+        EntityIterable all = txn.getAll(storeName);
         long size = all.size();
         if (size == 0) {
             return null;
@@ -38,10 +38,11 @@ public class BlockchainRepository {
         return new LastSuccessBlockData(Convert.parseHexString(hash), height);
     }
 
-    public void insert(LastSuccessBlockData blockData, StoreTransaction txn) {
-        Entity prev = txn.getAll(lastBlockDataKey).getFirst();
+    public void insert(LastSuccessBlockData blockData) {
+        StoreTransaction txn = context.getTx();
+        Entity prev = txn.getAll(storeName).getFirst();
         if (prev == null) {
-            prev = txn.newEntity(lastBlockDataKey);
+            prev = txn.newEntity(storeName);
         }
         prev.setProperty("hash", Convert.toHexString(blockData.getAppHash()));
         prev.setProperty("height", blockData.getHeight());
