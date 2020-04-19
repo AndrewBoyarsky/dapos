@@ -11,7 +11,9 @@ public class ComparableByteArrayBinding extends ComparableBinding {
     @SneakyThrows
     @Override
     public ComparableByteArray readObject(@NotNull ByteArrayInputStream stream) {
-        int size = stream.read();
+        byte[] intBytes = new byte[4];
+        stream.read(intBytes);
+        int size = intBytes[0] << 24 | intBytes[1] << 16 | intBytes[2] << 8 | intBytes[3];
         byte[] bytes = new byte[size];
         if (size == 0) {
             return new ComparableByteArray(bytes);

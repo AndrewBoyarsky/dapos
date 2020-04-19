@@ -24,6 +24,7 @@ public class XodusMessageRepository implements MessageRepository {
     }
 
     @Override
+    @Transactional(readonly = true)
     public MessageEntity get(long id) {
         StoreTransaction tx = context.getTx();
         Entity ent = CollectionUtils.requireAtMostOne(tx.find(entityType, "id", id));
@@ -34,15 +35,17 @@ public class XodusMessageRepository implements MessageRepository {
     }
 
     @Override
+    @Transactional(readonly = true)
     public List<MessageEntity> getToSelf(AccountId sender) {
         EntityIterable all = context.getTx()
                 .find(entityType, "sender", new ComparableByteArray(sender.getAddressBytes()))
-                .intersect(context.getTx().findWithProp(entityType, "recipient"));
+                .minus(context.getTx().findWithProp(entityType, "recipient"));
         return CollectionUtils.toList(all, this::map);
     }
 
 
     @Override
+    @Transactional(readonly = true)
     public List<MessageEntity> getWith(AccountId sender, AccountId recipient) {
         EntityIterable all = context.getTx()
                 .find(entityType, "sender", new ComparableByteArray(sender.getAddressBytes()))
@@ -52,6 +55,7 @@ public class XodusMessageRepository implements MessageRepository {
     }
 
     @Override
+    @Transactional(readonly = true)
     public List<MessageEntity> getAll(AccountId sender) {
         EntityIterable all = context.getTx()
                 .find(entityType, "sender", new ComparableByteArray(sender.getAddressBytes()));

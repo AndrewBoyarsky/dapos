@@ -1,8 +1,6 @@
 package com.boyarsky.dapos.core.repository;
 
-import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.model.account.Account;
-import com.boyarsky.dapos.core.model.keystore.Wallet;
 import com.boyarsky.dapos.core.repository.account.AccountRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,8 +8,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
-import java.util.Random;
 
+import static com.boyarsky.dapos.AccountUtil.generateAcc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -33,13 +31,6 @@ public class XodusAccountRepositoryTest extends RepoTest {
         assertEquals(accToSave, afterTxAccount);
     }
 
-    private Account generateAcc() {
-        Random random = new Random();
-        Wallet wallet = CryptoUtils.generateEd25Wallet();
-        Account acc = new Account(wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), random.nextInt(1000), Account.Type.ORDINARY);
-        acc.setHeight(random.nextInt(103));
-        return acc;
-    }
 
     @Test
     void saveWithoutTx() {
