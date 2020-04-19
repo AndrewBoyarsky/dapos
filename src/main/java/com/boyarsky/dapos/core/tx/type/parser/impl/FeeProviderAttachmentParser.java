@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx.type.parser.impl;
 
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.core.tx.type.attachment.FeeProviderAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
 import com.boyarsky.dapos.core.tx.type.parser.AttachmentTxTypeParser;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +16,6 @@ public class FeeProviderAttachmentParser implements AttachmentTxTypeParser<FeePr
 
     @Override
     public FeeProviderAttachment parseAttachment(ByteBuffer buffer) {
-        return new FeeProviderAttachment((byte) 0);
+        return new FeeProviderAttachment(buffer);
     }
 }

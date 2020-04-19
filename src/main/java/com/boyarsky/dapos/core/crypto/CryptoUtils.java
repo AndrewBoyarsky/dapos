@@ -28,6 +28,7 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -47,6 +48,7 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.zip.GZIPOutputStream;
 
 public class CryptoUtils {
     public static final String PROVIDER = "BC";
@@ -122,6 +124,27 @@ public class CryptoUtils {
         byte[] address = new byte[16];
         System.arraycopy(publicKeyHash, 0, address, 0, 16);
         return encodeEd25Address(address);
+    }
+
+    public static boolean isCompatible(AccountId id1, AccountId id2) {
+        return isEd25(id1) && isEd25(id2) || isSecp(id1) && isSecp(id2);
+    }
+
+    public static byte[] compress(byte[] bytes) throws IOException {
+
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream();
+             GZIPOutputStream gzipStream = new GZIPOutputStream(os)) {
+            gzipStream.write(bytes);
+            return os.toByteArray();
+        }
+    }
+
+    public static boolean isEd25(AccountId id) {
+        return id.isVal() || id.isEd25();
+    }
+
+    public static boolean isSecp(AccountId id) {
+        return id.isEth() || id.isBitcoin();
     }
 
     public static String validatorAddress(byte[] publicKey) {

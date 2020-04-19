@@ -1,12 +1,10 @@
 package com.boyarsky.dapos.core.tx.type.attachment;
 
-import com.boyarsky.dapos.core.tx.ByteSerializable;
-
 import java.nio.ByteBuffer;
 
 
-public abstract class AbstractAttachment implements ByteSerializable {
-    private byte version;
+public abstract class AbstractAttachment implements Attachment {
+    private final byte version;
 
     public AbstractAttachment(byte version) {
         this.version = version;
@@ -16,12 +14,18 @@ public abstract class AbstractAttachment implements ByteSerializable {
         version = buffer.get();
     }
 
-    public long fullSize() {
-        return 1 + size();
+    @Override
+    public int size() {
+        return 1 + mySize();
     }
 
-    public void putAllBytes(ByteBuffer buffer) {
+    @Override
+    public void putBytes(ByteBuffer buffer) {
         buffer.put(version);
-        putBytes(buffer);
+        putMyBytes(buffer);
     }
+
+    public abstract void putMyBytes(ByteBuffer buffer);
+
+    public abstract int mySize();
 }

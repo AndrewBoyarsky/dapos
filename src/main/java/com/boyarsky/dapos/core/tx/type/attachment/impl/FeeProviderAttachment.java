@@ -8,11 +8,10 @@ import lombok.EqualsAndHashCode;
 import java.nio.ByteBuffer;
 
 @EqualsAndHashCode(callSuper = true)
-//TODO maybe better to move all boolean flags to the beginning of buffer and store inside one integer
 public class FeeProviderAttachment extends AbstractAttachment {
-    private State state;
-    private PartyFeeConfig fromFeeConfig;
-    private PartyFeeConfig toFeeConfig;
+    private final State state;
+    private final PartyFeeConfig fromFeeConfig;
+    private final PartyFeeConfig toFeeConfig;
 
     public FeeProviderAttachment(byte version, State state, PartyFeeConfig fromFeeConfig, PartyFeeConfig toFeeConfig) {
         super(version);
@@ -29,13 +28,14 @@ public class FeeProviderAttachment extends AbstractAttachment {
     }
 
     @Override
-    public void putBytes(ByteBuffer buffer) {
+    public void putMyBytes(ByteBuffer buffer) {
         buffer.put(state.getCode());
         fromFeeConfig.putBytes(buffer);
         toFeeConfig.putBytes(buffer);
     }
 
-    public int size() {
+    @Override
+    public int mySize() {
         return 1 + fromFeeConfig.size() + toFeeConfig.size();
     }
 

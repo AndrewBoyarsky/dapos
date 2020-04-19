@@ -1,4 +1,6 @@
-package com.boyarsky.dapos.core.tx.type.attachment;
+package com.boyarsky.dapos.core.tx.type.attachment.impl;
+
+import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
 
 import java.nio.ByteBuffer;
 
@@ -8,12 +10,12 @@ public class DelegateAttachment extends AbstractAttachment {
     }
 
     @Override
-    public int size() {
+    public int mySize() {
         return 0;
     }
 
     @Override
-    public void putBytes(ByteBuffer buffer) {
+    public void putMyBytes(ByteBuffer buffer) {
 
     }
 }

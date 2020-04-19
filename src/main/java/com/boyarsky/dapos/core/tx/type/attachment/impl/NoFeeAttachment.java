@@ -18,12 +18,12 @@ public class NoFeeAttachment extends AbstractAttachment {
     }
 
     @Override
-    public int size() {
+    public int mySize() {
         return 8;
     }
 
     @Override
-    public void putBytes(ByteBuffer buffer) {
+    public void putMyBytes(ByteBuffer buffer) {
         buffer.putLong(payer);
     }
 }

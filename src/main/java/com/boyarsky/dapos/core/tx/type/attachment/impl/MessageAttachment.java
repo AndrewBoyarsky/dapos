@@ -32,12 +32,12 @@ public class MessageAttachment extends AbstractAttachment {
     }
 
     @Override
-    public int size() {
+    public int mySize() {
         return encryptedData.size() + 1 + 1;
     }
 
     @Override
-    public void putBytes(ByteBuffer buffer) {
+    public void putMyBytes(ByteBuffer buffer) {
         encryptedData.putBytes(buffer);
         ByteSerializable.putBoolean(buffer, compressed);
         ByteSerializable.putBoolean(buffer, toSelf);

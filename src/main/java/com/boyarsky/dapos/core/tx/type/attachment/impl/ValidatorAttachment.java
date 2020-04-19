@@ -22,12 +22,12 @@ public class ValidatorAttachment extends AbstractAttachment {
     }
 
     @Override
-    public int size() {
+    public int mySize() {
         return 1 + 2;
     }
 
     @Override
-    public void putBytes(ByteBuffer buffer) {
+    public void putMyBytes(ByteBuffer buffer) {
         ByteSerializable.putBoolean(buffer, enable);
         buffer.putShort(fee);
     }

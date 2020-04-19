@@ -3,7 +3,9 @@ package com.boyarsky.dapos.core.tx;
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.Attachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.MessageAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.NoFeeAttachment;
 import com.boyarsky.dapos.utils.Convert;
 import lombok.Getter;
 import lombok.ToString;
@@ -12,6 +14,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ToString
@@ -31,13 +34,13 @@ public class Transaction {
     private int maxGas;
 
     private int gasUsed;
-    private final Map<Class<? extends AbstractAttachment>, AbstractAttachment> attachments = new HashMap<>();
+    private final Map<Class<? extends Attachment>, Attachment> attachments = new HashMap<>();
 
-    public <T extends AbstractAttachment> T getAttachment(Class<T> clazz) {
+    public <T extends Attachment> T getAttachment(Class<T> clazz) {
         return (T) attachments.get(clazz);
     }
 
-    public <T extends AbstractAttachment> void putAttachment(T attachment) {
+    public <T extends Attachment> void putAttachment(T attachment) {
         attachments.putIfAbsent(attachment.getClass(), attachment);
     }
 
@@ -185,11 +188,14 @@ public class Transaction {
         private KeyPair keyPair;
         private AccountId recipient;
         private byte[] data = new byte[0];
+        private Map<Class, Attachment> attachments = new LinkedHashMap<>();
+        private Attachment rootAttachment;
         private long amount = 0;
         private int maxGas;
         private int gasPrice;
 
-        public TransactionBuilder(TxType type, AccountId accountId, KeyPair keyPair, int gasPrice, int maxGas) {
+        public TransactionBuilder(TxType type, Attachment rootAttachment, AccountId accountId, KeyPair keyPair, int gasPrice, int maxGas) {
+            this.rootAttachment = rootAttachment;
             this.type = type;
             this.sender = accountId;
             this.gasPrice = gasPrice;
@@ -197,13 +203,32 @@ public class Transaction {
             this.keyPair = keyPair;
         }
 
+        public TransactionBuilder message(MessageAttachment attachment) {
+            if (type == TxType.MESSAGE) {
+                throw new RuntimeException("Duplicate message");
+            }
+            attachments.put(attachment.getClass(), attachment);
+            return this;
+        }
+
+        public TransactionBuilder noFee(NoFeeAttachment attachment) {
+            attachments.put(attachment.getClass(), attachment);
+            return this;
+        }
+
         public TransactionBuilder data(byte[] data) {
             this.data = data;
             return this;
         }
 
+
         public TransactionBuilder amount(long amount) {
             this.amount = amount;
+            return this;
+        }
+
+        public TransactionBuilder gas(int gas) {
+            this.maxGas = gas;
             return this;
         }
 
@@ -223,7 +248,18 @@ public class Transaction {
             if (first && sender.isBitcoin()) {
                 version |= 4;
             }
-            Transaction transaction = new Transaction(version, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, data, amount, gasPrice, maxGas, null);
+            int attachmentSize = rootAttachment.size();
+            for (Map.Entry<Class, Attachment> entry : attachments.entrySet()) {
+                attachmentSize += entry.getValue().size();
+            }
+            ByteBuffer buffer = ByteBuffer.allocate(attachmentSize + data.length);
+            rootAttachment.putBytes(buffer);
+            for (Map.Entry<Class, Attachment> entry : attachments.entrySet()) {
+                entry.getValue().putBytes(buffer);
+            }
+            buffer.put(data);
+            byte[] dataArray = buffer.array();
+            Transaction transaction = new Transaction(version, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, dataArray, amount, gasPrice, maxGas, null);
             byte[] bytes = transaction.bytes(true);
             transaction.signature = CryptoUtils.compressSignature(CryptoUtils.sign(keyPair.getPrivate(), bytes));
             transaction.idFromSignature();

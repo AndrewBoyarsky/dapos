@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx.type.parser.impl;
 
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.core.tx.type.attachment.DelegateAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.DelegateAttachment;
 import com.boyarsky.dapos.core.tx.type.parser.AttachmentTxTypeParser;
 import org.springframework.stereotype.Component;
 
