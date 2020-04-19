@@ -2,8 +2,12 @@ package com.boyarsky.dapos.core.tx;
 
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
-import com.boyarsky.dapos.core.tx.type.parser.AttachmentParser;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.boyarsky.dapos.core.tx.type.attachment.IndependentAttachmentType;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.MessageAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.NoFeeAttachment;
+import com.boyarsky.dapos.core.tx.type.parser.AttachmentTxTypeParser;
+import com.boyarsky.dapos.core.tx.type.parser.IndependentAttachmentParser;
+import com.boyarsky.dapos.core.tx.type.parser.TxParsingException;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
@@ -12,27 +16,35 @@ import java.util.Map;
 
 @Component
 public class TransactionParser {
-    private Map<TxType, AttachmentParser<? extends AbstractAttachment>> parsers = new HashMap<>();
+    private final Map<TxType, AttachmentTxTypeParser<? extends AbstractAttachment>> txTypeParsers = new HashMap<>();
+    private final Map<IndependentAttachmentType, IndependentAttachmentParser<? extends AbstractAttachment>> indAttachmentParsers = new HashMap<>();
 
-    @Autowired
-    public TransactionParser(Map<TxType, AttachmentParser<? extends AbstractAttachment>> parsers) {
-        this.parsers.putAll(parsers);
+    public TransactionParser(Map<TxType, AttachmentTxTypeParser<? extends AbstractAttachment>> txTypeParsers, Map<IndependentAttachmentType, IndependentAttachmentParser<? extends AbstractAttachment>> indAttachmentParsers) {
+        this.txTypeParsers.putAll(txTypeParsers);
+        this.indAttachmentParsers.putAll(indAttachmentParsers);
     }
 
     public Transaction parseTx(byte[] txBytes) {
         Transaction transaction = new Transaction(txBytes);
-        AttachmentParser<? extends AbstractAttachment> attachmentParser = parsers.get(transaction.getType());
+        AttachmentTxTypeParser<? extends AbstractAttachment> attachmentTxTypeParser = txTypeParsers.get(transaction.getType());
         ByteBuffer attachmentBuffer = ByteBuffer.wrap(transaction.getData());
-        AbstractAttachment attachment = attachmentParser.parseAttachment(attachmentBuffer);
+        AbstractAttachment attachment = attachmentTxTypeParser.parseAttachment(attachmentBuffer);
         transaction.putAttachment(attachment);
         if (attachmentBuffer.position() != attachmentBuffer.capacity()) {
             byte notTypedAttachmentPresentByte = attachmentBuffer.get();
             if (notTypedAttachmentPresentByte != 0) {
                 if ((notTypedAttachmentPresentByte & 1) == 1) {
-                    // parse message
+                    AttachmentTxTypeParser<? extends AbstractAttachment> messageParser = txTypeParsers.get(TxType.MESSAGE);
+                    if (transaction.getType() == TxType.MESSAGE) {
+                        throw new TxParsingException("Duplicate message for MESSAGE tx", null, transaction, ErrorCodes.DUPLICATE_MESSAGE_PARSING_ERROR);
+                    }
+                    MessageAttachment messageAttachment = (MessageAttachment) messageParser.parseAttachment(attachmentBuffer);
+                    transaction.putAttachment(messageAttachment);
                 }
                 if ((notTypedAttachmentPresentByte & 2) == 2) {
-                    // parse no fee attachment
+                    IndependentAttachmentParser<? extends AbstractAttachment> parser = indAttachmentParsers.get(IndependentAttachmentType.NO_FEE);
+                    NoFeeAttachment noFeeAttachment = (NoFeeAttachment) parser.parseAttachment(attachmentBuffer);
+                    transaction.putAttachment(noFeeAttachment);
                 }
             }
         }

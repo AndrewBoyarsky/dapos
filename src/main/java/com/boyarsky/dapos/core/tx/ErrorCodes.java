@@ -16,6 +16,7 @@ public class ErrorCodes {
 
     public static final String TX_PARSING = "Transaction Parsing";
     public static final ErrorCode GENERAL_PARSING_ERROR = new ErrorCode(TX_PARSING, 255);
+    public static final ErrorCode DUPLICATE_MESSAGE_PARSING_ERROR = new ErrorCode(TX_PARSING, 250);
 
     public static final String VALIDATION = "Validation";
     public static final ErrorCode UNKNOWN_VALIDATION_ERROR = new ErrorCode(VALIDATION, -1000);

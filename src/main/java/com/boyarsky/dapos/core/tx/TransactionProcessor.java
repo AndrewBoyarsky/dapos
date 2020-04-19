@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx;
 
-import com.boyarsky.dapos.core.tx.type.GasCalculationException;
-import com.boyarsky.dapos.core.tx.type.TxHandlingException;
+import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
+import com.boyarsky.dapos.core.tx.type.handler.TxHandlingException;
 import com.boyarsky.dapos.core.tx.type.validator.TxNotValidException;
 import com.boyarsky.dapos.utils.Convert;
 import lombok.extern.slf4j.Slf4j;

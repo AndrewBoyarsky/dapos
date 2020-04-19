@@ -2,8 +2,8 @@ package com.boyarsky.dapos.core.tx.type.attachment;
 
 import java.nio.ByteBuffer;
 
-public class FeeProviderAttachment extends AbstractAttachment {
-    public FeeProviderAttachment(byte version) {
+public class DelegateAttachment extends AbstractAttachment {
+    public DelegateAttachment(byte version) {
         super(version);
     }
 

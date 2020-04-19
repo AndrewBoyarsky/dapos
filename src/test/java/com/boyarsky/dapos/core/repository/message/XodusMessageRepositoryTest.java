@@ -30,10 +30,18 @@ class XodusMessageRepositoryTest extends RepoTest {
     MessageEntity bobToChuck1 = new MessageEntity(6, new EncryptedData(new byte[64], new byte[32]), bob, chuck, true);
     MessageEntity aliceToSelf2 = new MessageEntity(7, new EncryptedData(new byte[64], new byte[32]), alice, null, true);
 
-    MessageEntity bobToChuck2 = new MessageEntity(8, new EncryptedData(new byte[64], new byte[32]), bob, chuck, false);
+    MessageEntity notSavedBobToChuck2 = new MessageEntity(8, new EncryptedData(new byte[64], new byte[32]), bob, chuck, false);
 
     @BeforeEach
     void setUp() {
+        aliceToBob1.setHeight(1);
+        aliceToBob2.setHeight(2);
+        aliceToSelf1.setHeight(3);
+        aliceToChuck1.setHeight(3);
+        bobToAlice1.setHeight(3);
+        bobToChuck1.setHeight(4);
+        aliceToSelf2.setHeight(4);
+        notSavedBobToChuck2.setHeight(5);
         manager.begin();
         repos.save(aliceToBob1);
         repos.save(aliceToBob2);
@@ -48,18 +56,26 @@ class XodusMessageRepositoryTest extends RepoTest {
     @Test
     void getToSelf() {
         List<MessageEntity> toSelf = repos.getToSelf(alice);
-        assertEquals(List.of(aliceToSelf1, aliceToSelf2), toSelf);
+        assertEquals(List.of(aliceToSelf2, aliceToSelf1), toSelf);
+
         List<MessageEntity> bobToSelf = repos.getToSelf(bob);
         assertEquals(0, bobToSelf.size());
     }
 
     @Test
+    void get() {
+        MessageEntity message = repos.get(2);
+
+        assertEquals(aliceToBob2, message);
+    }
+
+    @Test
     void getWith() {
         List<MessageEntity> aliceBobChat = repos.getWith(alice, bob);
-        assertEquals(List.of(aliceToBob1, aliceToBob2), aliceBobChat);
+        assertEquals(List.of(bobToAlice1, aliceToBob2, aliceToBob1), aliceBobChat);
 
         List<MessageEntity> chuckAliceChat = repos.getWith(chuck, alice);
-        assertEquals(0, chuckAliceChat.size());
+        assertEquals(List.of(aliceToChuck1), chuckAliceChat);
     }
 
     @Test
@@ -71,9 +87,9 @@ class XodusMessageRepositoryTest extends RepoTest {
     @Test
     void save() {
         manager.begin();
-        repos.save(bobToChuck2);
+        repos.save(notSavedBobToChuck2);
         manager.commit();
         List<MessageEntity> all = repos.getAll(bob);
-        assertEquals(List.of(bobToAlice1, bobToChuck1, bobToChuck2), all);
+        assertEquals(List.of(bobToAlice1, bobToChuck1, notSavedBobToChuck2), all);
     }
 }

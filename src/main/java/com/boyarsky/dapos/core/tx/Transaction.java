@@ -38,7 +38,7 @@ public class Transaction {
     }
 
     public <T extends AbstractAttachment> void putAttachment(T attachment) {
-        attachments.put(attachment.getClass(), attachment);
+        attachments.putIfAbsent(attachment.getClass(), attachment);
     }
 
     public Transaction(byte[] rawTransaction) {

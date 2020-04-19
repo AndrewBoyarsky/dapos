@@ -1,7 +1,12 @@
 package com.boyarsky.dapos.core.tx.type;
 
+import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.AttachmentTypedComponent;
+import com.boyarsky.dapos.core.tx.type.attachment.IndependentAttachmentType;
 import com.boyarsky.dapos.core.tx.type.fee.GasCalculator;
 import com.boyarsky.dapos.core.tx.type.handler.TransactionTypeHandler;
+import com.boyarsky.dapos.core.tx.type.parser.AttachmentTxTypeParser;
+import com.boyarsky.dapos.core.tx.type.parser.IndependentAttachmentParser;
 import com.boyarsky.dapos.core.tx.type.validator.TransactionTypeValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -18,12 +23,20 @@ public class BlockchainLogicVerifier {
     private final List<GasCalculator> gasCalculatorList;
     private final List<TransactionTypeValidator> validators;
     private final List<TransactionTypeHandler> handlers;
+    private final List<AttachmentTxTypeParser<? extends AbstractAttachment>> txTypeAttachmentParsers;
+    private final List<IndependentAttachmentParser<? extends AbstractAttachment>> independentAttachmentParsers;
 
     @Autowired
-    public BlockchainLogicVerifier(List<GasCalculator> gasCalculatorList, List<TransactionTypeValidator> validators, List<TransactionTypeHandler> handlers) {
+    public BlockchainLogicVerifier(List<GasCalculator> gasCalculatorList,
+                                   List<TransactionTypeValidator> validators,
+                                   List<TransactionTypeHandler> handlers,
+                                   List<AttachmentTxTypeParser<? extends AbstractAttachment>> txTypeAttachmentParsers,
+                                   List<IndependentAttachmentParser<? extends AbstractAttachment>> independentAttachmentParsers) {
         this.gasCalculatorList = gasCalculatorList;
         this.validators = validators;
         this.handlers = handlers;
+        this.txTypeAttachmentParsers = txTypeAttachmentParsers;
+        this.independentAttachmentParsers = independentAttachmentParsers;
     }
 
     @PostConstruct
@@ -31,23 +44,31 @@ public class BlockchainLogicVerifier {
         validate(gasCalculatorList, "Gas calculator");
         validate(validators, "Tx validator");
         validate(handlers, "Tx handler");
+        validate(txTypeAttachmentParsers, "Tx attachment parser");
+        validate(independentAttachmentParsers, "Independent Tx attachment parser", AttachmentTypedComponent::type, IndependentAttachmentType.values());
     }
 
-    private <T extends TypedComponent> void validate(List<T> entities, String name) {
-        Map<TxType, List<T>> map = entities.stream().collect(Collectors.groupingBy(T::type));
+    private <T> void validate(List<T> entities, String name, Function<T, Enum<?>> en, Enum<?>[] values) {
+
+        Map<Enum<?>, List<T>> map = entities.stream().collect(Collectors.groupingBy(en));
         map.forEach((t, l) -> {
             if (l.size() > 1) {
-                throw new RuntimeException(l.size() + " " + name + "s registered for transaction of type " + t + " :" + l);
+                throw new RuntimeException(l.size() + " " + name + "s registered for type " + t + " :" + l);
             }
         });
-        for (TxType value : TxType.values()) {
+        for (Enum<?> value : values) {
             if (map.get(value) == null) {
                 throw new RuntimeException("No " + name + " defined for type " + value);
             }
         }
     }
 
-    private <T extends TypedComponent> Map<TxType, T> getEntityMap(List<T> entities) {
+    private <T extends TxTypedComponent> void validate(List<T> entities, String name) {
+        validate(entities, name, T::type, TxType.values());
+    }
+
+
+    private <T extends TxTypedComponent> Map<TxType, T> getEntityMap(List<T> entities) {
         return entities.stream().collect(Collectors.toMap(T::type, Function.identity()));
     }
 
@@ -64,5 +85,15 @@ public class BlockchainLogicVerifier {
     @Bean
     Map<TxType, TransactionTypeValidator> validators() {
         return getEntityMap(validators);
+    }
+
+    @Bean
+    Map<TxType, AttachmentTxTypeParser<? extends AbstractAttachment>> txTypeParsers() {
+        return getEntityMap(txTypeAttachmentParsers);
+    }
+
+    @Bean
+    Map<IndependentAttachmentType, IndependentAttachmentParser<? extends AbstractAttachment>> independentAttachmentParsers() {
+        return independentAttachmentParsers.stream().collect(Collectors.toMap(IndependentAttachmentParser::type, Function.identity()));
     }
 }

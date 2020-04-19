@@ -40,18 +40,21 @@ public class XodusMessageRepository implements MessageRepository {
         EntityIterable all = context.getTx()
                 .find(entityType, "sender", new ComparableByteArray(sender.getAddressBytes()))
                 .minus(context.getTx().findWithProp(entityType, "recipient"));
-        return CollectionUtils.toList(all, this::map);
+        EntityIterable sorted = context.getTx().sort(entityType, "height", all, false);
+        return CollectionUtils.toList(sorted, this::map);
     }
 
 
     @Override
     @Transactional(readonly = true)
     public List<MessageEntity> getWith(AccountId sender, AccountId recipient) {
-        EntityIterable all = context.getTx()
+        EntityIterable wholeChat = context.getTx()
                 .find(entityType, "sender", new ComparableByteArray(sender.getAddressBytes()))
-                .intersect(context.getTx().find(entityType, "recipient", new ComparableByteArray(recipient.getAddressBytes())));
-
-        return CollectionUtils.toList(all, this::map);
+                .intersect(context.getTx().find(entityType, "recipient", new ComparableByteArray(recipient.getAddressBytes())))
+                .union(context.getTx().find(entityType, "sender", new ComparableByteArray(recipient.getAddressBytes()))
+                        .intersect(context.getTx().find(entityType, "recipient", new ComparableByteArray(sender.getAddressBytes()))));
+        EntityIterable sorted = context.getTx().sort(entityType, "height", wholeChat, false);
+        return CollectionUtils.toList(sorted, this::map);
     }
 
     @Override

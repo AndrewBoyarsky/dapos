@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx;
 
-import com.boyarsky.dapos.core.tx.type.GasCalculationException;
 import com.boyarsky.dapos.core.tx.type.TxType;
+import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
 import com.boyarsky.dapos.core.tx.type.fee.GasCalculator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
