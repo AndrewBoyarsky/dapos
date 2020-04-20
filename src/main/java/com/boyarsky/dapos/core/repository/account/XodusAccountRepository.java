@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.repository.account;
 
 import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.repository.ComparableByteArray;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;
@@ -9,6 +10,7 @@ import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
 import jetbrains.exodus.entitystore.EntityIterable;
 import jetbrains.exodus.entitystore.StoreTransaction;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ public class XodusAccountRepository implements AccountRepository {
     private static final String entityType = "account";
     private final XodusRepoContext context;
 
+    @Autowired
     public XodusAccountRepository(XodusRepoContext context) {
         this.context = context;
     }
@@ -45,12 +48,12 @@ public class XodusAccountRepository implements AccountRepository {
         Entity entity;
         if (account.getDbId() == null) {
             entity = tx.newEntity(entityType);
-            entity.setProperty("id", Convert.toHexString(account.getCryptoId().getAddressBytes()));
+            entity.setProperty("id", new ComparableByteArray(account.getCryptoId().getAddressBytes()));
         } else {
             entity = tx.getEntity(account.getDbId());
         }
         entity.setProperty("balance", account.getBalance());
-        entity.setProperty("publicKey", Convert.toHexString(account.getPublicKey()));
+        entity.setProperty("publicKey", new ComparableByteArray(account.getPublicKey()));
         entity.setProperty("type", account.getType().getCode());
         entity.setProperty("height", account.getHeight());
     }
@@ -59,8 +62,8 @@ public class XodusAccountRepository implements AccountRepository {
         Account acc = new Account();
         acc.setDbId(entity.getId());
         acc.setBalance((Long) entity.getProperty("balance"));
-        acc.setCryptoId(AccountId.fromBytes(Convert.parseHexString((String) entity.getProperty("id"))));
-        acc.setPublicKey(Convert.parseHexString((String) entity.getProperty("publicKey")));
+        acc.setCryptoId(AccountId.fromBytes(((ComparableByteArray) entity.getProperty("id")).getData()));
+        acc.setPublicKey(((ComparableByteArray) entity.getProperty("publicKey")).getData());
         acc.setType(Account.Type.fromCode((Byte) entity.getProperty("type")));
         acc.setHeight((Long) entity.getProperty("height"));
         return acc;

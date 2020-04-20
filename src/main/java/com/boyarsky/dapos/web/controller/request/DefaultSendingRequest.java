@@ -15,4 +15,6 @@ public class DefaultSendingRequest extends Credentials {
     private AccountId recipient;
     @PositiveOrZero
     private long amount = 0;
+
+    private long feeProvider = 0;
 }

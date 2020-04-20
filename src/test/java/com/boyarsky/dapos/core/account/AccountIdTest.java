@@ -66,8 +66,7 @@ class AccountIdTest {
         assertEquals(plain, deserialized);
 
         buff.flip();
-        byte[] rawBytes = new byte[size - 1];
-        buff.get();
+        byte[] rawBytes = new byte[size];
         buff.get(rawBytes);
         assertArrayEquals(plain.getAddressBytes(), rawBytes);
         assertEquals(plain, AccountId.fromBytes(rawBytes));

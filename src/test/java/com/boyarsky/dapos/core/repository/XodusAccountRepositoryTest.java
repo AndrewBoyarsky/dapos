@@ -9,7 +9,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 
-import static com.boyarsky.dapos.AccountUtil.generateAcc;
+import static com.boyarsky.dapos.AccountUtil.generateEd25Acc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -22,7 +22,7 @@ public class XodusAccountRepositoryTest extends RepoTest {
     @Test
     void saveAndFind() {
         manager.begin();
-        Account accToSave = generateAcc();
+        Account accToSave = generateEd25Acc();
         repository.save(accToSave);
         Account foundAccount = repository.find(accToSave.getCryptoId());
         assertEquals(accToSave, foundAccount);
@@ -39,9 +39,9 @@ public class XodusAccountRepositoryTest extends RepoTest {
 
     @Test
     void getAll() {
-        Account acc1 = generateAcc();
-        Account acc2 = generateAcc();
-        Account acc3 = generateAcc();
+        Account acc1 = generateEd25Acc();
+        Account acc2 = generateEd25Acc();
+        Account acc3 = generateEd25Acc();
         manager.begin();
         repository.save(acc1);
         repository.save(acc2);
@@ -54,7 +54,7 @@ public class XodusAccountRepositoryTest extends RepoTest {
     @Test
     void delete() {
         manager.begin();
-        assertThrows(UnsupportedOperationException.class, () -> repository.delete(generateAcc()));
+        assertThrows(UnsupportedOperationException.class, () -> repository.delete(generateEd25Acc()));
         manager.rollback();
     }
 }

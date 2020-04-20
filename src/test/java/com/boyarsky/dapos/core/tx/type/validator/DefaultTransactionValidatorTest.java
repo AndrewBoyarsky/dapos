@@ -7,6 +7,7 @@ import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.PaymentAttachment;
 import com.boyarsky.dapos.core.tx.type.validator.impl.DefaultTransactionValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,7 @@ class DefaultTransactionValidatorTest {
     @Test
     void validate_correctTx() {
         Wallet wallet = CryptoUtils.generateBitcoinWallet();
-        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, wallet.getAccount(), wallet.getKeyPair(), 0, 100)
+        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 0, 100)
                 .amount(100)
                 .build(true);
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(tx.getSender());
@@ -43,7 +44,7 @@ class DefaultTransactionValidatorTest {
     @Test
     void validate_noSenderAccount() {
         Wallet wallet = CryptoUtils.generateBitcoinWallet();
-        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, wallet.getAccount(), wallet.getKeyPair(), 0, 100)
+        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 0, 100)
                 .amount(100)
                 .build(true);
 
@@ -55,7 +56,7 @@ class DefaultTransactionValidatorTest {
     @Test
     void validate_txWithPubKey_alreadyAssignedAccount() {
         Wallet wallet = CryptoUtils.generateBitcoinWallet();
-        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, wallet.getAccount(), wallet.getKeyPair(), 0, 100).build(true);
+        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 0, 100).build(true);
         doReturn(new Account(wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), 100, Account.Type.ORDINARY)).when(service).get(tx.getSender());
 
         TxNotValidException ex = assertThrows(TxNotValidException.class, () -> validator.validate(tx));
@@ -66,7 +67,7 @@ class DefaultTransactionValidatorTest {
     @Test
     void validate_txWithoutPubKey_newAccount() {
         Wallet wallet = CryptoUtils.generateBitcoinWallet();
-        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, wallet.getAccount(), wallet.getKeyPair(), 0, 100).build(false);
+        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 0, 100).build(false);
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(tx.getSender());
 
         TxNotValidException exception = assertThrows(TxNotValidException.class, () -> validator.validate(tx));
@@ -112,7 +113,7 @@ class DefaultTransactionValidatorTest {
     @Test
     void validate_insufficient_balance() {
         Wallet wallet = CryptoUtils.generateEd25Wallet();
-        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, wallet.getAccount(), wallet.getKeyPair(), 0, 2)
+        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 0, 2)
                 .amount(100)
                 .build(false);
         doReturn(new Account(wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), 99, Account.Type.ORDINARY)).when(service).get(tx.getSender());

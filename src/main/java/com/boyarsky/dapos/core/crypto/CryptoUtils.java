@@ -150,9 +150,8 @@ public class CryptoUtils {
     public static String validatorAddress(byte[] publicKey) {
         MessageDigest sha256 = sha256();
         byte[] publicKeyHash = sha256.digest(publicKey);
-        byte[] address = new byte[21];
-        System.arraycopy(publicKeyHash, 0, address, 1, 20);
-        address[0] = 0x11;
+        byte[] address = new byte[20];
+        System.arraycopy(publicKeyHash, 0, address, 0, 20);
         return encodeValidatorAddress(address);
     }
 

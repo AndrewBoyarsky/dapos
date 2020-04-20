@@ -19,20 +19,17 @@ public class FeeConfig implements ByteSerializable {
     private int maxAllowedOperations;
     private long maxAllowedTotalFee;
     private Set<TxType> allowedTxs = new HashSet<>();
-    private boolean allowedAllTxs;
 
     @Override
     public int size() {
         return ByteSerializable.longSize(maxAllowedFee, defaultValue) + ByteSerializable.intSize(maxAllowedOperations, defaultValue)
-                + ByteSerializable.longSize(maxAllowedTotalFee, defaultValue) + (allowedAllTxs ? 1 : 2 + allowedTxs.size());
+                + ByteSerializable.longSize(maxAllowedTotalFee, defaultValue) + 1 + allowedTxs.size();
     }
 
     public FeeConfig(ByteBuffer buffer) {
         maxAllowedFee = ByteSerializable.getDefaultLong(buffer, defaultValue);
         maxAllowedOperations = ByteSerializable.getDefaultInt(buffer, defaultValue);
         maxAllowedTotalFee = ByteSerializable.getDefaultLong(buffer, defaultValue);
-        byte b = buffer.get();
-        allowedAllTxs = b == 1;
         byte allowedSize = buffer.get();
         for (int i = 0; i < allowedSize; i++) {
             allowedTxs.add(TxType.ofCode(buffer.get()));
@@ -44,14 +41,9 @@ public class FeeConfig implements ByteSerializable {
         ByteSerializable.putDefaultLong(buffer, maxAllowedFee, defaultValue);
         ByteSerializable.putDefaultInt(buffer, maxAllowedOperations, defaultValue);
         ByteSerializable.putDefaultLong(buffer, maxAllowedTotalFee, defaultValue);
-        if (allowedAllTxs) {
-            buffer.put((byte) 1);
-        } else {
-            buffer.put((byte) 0);
-            buffer.put((byte) allowedTxs.size());
-            for (TxType allowedTx : allowedTxs) {
-                buffer.put(allowedTx.getCode());
-            }
+        buffer.put((byte) allowedTxs.size());
+        for (TxType allowedTx : allowedTxs) {
+            buffer.put(allowedTx.getCode());
         }
     }
 }

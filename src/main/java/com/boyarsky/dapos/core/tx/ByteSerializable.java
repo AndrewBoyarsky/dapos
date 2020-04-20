@@ -41,7 +41,7 @@ public interface ByteSerializable {
     }
 
     static int intSize(int l, byte defaultValue) {
-        return l == defaultValue ? 1 : 4;
+        return l == defaultValue ? 1 : 5;
     }
 
     static int getDefaultInt(ByteBuffer buffer, int defaultValue) {
@@ -56,7 +56,7 @@ public interface ByteSerializable {
             buffer.put(defaultValue);
         } else {
             buffer.put(++defaultValue);
-            buffer.putLong(l);
+            buffer.putInt(l);
         }
     }
 }

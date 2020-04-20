@@ -1,6 +1,7 @@
 package com.boyarsky.dapos.core.tx.type.attachment;
 
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 
 public abstract class AbstractAttachment implements Attachment {
@@ -23,6 +24,19 @@ public abstract class AbstractAttachment implements Attachment {
     public void putBytes(ByteBuffer buffer) {
         buffer.put(version);
         putMyBytes(buffer);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AbstractAttachment that = (AbstractAttachment) o;
+        return version == that.version;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(version);
     }
 
     public abstract void putMyBytes(ByteBuffer buffer);

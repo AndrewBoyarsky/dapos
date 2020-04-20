@@ -7,7 +7,7 @@ import com.boyarsky.dapos.core.model.keystore.Wallet;
 import java.util.Random;
 
 public class AccountUtil {
-    public static Account generateAcc() {
+    public static Account generateEd25Acc() {
         Random random = new Random();
         Wallet wallet = CryptoUtils.generateEd25Wallet();
         Account acc = new Account(wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), random.nextInt(1000), Account.Type.ORDINARY);

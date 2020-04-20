@@ -2,7 +2,6 @@ package com.boyarsky.dapos.core.model;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.tx.ByteSerializable;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,12 +12,19 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class PartyFeeConfig implements ByteSerializable {
     private boolean whitelistAll;
     private FeeConfig rootConfig;
     private Map<FeeConfig, List<AccountId>> configs = new LinkedHashMap<>();
+
+    public PartyFeeConfig(boolean whitelistAll, FeeConfig rootConfig, Map<FeeConfig, List<AccountId>> configs) {
+        this.whitelistAll = whitelistAll;
+        this.rootConfig = rootConfig;
+        if (configs != null) {
+            this.configs.putAll(configs);
+        }
+    }
 
     public PartyFeeConfig(ByteBuffer buffer) {
         whitelistAll = buffer.get() == 1;
@@ -43,19 +49,28 @@ public class PartyFeeConfig implements ByteSerializable {
 
     @Override
     public int size() {
-        return 1 +
-                (whitelistAll ? 1 : 0) +
-                (rootConfig == null ? 0 : rootConfig.size()) +
-                (whitelistAll ? 0 : 2 +
-                        configs.entrySet()
-                                .stream()
-                                .mapToInt((e) ->
-                                        e.getKey()
-                                                .size() + 2 + e.getValue()
-                                                .stream()
-                                                .mapToInt(AccountId::size)
-                                                .sum())
-                                .sum());
+
+        int size = 1;
+        if (whitelistAll) {
+            size++;
+            if (rootConfig != null) {
+                size += rootConfig.size();
+            }
+        } else {
+            size += 2;
+            int computedSize = configs.entrySet()
+                    .stream()
+                    .mapToInt((e) -> e.getKey()
+                            .size() + 2 + e.getValue()
+                            .stream()
+                            .mapToInt(AccountId::size)
+                            .sum())
+                    .sum();
+            size += computedSize;
+        }
+
+
+        return size;
     }
 
     @Override

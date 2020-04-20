@@ -17,6 +17,6 @@ public class PaymentAttachmentParser implements AttachmentTxTypeParser<PaymentAt
 
     @Override
     public PaymentAttachment parseAttachment(ByteBuffer buffer) {
-        return new PaymentAttachment((byte) 0);
+        return new PaymentAttachment();
     }
 }
