@@ -29,6 +29,13 @@ public class ErrorCodes {
     public static final ErrorCode RECIPIENT_DB_MISSING = new ErrorCode(MESSAGE_VALIDATION, 43);
     public static final ErrorCode RECIPIENT_PK_MISSING = new ErrorCode(MESSAGE_VALIDATION, 44);
 
+    public static final String FEE_PROV_VALIDATION = "Fee Provider";
+    public static final ErrorCode RECIPIENT_EXIST = new ErrorCode(FEE_PROV_VALIDATION, 21);
+    public static final ErrorCode ZERO_BALANCE = new ErrorCode(FEE_PROV_VALIDATION, 22);
+    public static final ErrorCode DUPLICATE_FEE_ACCOUNT = new ErrorCode(FEE_PROV_VALIDATION, 23);
+    public static final ErrorCode TOTAL_FEE_LESS_OP_FEE = new ErrorCode(FEE_PROV_VALIDATION, 24);
+
+
     public static final String TX_HANDLING = "Transaction Handling";
     public static final ErrorCode HANDLING_ERROR = new ErrorCode(TX_HANDLING, 127);
     public static final ErrorCode UNKNOWN_HANDLING_ERROR = new ErrorCode(TX_HANDLING, 128);

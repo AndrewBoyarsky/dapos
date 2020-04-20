@@ -4,12 +4,14 @@ import com.boyarsky.dapos.core.model.PartyFeeConfig;
 import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.ToString;
 
 import java.nio.ByteBuffer;
 
 @EqualsAndHashCode(callSuper = true)
 @ToString
+@Getter
 public class FeeProviderAttachment extends AbstractAttachment {
     private final State state;
     private final PartyFeeConfig fromFeeConfig;

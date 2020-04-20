@@ -26,7 +26,7 @@ public class DefaultTransactionHandler implements TransactionTypeHandler {
     public void handle(Transaction tx) {
         AccountId sender = tx.getSender();
         accountService.assignPublicKey(sender, tx.getSenderPublicKey());
-        if (tx.getRecipient() != null && tx.getAmount() > 0) {
+        if (tx.getAmount() > 0) {
             accountService.transferMoney(sender, tx.getRecipient(), tx.getAmount());
         }
         accountService.transferMoney(sender, null, tx.getFee());
