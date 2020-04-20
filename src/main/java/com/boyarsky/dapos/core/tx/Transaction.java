@@ -20,7 +20,8 @@ import java.util.Map;
 @ToString
 @Getter
 public class Transaction {
-    private String rawTransaction;
+   @ToString.Exclude
+   private String rawTransaction;
     private byte version;
     private long txId;
     private TxType type;
@@ -256,20 +257,20 @@ public class Transaction {
             ByteBuffer buffer = ByteBuffer.allocate(attachmentSize + data.length);
             rootAttachment.putBytes(buffer);
             byte attachmenPresentByte = 0;
-            Attachment noFeeAttachment = attachments.get(NoFeeAttachment.class);
-            if (noFeeAttachment != null) {
-                attachmenPresentByte |= 1;
-            }
             Attachment messageAttachment = attachments.get(MessageAttachment.class);
             if (messageAttachment != null) {
+                attachmenPresentByte |= 1;
+            }
+            Attachment noFeeAttachment = attachments.get(NoFeeAttachment.class);
+            if (noFeeAttachment != null) {
                 attachmenPresentByte |= 2;
             }
             buffer.put(attachmenPresentByte);
-            if (noFeeAttachment != null) {
-                noFeeAttachment.putBytes(buffer);
-            }
             if (messageAttachment != null) {
                 messageAttachment.putBytes(buffer);
+            }
+            if (noFeeAttachment != null) {
+                noFeeAttachment.putBytes(buffer);
             }
             buffer.put(data);
             byte[] dataArray = buffer.array();
