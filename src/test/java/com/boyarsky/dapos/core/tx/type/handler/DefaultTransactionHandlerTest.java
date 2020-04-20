@@ -25,7 +25,7 @@ class DefaultTransactionHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new DefaultTransactionHandler(service);
+        handler = new DefaultTransactionHandler(service, null, null);
     }
 
     @Test
@@ -40,13 +40,14 @@ class DefaultTransactionHandlerTest {
     }
 
     @Test
-    void handle_noTransferNoRecipient() {
+    void handle_burnMoneyNoRecipient() {
         Transaction tx = new Transaction((byte) 1, TxType.SET_FEE_PROVIDER, senderId, new byte[32], null, new byte[0], 1, 2, 5, null);
         tx.setGasUsed(5);
         handler.handle(tx);
 
         verify(service).assignPublicKey(senderId, new byte[32]);
         verify(service).transferMoney(senderId, null, 10);
+        verify(service).transferMoney(senderId, null, 1);
         verifyNoMoreInteractions(service);
     }
 
