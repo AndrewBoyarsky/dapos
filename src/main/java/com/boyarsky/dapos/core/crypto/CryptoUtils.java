@@ -385,7 +385,7 @@ public class CryptoUtils {
         return ed25519.equalsIgnoreCase(crypto);
     }
 
-    public static AccountId fromPublicKey(byte[] pubKey, boolean isBitcoin) {
+    public static AccountId fromPublicKey(byte[] pubKey, boolean isBitcoin, boolean isEd) {
         if (pubKey.length == 33) {
             if (isBitcoin) {
                 return new AccountId(bitcoinAddress(pubKey));
@@ -393,7 +393,11 @@ public class CryptoUtils {
                 return new AccountId(ethAddress(pubKey));
             }
         } else if (pubKey.length == 32) {
-            return new AccountId(ed25Address(pubKey));
+            if (isEd) {
+                return new AccountId(ed25Address(pubKey));
+            } else {
+                return new AccountId(validatorAddress(pubKey));
+            }
         } else {
             throw new RuntimeException("Invalid pub key");
         }

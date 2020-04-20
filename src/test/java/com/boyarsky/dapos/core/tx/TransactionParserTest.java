@@ -42,4 +42,17 @@ class TransactionParserTest {
         assertEquals(encryptedData, transaction.getAttachment(MessageAttachment.class).getEncryptedData());
         assertNotNull(transaction.getAttachment(PaymentAttachment.class));
     }
+
+    @Test
+    void parsePlainPaymentTx() {
+        Wallet wallet = CryptoUtils.generateValidatorWallet();
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 1, 10)
+                .recipient(wallet.getAccount())
+                .amount(10);
+        Transaction tx = builder.build(true);
+        Transaction transaction = transactionParser.parseTx(tx.bytes(false));
+        assertEquals(tx.getTxId(), transaction.getTxId());
+        assertEquals(wallet.getAccount(), transaction.getSender());
+        assertNotNull(transaction.getAttachment(PaymentAttachment.class));
+    }
 }

@@ -52,12 +52,12 @@ public class Transaction {
         type = TxType.ofCode(buffer.get());
         if (isFirst()) {
             int pubSize = 33; // secp compressed
-            if (isEd()) {
+            if (isEd() || isVal()) { //ed25519 compressed
                 pubSize = 32;
             }
             senderPublicKey = new byte[pubSize];
             buffer.get(senderPublicKey);
-            sender = CryptoUtils.fromPublicKey(senderPublicKey, isBitcoin());
+            sender = CryptoUtils.fromPublicKey(senderPublicKey, isBitcoin(), isEd());
         } else {
             sender = AccountId.fromBytes(buffer);
         }
@@ -179,6 +179,10 @@ public class Transaction {
         return (version & 2) == 2;
     }
 
+    public boolean isVal() {
+        return (version & 8) == 8;
+    }
+
     public boolean isFirst() {
         return (version & 1) == 1;
     }
@@ -247,10 +251,13 @@ public class Transaction {
             if (sender.isEd25()) {
                 version |= 2;
             }
-            if (first && sender.isBitcoin()) {
+            if (sender.isBitcoin()) {
                 version |= 4;
             }
-            int attachmentSize = 1 + rootAttachment.size();
+            if (sender.isVal()) {
+                version |= 8;
+            }
+            int attachmentSize = rootAttachment.size() + (attachments.isEmpty() ? 0 : 1);
             for (Map.Entry<Class, Attachment> entry : attachments.entrySet()) {
                 attachmentSize += entry.getValue().size();
             }
@@ -265,7 +272,9 @@ public class Transaction {
             if (noFeeAttachment != null) {
                 attachmenPresentByte |= 2;
             }
-            buffer.put(attachmenPresentByte);
+            if (attachmenPresentByte != 0) {
+                buffer.put(attachmenPresentByte);
+            }
             if (messageAttachment != null) {
                 messageAttachment.putBytes(buffer);
             }
