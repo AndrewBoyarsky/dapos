@@ -57,13 +57,13 @@ public class TransactionController {
     @Autowired
     NodeProxyClient proxyClient;
 
-    @PostMapping
+    @PostMapping("/payments")
     public ResponseEntity<?> sendMoney(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException {
         AccountWithWallet accountWithWallet = parseAccount(request);
         return sendTransaction(new TxSendRequest(request, accountWithWallet, TxType.PAYMENT, new PaymentAttachment(), 1));
     }
 
-    @PostMapping
+    @PostMapping("/messages")
     public ResponseEntity<?> sendMessage(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException {
         AccountWithWallet accountWithWallet = parseAccount(request);
         MessageWithResponse messageWithError = createMessageAttachment(request, accountWithWallet.wallet);
@@ -107,7 +107,7 @@ public class TransactionController {
         EncryptedData encryptedData;
         PrivateKey privateKey = wallet.getKeyPair().getPrivate();
         if (CryptoUtils.isEd25(request.getAccount())) {
-            encryptedData = CryptoUtils.encryptX25519(privateKey, recipientPublicKey, bytesToEncrypt);
+            encryptedData = CryptoUtils.encryptX25519WithEd25519(privateKey, recipientPublicKey, bytesToEncrypt);
         } else {
             encryptedData = CryptoUtils.encryptECDH(privateKey, recipientPublicKey, bytesToEncrypt);
         }

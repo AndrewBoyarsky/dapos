@@ -40,6 +40,12 @@ public class DbConfig {
         store.executeInExclusiveTransaction(txn -> {
             store.registerCustomPropertyType(txn, ComparableByteArray.class, new ComparableByteArrayBinding());
         });
+        store.executeInTransaction(txn -> {
+            store.registerCustomPropertyType(txn, ComparableByteArray.class, new ComparableByteArrayBinding());
+        });
+        store.executeInReadonlyTransaction(txn -> {
+            store.registerCustomPropertyType(txn, ComparableByteArray.class, new ComparableByteArrayBinding());
+        });
 
         return store;
     }

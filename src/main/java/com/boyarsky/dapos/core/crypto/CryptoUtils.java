@@ -437,10 +437,15 @@ public class CryptoUtils {
         return encryptWithKeyAgreement("X25519", privateKey, publicKey, message);
     }
 
+    public static EncryptedData encryptX25519WithEd25519(PrivateKey privateKey, PublicKey publicKey, byte[] message) {
+        return encryptWithKeyAgreement("X25519", toX25519(privateKey), toX25519(publicKey), message);
+    }
+
 
     public static byte[] decryptECDH(PrivateKey privKey, PublicKey pubKey, EncryptedData data) {
         return decryptWithKeyAgreement("ECDH", privKey, pubKey, data);
     }
+
     public static byte[] decryptX25519(PrivateKey privKey, PublicKey pubKey, EncryptedData data) {
         return decryptWithKeyAgreement("X25519", privKey, pubKey, data);
     }

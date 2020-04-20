@@ -1,6 +1,6 @@
 package com.boyarsky.dapos.core.tx.type;
 
-import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.Attachment;
 import com.boyarsky.dapos.core.tx.type.attachment.AttachmentTypedComponent;
 import com.boyarsky.dapos.core.tx.type.attachment.IndependentAttachmentType;
 import com.boyarsky.dapos.core.tx.type.fee.GasCalculator;
@@ -23,15 +23,15 @@ public class BlockchainLogicVerifier {
     private final List<GasCalculator> gasCalculatorList;
     private final List<TransactionTypeValidator> validators;
     private final List<TransactionTypeHandler> handlers;
-    private final List<AttachmentTxTypeParser<? extends AbstractAttachment>> txTypeAttachmentParsers;
-    private final List<IndependentAttachmentParser<? extends AbstractAttachment>> independentAttachmentParsers;
+    private final List<AttachmentTxTypeParser<? extends Attachment>> txTypeAttachmentParsers;
+    private final List<IndependentAttachmentParser<? extends Attachment>> independentAttachmentParsers;
 
     @Autowired
     public BlockchainLogicVerifier(List<GasCalculator> gasCalculatorList,
                                    List<TransactionTypeValidator> validators,
                                    List<TransactionTypeHandler> handlers,
-                                   List<AttachmentTxTypeParser<? extends AbstractAttachment>> txTypeAttachmentParsers,
-                                   List<IndependentAttachmentParser<? extends AbstractAttachment>> independentAttachmentParsers) {
+                                   List<AttachmentTxTypeParser<? extends Attachment>> txTypeAttachmentParsers,
+                                   List<IndependentAttachmentParser<? extends Attachment>> independentAttachmentParsers) {
         this.gasCalculatorList = gasCalculatorList;
         this.validators = validators;
         this.handlers = handlers;
@@ -88,12 +88,12 @@ public class BlockchainLogicVerifier {
     }
 
     @Bean
-    Map<TxType, AttachmentTxTypeParser<? extends AbstractAttachment>> txTypeParsers() {
+    Map<TxType, AttachmentTxTypeParser<? extends Attachment>> txTypeParsers() {
         return getEntityMap(txTypeAttachmentParsers);
     }
 
     @Bean
-    Map<IndependentAttachmentType, IndependentAttachmentParser<? extends AbstractAttachment>> independentAttachmentParsers() {
+    Map<IndependentAttachmentType, IndependentAttachmentParser<? extends Attachment>> independentAttachmentParsers() {
         return independentAttachmentParsers.stream().collect(Collectors.toMap(IndependentAttachmentParser::type, Function.identity()));
     }
 }

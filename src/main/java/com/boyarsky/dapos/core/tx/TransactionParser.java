@@ -18,9 +18,9 @@ import java.util.Map;
 @Component
 public class TransactionParser {
     private final Map<TxType, AttachmentTxTypeParser<? extends Attachment>> txTypeParsers = new HashMap<>();
-    private final Map<IndependentAttachmentType, IndependentAttachmentParser<? extends AbstractAttachment>> indAttachmentParsers = new HashMap<>();
+    private final Map<IndependentAttachmentType, IndependentAttachmentParser<? extends Attachment>> indAttachmentParsers = new HashMap<>();
 
-    public TransactionParser(Map<TxType, AttachmentTxTypeParser<? extends Attachment>> txTypeParsers, Map<IndependentAttachmentType, IndependentAttachmentParser<? extends AbstractAttachment>> indAttachmentParsers) {
+    public TransactionParser(Map<TxType, AttachmentTxTypeParser<? extends Attachment>> txTypeParsers, Map<IndependentAttachmentType, IndependentAttachmentParser<? extends Attachment>> indAttachmentParsers) {
         this.txTypeParsers.putAll(txTypeParsers);
         this.indAttachmentParsers.putAll(indAttachmentParsers);
     }
