@@ -6,7 +6,6 @@ import com.boyarsky.dapos.core.repository.ComparableByteArray;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;
-import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
 import jetbrains.exodus.entitystore.EntityIterable;
 import jetbrains.exodus.entitystore.StoreTransaction;
@@ -38,7 +37,7 @@ public class XodusAccountRepository implements AccountRepository {
     }
 
     private Entity find(AccountId accountId, StoreTransaction txn) {
-        return CollectionUtils.requireAtMostOne(txn.find(entityType, "id", Convert.toHexString(accountId.getAddressBytes())));
+        return CollectionUtils.requireAtMostOne(txn.find(entityType, "id", new ComparableByteArray(accountId.getAddressBytes())));
     }
 
     @Override

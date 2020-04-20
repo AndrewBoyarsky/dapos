@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AccountIdTest {
     AccountId encodedEd25 = new AccountId("dap25" + hexBytes(16));
     AccountId plainEd25 = new AccountId("25" + hexBytes(16));
-    AccountId encodedValidator = new AccountId("davnn11" + hexBytes(20));
-    AccountId plainValidator = new AccountId("nn11" + hexBytes(20));
+    AccountId encodedValidator = new AccountId("davnn" + hexBytes(20));
+    AccountId plainValidator = new AccountId("nn" + hexBytes(20));
     AccountId encodedEth = new AccountId("det0x" + hexBytes(20));
     AccountId plainEth = new AccountId("0x" + hexBytes(20));
     AccountId encodedBtc = new AccountId("dbt" + bitcoin());
@@ -49,7 +49,7 @@ class AccountIdTest {
     @Test
     void serialize() {
         serialize(encodedEd25, plainEd25, 17);
-        serialize(encodedValidator, plainValidator, 22);
+        serialize(encodedValidator, plainValidator, 21);
         serialize(encodedBtc, plainBtc, 26);
         serialize(encodedEth, plainEth, 21);
     }
