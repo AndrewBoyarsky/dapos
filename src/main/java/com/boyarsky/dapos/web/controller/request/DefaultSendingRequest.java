@@ -17,4 +17,7 @@ public class DefaultSendingRequest extends Credentials {
     private long amount = 0;
 
     private long feeProvider = 0;
+
+    String data;
+    boolean isToSelf;
 }
