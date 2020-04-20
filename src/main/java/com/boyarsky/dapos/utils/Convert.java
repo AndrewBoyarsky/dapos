@@ -1,5 +1,7 @@
 package com.boyarsky.dapos.utils;
 
+import com.boyarsky.dapos.core.tx.ByteSerializable;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -73,20 +75,33 @@ public final class Convert {
     public static long parseLong(String s) {
         if (s == null) {
             return 0;
-        } else if (s.charAt(0)== '-') {
+        } else if (s.charAt(0) == '-') {
             return Long.parseLong(s);
         } else {
             return Long.parseUnsignedLong(s);
         }
     }
 
+    public static byte[] toBytes(ByteSerializable serializable) {
+        ByteBuffer buffer = ByteBuffer.allocate(serializable.size());
+        serializable.putBytes(buffer);
+        return buffer.array();
+    }
+
+    public static ByteBuffer toBuff(byte[] bytes) {
+        ByteBuffer buffer = ByteBuffer.allocate(bytes.length);
+        buffer.put(bytes);
+        buffer.flip();
+        return buffer;
+    }
+
     public static long parseLong(Object o) {
         if (o == null) {
             return 0;
         } else if (o instanceof Long) {
-            return ((Long)o);
+            return ((Long) o);
         } else if (o instanceof String) {
-            return Long.parseLong((String)o);
+            return Long.parseLong((String) o);
         } else {
             throw new IllegalArgumentException("Not a long: " + o);
         }

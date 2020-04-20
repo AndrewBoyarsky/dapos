@@ -3,11 +3,14 @@ package com.boyarsky.dapos.core.model;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+@EqualsAndHashCode(callSuper = true)
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FeeProvider {
+public class FeeProvider extends BlockchainEntity {
     private long id;
     private AccountId account;
     private long balance;
