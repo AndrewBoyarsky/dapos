@@ -1,4 +1,4 @@
-package com.boyarsky.dapos.core.model;
+package com.boyarsky.dapos.core.model.fee;
 
 import com.boyarsky.dapos.core.tx.ByteSerializable;
 import com.boyarsky.dapos.core.tx.type.TxType;
@@ -34,6 +34,14 @@ public class FeeConfig implements ByteSerializable {
         for (int i = 0; i < allowedSize; i++) {
             allowedTxs.add(TxType.ofCode(buffer.get()));
         }
+    }
+
+    public boolean allTxsAllowed() {
+        return allowedTxs.isEmpty();
+    }
+
+    public boolean allowed(TxType txType) {
+        return allTxsAllowed() || allowedTxs.contains(txType);
     }
 
     @Override

@@ -1,11 +1,17 @@
 package com.boyarsky.dapos.core.tx.type.attachment.impl;
 
 import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.nio.ByteBuffer;
 
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@ToString
 public class NoFeeAttachment extends AbstractAttachment {
-    private long payer;
+    private final long payer;
 
     public NoFeeAttachment(ByteBuffer buffer) {
         super(buffer);

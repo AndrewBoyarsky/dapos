@@ -1,4 +1,4 @@
-package com.boyarsky.dapos.core.model;
+package com.boyarsky.dapos.core.model.fee;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.tx.ByteSerializable;
@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Data
 @NoArgsConstructor
@@ -24,6 +25,14 @@ public class PartyFeeConfig implements ByteSerializable {
         if (configs != null) {
             this.configs.putAll(configs);
         }
+    }
+
+    public Optional<FeeConfig> forAccount(AccountId accountId) {
+        if (whitelistAll) {
+            return Optional.ofNullable(rootConfig);
+        }
+        return this.configs.entrySet().stream().filter(e -> e.getValue().contains(accountId)).map(Map.Entry::getKey).findAny();
+
     }
 
     public PartyFeeConfig(ByteBuffer buffer) {

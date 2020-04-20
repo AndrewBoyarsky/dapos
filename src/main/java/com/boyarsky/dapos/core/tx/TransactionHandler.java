@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.handler.TransactionTypeHandler;
 import com.boyarsky.dapos.core.tx.type.handler.TxHandlingException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Map;
 public class TransactionHandler {
     private final Map<TxType, TransactionTypeHandler> handlers = new HashMap<>();
 
+    @Autowired
     public TransactionHandler(Map<TxType, TransactionTypeHandler> handlers) {
         this.handlers.putAll(handlers);
     }

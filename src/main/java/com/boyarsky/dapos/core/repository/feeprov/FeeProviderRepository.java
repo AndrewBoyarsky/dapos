@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.repository.feeprov;
 
-import com.boyarsky.dapos.core.model.FeeProvider;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.fee.FeeProvider;
 
 import java.util.List;
 

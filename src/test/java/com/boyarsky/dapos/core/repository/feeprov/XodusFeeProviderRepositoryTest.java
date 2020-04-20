@@ -1,11 +1,11 @@
 package com.boyarsky.dapos.core.repository.feeprov;
 
 import com.boyarsky.dapos.AccountUtil;
-import com.boyarsky.dapos.core.model.FeeConfig;
-import com.boyarsky.dapos.core.model.FeeProvider;
-import com.boyarsky.dapos.core.model.PartyFeeConfig;
 import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.fee.FeeConfig;
+import com.boyarsky.dapos.core.model.fee.FeeProvider;
+import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
 import com.boyarsky.dapos.core.repository.RepoTest;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import org.junit.jupiter.api.BeforeEach;

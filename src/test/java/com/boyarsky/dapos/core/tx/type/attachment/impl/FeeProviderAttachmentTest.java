@@ -1,9 +1,9 @@
 package com.boyarsky.dapos.core.tx.type.attachment.impl;
 
 import com.boyarsky.dapos.AccountUtil;
-import com.boyarsky.dapos.core.model.FeeConfig;
-import com.boyarsky.dapos.core.model.PartyFeeConfig;
 import com.boyarsky.dapos.core.model.State;
+import com.boyarsky.dapos.core.model.fee.FeeConfig;
+import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import org.junit.jupiter.api.Test;
 

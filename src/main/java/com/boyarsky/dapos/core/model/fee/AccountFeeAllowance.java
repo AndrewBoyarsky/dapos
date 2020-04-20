@@ -1,5 +1,6 @@
-package com.boyarsky.dapos.core.model;
+package com.boyarsky.dapos.core.model.fee;
 
+import com.boyarsky.dapos.core.model.BlockchainEntity;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,12 +11,9 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class FeeProvider extends BlockchainEntity {
-    private long id;
+public class AccountFeeAllowance extends BlockchainEntity {
     private AccountId account;
-    private long balance;
-    private State state;
-    private PartyFeeConfig fromFeeConfig;
-    private PartyFeeConfig toFeeConfig;
-
+    private long provId;
+    private int operations;
+    private long feeRemaining;
 }

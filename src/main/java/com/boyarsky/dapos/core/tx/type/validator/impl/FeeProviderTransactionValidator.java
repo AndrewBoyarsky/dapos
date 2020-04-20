@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx.type.validator.impl;
 
-import com.boyarsky.dapos.core.model.FeeConfig;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.fee.FeeConfig;
 import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;

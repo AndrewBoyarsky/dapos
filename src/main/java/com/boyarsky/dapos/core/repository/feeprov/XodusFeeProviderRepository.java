@@ -1,9 +1,9 @@
 package com.boyarsky.dapos.core.repository.feeprov;
 
-import com.boyarsky.dapos.core.model.FeeProvider;
-import com.boyarsky.dapos.core.model.PartyFeeConfig;
 import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.fee.FeeProvider;
+import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
 import com.boyarsky.dapos.core.repository.ComparableByteArray;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
@@ -21,6 +21,7 @@ import java.util.List;
 @Component
 public class XodusFeeProviderRepository implements FeeProviderRepository {
     private static final String storeName = "fee-provider";
+    private static final String accountFeeStore = "accountFee";
     private final XodusRepoContext context;
 
     @Autowired

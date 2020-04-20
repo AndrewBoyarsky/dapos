@@ -27,7 +27,7 @@ class DefaultTransactionValidatorTest {
 
     @BeforeEach
     void setUp() {
-        validator = new DefaultTransactionValidator(service);
+        validator = new DefaultTransactionValidator(service, null, null);
     }
 
     @Test

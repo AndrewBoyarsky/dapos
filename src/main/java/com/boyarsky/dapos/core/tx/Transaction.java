@@ -170,6 +170,10 @@ public class Transaction {
         return gasUsed * gasPrice;
     }
 
+    public long getMaxFee() {
+        return maxGas * gasPrice;
+    }
+
     public boolean isEd() {
         return (version & 2) == 2;
     }
@@ -204,9 +208,6 @@ public class Transaction {
         }
 
         public TransactionBuilder message(MessageAttachment attachment) {
-            if (type == TxType.MESSAGE) {
-                throw new RuntimeException("Duplicate message");
-            }
             attachments.put(attachment.getClass(), attachment);
             return this;
         }
@@ -248,14 +249,27 @@ public class Transaction {
             if (first && sender.isBitcoin()) {
                 version |= 4;
             }
-            int attachmentSize = rootAttachment.size();
+            int attachmentSize = 1 + rootAttachment.size();
             for (Map.Entry<Class, Attachment> entry : attachments.entrySet()) {
                 attachmentSize += entry.getValue().size();
             }
             ByteBuffer buffer = ByteBuffer.allocate(attachmentSize + data.length);
             rootAttachment.putBytes(buffer);
-            for (Map.Entry<Class, Attachment> entry : attachments.entrySet()) {
-                entry.getValue().putBytes(buffer);
+            byte attachmenPresentByte = 0;
+            Attachment noFeeAttachment = attachments.get(NoFeeAttachment.class);
+            if (noFeeAttachment != null) {
+                attachmenPresentByte |= 1;
+            }
+            Attachment messageAttachment = attachments.get(MessageAttachment.class);
+            if (messageAttachment != null) {
+                attachmenPresentByte |= 2;
+            }
+            buffer.put(attachmenPresentByte);
+            if (noFeeAttachment != null) {
+                noFeeAttachment.putBytes(buffer);
+            }
+            if (messageAttachment != null) {
+                messageAttachment.putBytes(buffer);
             }
             buffer.put(data);
             byte[] dataArray = buffer.array();

@@ -13,6 +13,15 @@ public class ErrorCodes {
     public static final ErrorCode WRONG_SIG_FORMAT = new ErrorCode(DEFAULT_VALIDATION, -16);
     public static final ErrorCode BAD_SIG = new ErrorCode(DEFAULT_VALIDATION, -17);
     public static final ErrorCode NOT_ENOUGH_MONEY = new ErrorCode(DEFAULT_VALIDATION, -18);
+    public static final ErrorCode FEE_PROVIDER_NOT_EXIST = new ErrorCode(DEFAULT_VALIDATION, -19);
+    public static final ErrorCode FEE_PROVIDER_NOT_ENABLED = new ErrorCode(DEFAULT_VALIDATION, -20);
+    public static final ErrorCode FEE_PROVIDER_NOT_ENOUGH_FUNDS = new ErrorCode(DEFAULT_VALIDATION, -21);
+    public static final ErrorCode FEE_PROVIDER_NOT_SUPPORTED_TX_TYPE = new ErrorCode(DEFAULT_VALIDATION, -22);
+    public static final ErrorCode FEE_PROVIDER_NOT_ENOUGH_AVAILABLE_OPS = new ErrorCode(DEFAULT_VALIDATION, -23);
+    public static final ErrorCode FEE_PROVIDER_NOT_ENOUGH_AVAIlABLE_FEE_LIMIT = new ErrorCode(DEFAULT_VALIDATION, -24);
+    public static final ErrorCode FEE_PROVIDER_EXCEED_LIMIT_PER_OP = new ErrorCode(DEFAULT_VALIDATION, -25);
+    public static final ErrorCode FEE_PROVIDER_EXCEED_TOTAL_LIMIT = new ErrorCode(DEFAULT_VALIDATION, -26);
+    public static final ErrorCode FEE_PROVIDER_NOT_WHITELISTED_SENDER = new ErrorCode(DEFAULT_VALIDATION, -27);
 
     public static final String TX_PARSING = "Transaction Parsing";
     public static final ErrorCode GENERAL_PARSING_ERROR = new ErrorCode(TX_PARSING, 255);

@@ -22,7 +22,7 @@ public class MessageTransactionValidator implements TransactionTypeValidator {
 
     @Override
     public void validate(Transaction tx) throws TxNotValidException {
-        MessageAttachment message = (MessageAttachment) tx.getAttachments().get(MessageAttachment.class);
+        MessageAttachment message = tx.getAttachment(MessageAttachment.class);
         if (!message.isToSelf()) {
             if (tx.getRecipient() == null) {
                 throw new TxNotValidException("Recipient should be present in tx for DH encrypted message", null, tx, ErrorCodes.RECIPIENT_NULL_DH);
