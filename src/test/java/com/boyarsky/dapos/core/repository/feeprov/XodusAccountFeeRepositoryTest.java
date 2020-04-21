@@ -5,6 +5,7 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
 import com.boyarsky.dapos.core.repository.RepoTest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
@@ -39,13 +40,13 @@ class XodusAccountFeeRepositoryTest extends RepoTest {
         assertEquals(allowance2, allowance);
     }
 
-    @Test
-    void save() {
+    @RepeatedTest(1000)
+    void save() throws InterruptedException {
         manager.begin();
-
         repository.save(allowance4);
-        manager.commit();
-
         assertEquals(allowance4, repository.getBy(allowance4.getProvId(), allowance4.getAccount()));
+        manager.commit();
+        AccountFeeAllowance by = repository.getBy(allowance4.getProvId(), allowance4.getAccount());
+        assertEquals(allowance4, by);
     }
 }

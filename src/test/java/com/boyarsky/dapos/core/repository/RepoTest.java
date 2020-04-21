@@ -14,7 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 public abstract class RepoTest {
     @RegisterExtension
-    static StoreExtension extension = new StoreExtension(false);
+    public static StoreExtension extension = new StoreExtension(false);
     @Autowired
     public TransactionManager manager;
 

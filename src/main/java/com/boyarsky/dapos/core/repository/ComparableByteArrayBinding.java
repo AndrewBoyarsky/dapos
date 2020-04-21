@@ -18,7 +18,10 @@ public class ComparableByteArrayBinding extends ComparableBinding {
         if (size == 0) {
             return new ComparableByteArray(bytes);
         }
-        stream.read(bytes);
+        int read = stream.read(bytes);
+        if (read != size) {
+            throw new RuntimeException("Not enogh bytes read");
+        }
         return new ComparableByteArray(bytes);
     }
 

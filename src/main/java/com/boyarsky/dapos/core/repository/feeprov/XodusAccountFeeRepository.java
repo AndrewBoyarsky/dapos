@@ -7,8 +7,13 @@ import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;
 import jetbrains.exodus.entitystore.Entity;
+import jetbrains.exodus.entitystore.EntityIterable;
+import jetbrains.exodus.entitystore.StoreTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class XodusAccountFeeRepository implements AccountFeeRepository {
@@ -30,9 +35,23 @@ public class XodusAccountFeeRepository implements AccountFeeRepository {
         return map(entity);
     }
 
+    @Override
+    @Transactional(readonly = true)
+    public List<AccountFeeAllowance> getAll() {
+        EntityIterable all = context.getTx().getAll(name);
+        List<AccountFeeAllowance> list = new ArrayList<>();
+        for (Entity entity : all) {
+            list.add(map(entity));
+        }
+        return list;
+    }
+
     private Entity find(long feeProvId, AccountId accountId) {
-        return CollectionUtils.requireAtMostOne(context.getTx().find(name, "account", new ComparableByteArray(accountId.getAddressBytes()))
-                .intersect(context.getTx().find(name, "feeProvider", feeProvId)));
+        StoreTransaction tx = context.getTx();
+        EntityIterable found = tx.find(name, "account", new ComparableByteArray(accountId.getAddressBytes()));
+        EntityIterable feeProvider = tx.find(name, "feeProvider", feeProvId);
+        return CollectionUtils.requireAtMostOne(found
+                .intersect(feeProvider));
     }
 
     private AccountFeeAllowance map(Entity entity) {
