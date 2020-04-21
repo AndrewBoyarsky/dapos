@@ -28,6 +28,7 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -48,6 +49,7 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class CryptoUtils {
@@ -136,6 +138,14 @@ public class CryptoUtils {
              GZIPOutputStream gzipStream = new GZIPOutputStream(os)) {
             gzipStream.write(bytes);
             return os.toByteArray();
+        }
+    }
+
+    public static byte[] uncompress(byte[] bytes) throws IOException {
+
+        try (ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+             GZIPInputStream gzipStream = new GZIPInputStream(is)) {
+            return gzipStream.readAllBytes();
         }
     }
 
@@ -448,6 +458,10 @@ public class CryptoUtils {
 
     public static byte[] decryptX25519(PrivateKey privKey, PublicKey pubKey, EncryptedData data) {
         return decryptWithKeyAgreement("X25519", privKey, pubKey, data);
+    }
+
+    public static byte[] decryptX25519WithEd25519(PrivateKey privKey, PublicKey pubKey, EncryptedData data) {
+        return decryptWithKeyAgreement("X25519", toX25519(privKey), toX25519(pubKey), data);
     }
 
     private static byte[] decryptWithKeyAgreement(String algorithm, PrivateKey privKey, PublicKey pubKey, EncryptedData data) {
