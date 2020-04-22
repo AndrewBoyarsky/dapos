@@ -1,4 +1,4 @@
-!#/bin/bash
+#!/bin/bash
 
 rm -rf ~/.dapos/app-data
 rm -rf ~/.dapos/app-db
