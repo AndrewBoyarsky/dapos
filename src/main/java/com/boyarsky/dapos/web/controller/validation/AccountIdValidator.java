@@ -11,6 +11,6 @@ public class AccountIdValidator implements ConstraintValidator<ValidAccount, Acc
 
     @Override
     public boolean isValid(AccountId value, ConstraintValidatorContext context) {
-        return value.isBitcoin() || value.isEd25() || value.isEth() || value.isVal();
+        return value == null || value.isBitcoin() || value.isEd25() || value.isEth() || value.isVal();
     }
 }

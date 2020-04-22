@@ -3,8 +3,6 @@
  */
 package com.boyarsky.dapos.config;
 
-import com.boyarsky.dapos.core.repository.ComparableByteArray;
-import com.boyarsky.dapos.core.repository.ComparableByteArrayBinding;
 import jetbrains.exodus.entitystore.PersistentEntityStore;
 import jetbrains.exodus.entitystore.PersistentEntityStoreImpl;
 import jetbrains.exodus.entitystore.PersistentEntityStores;
@@ -37,16 +35,9 @@ public class DbConfig {
     @Bean // destroy method is registered by default (close() method)
     public PersistentEntityStore store() throws IOException, InterruptedException {
         PersistentEntityStoreImpl store = PersistentEntityStores.newInstance(env(), "MAIN");
-        store.executeInExclusiveTransaction(txn -> {
-            store.registerCustomPropertyType(txn, ComparableByteArray.class, new ComparableByteArrayBinding());
-        });
-        store.executeInTransaction(txn -> {
-            store.registerCustomPropertyType(txn, ComparableByteArray.class, new ComparableByteArrayBinding());
-        });
-        store.executeInReadonlyTransaction(txn -> {
-            store.registerCustomPropertyType(txn, ComparableByteArray.class, new ComparableByteArrayBinding());
-        });
-
+//        store.executeInExclusiveTransaction(txn -> {
+//            store.registerCustomPropertyType(txn, ComparableByteArray.class, new ComparableByteArrayBinding());
+//        });
         return store;
     }
 }

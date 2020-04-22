@@ -1,6 +1,7 @@
-package com.boyarsky.dapos.core.repository;
+package com.boyarsky.dapos.core.repository.block;
 
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
+import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;
 import com.boyarsky.dapos.utils.Convert;
@@ -11,12 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class BlockchainRepository {
+public class BlockRepository {
     private static final String storeName = "lastBlock";
     private XodusRepoContext context;
 
     @Autowired
-    public BlockchainRepository(XodusRepoContext context) {
+    public BlockRepository(XodusRepoContext context) {
         this.context = context;
     }
 
@@ -29,13 +30,18 @@ public class BlockchainRepository {
         EntityIterable all = txn.getAll(storeName);
 
         Entity first = CollectionUtils.requireAtMostOne(all);
-        String hash = (String) first.getProperty("hash");
-        long height = (Long) first.getProperty("height");
-        return new LastSuccessBlockData(Convert.parseHexString(hash), height);
+        if (first != null) {
+
+            String hash = (String) first.getProperty("hash");
+            long height = (Long) first.getProperty("height");
+            return new LastSuccessBlockData(Convert.parseHexString(hash), height);
+        }
+        return null;
     }
 
+    @Transactional(requiredExisting = true)
     public void insert(LastSuccessBlockData blockData) {
-        StoreTransaction txn = context.getTx();
+        StoreTransaction txn = context.getBlockchainTx();
         Entity prev = CollectionUtils.requireAtMostOne(txn.getAll(storeName));
         if (prev == null) {
             prev = txn.newEntity(storeName);

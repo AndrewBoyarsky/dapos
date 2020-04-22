@@ -4,7 +4,6 @@ import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.FeeProvider;
 import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
-import com.boyarsky.dapos.core.repository.ComparableByteArray;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;
@@ -32,13 +31,13 @@ public class XodusFeeProviderRepository implements FeeProviderRepository {
     @Override
     @Transactional(requiredExisting = true)
     public void save(FeeProvider feeProvider) {
-        StoreTransaction tx = context.getTx();
+        StoreTransaction tx = context.getBlockchainTx();
         Entity toSave = null;
         if (feeProvider.getDbId() != null) {
             toSave = tx.getEntity(feeProvider.getDbId());
         }
         if (toSave == null) {
-            toSave = find(feeProvider.getId());
+            toSave = find(feeProvider.getId(), tx);
         }
         if (toSave == null) {
             toSave = tx.newEntity(storeName);
@@ -46,23 +45,23 @@ public class XodusFeeProviderRepository implements FeeProviderRepository {
         }
         toSave.setProperty("balance", feeProvider.getBalance());
         toSave.setProperty("state", feeProvider.getState().getCode());
-        toSave.setProperty("account", new ComparableByteArray(feeProvider.getAccount().getAddressBytes()));
-        toSave.setProperty("fromConfig", new ComparableByteArray(Convert.toBytes(feeProvider.getFromFeeConfig())));
-        toSave.setProperty("toConfig", new ComparableByteArray(Convert.toBytes(feeProvider.getToFeeConfig())));
+        toSave.setProperty("account", Convert.toHexString(feeProvider.getAccount().getAddressBytes()));
+        toSave.setProperty("fromConfig", Convert.toHexString(Convert.toBytes(feeProvider.getFromFeeConfig())));
+        toSave.setProperty("toConfig", Convert.toHexString(Convert.toBytes(feeProvider.getToFeeConfig())));
         toSave.setProperty("height", feeProvider.getHeight());
     }
 
-    private Entity find(long id) {
-        return CollectionUtils.requireAtMostOne(context.getTx().find(storeName, "id", id));
+    private Entity find(long id, StoreTransaction tx) {
+        return CollectionUtils.requireAtMostOne(tx.find(storeName, "id", id));
     }
 
     FeeProvider map(Entity entity) {
         FeeProvider feeProvider = new FeeProvider();
         feeProvider.setId((Long) entity.getProperty("id"));
-        feeProvider.setAccount(AccountId.fromBytes(((ComparableByteArray) entity.getProperty("account")).getData()));
+        feeProvider.setAccount(AccountId.fromBytes(Convert.parseHexString((String) entity.getProperty("account"))));
         feeProvider.setBalance((Long) entity.getProperty("balance"));
-        feeProvider.setFromFeeConfig(new PartyFeeConfig(Convert.toBuff(((ComparableByteArray) entity.getProperty("fromConfig")).getData())));
-        feeProvider.setToFeeConfig(new PartyFeeConfig(Convert.toBuff(((ComparableByteArray) entity.getProperty("toConfig")).getData())));
+        feeProvider.setFromFeeConfig(new PartyFeeConfig(Convert.toBuff(Convert.parseHexString((String) entity.getProperty("fromConfig")))));
+        feeProvider.setToFeeConfig(new PartyFeeConfig(Convert.toBuff(Convert.parseHexString((String) entity.getProperty("toConfig")))));
         feeProvider.setHeight((Long) entity.getProperty("height"));
         feeProvider.setState(State.ofCode((Byte) entity.getProperty("state")));
         return feeProvider;
@@ -71,7 +70,7 @@ public class XodusFeeProviderRepository implements FeeProviderRepository {
     @Override
     @Transactional(readonly = true)
     public FeeProvider get(long id) {
-        Entity entity = find(id);
+        Entity entity = find(id, context.getTx());
         if (entity != null) {
             return map(entity);
         }
@@ -83,7 +82,7 @@ public class XodusFeeProviderRepository implements FeeProviderRepository {
     @Transactional(readonly = true)
     public List<FeeProvider> getByAccount(AccountId id) {
         StoreTransaction tx = context.getTx();
-        EntityIterable all = tx.find(storeName, "account", new ComparableByteArray(id.getAddressBytes()));
+        EntityIterable all = tx.find(storeName, "account", Convert.toHexString(id.getAddressBytes()));
         List<FeeProvider> result = new ArrayList<>();
         for (Entity entity : all) {
             result.add(map(entity));

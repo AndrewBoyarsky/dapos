@@ -31,7 +31,7 @@ public class NodeProxyClient {
     public void init() {
         client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(30))
-                .followRedirects(HttpClient.Redirect.NEVER)
+                .followRedirects(HttpClient.Redirect.NORMAL)
                 .version(HttpClient.Version.HTTP_2)
                 .build();
     }

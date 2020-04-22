@@ -13,6 +13,8 @@ import com.boyarsky.dapos.core.service.message.MessageService;
 import com.boyarsky.dapos.web.API;
 import com.boyarsky.dapos.web.controller.exception.RestError;
 import com.boyarsky.dapos.web.controller.validation.ValidAccount;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +44,9 @@ public class MessageController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllMessages(@RequestParam @ValidAccount AccountId sender, @RequestParam @NotBlank String pass, @RequestParam(required = false) @ValidAccount AccountId recipient) throws InvalidKeyException, IOException {
+    public ResponseEntity<?> getAllMessages(@RequestParam @ValidAccount @Parameter(schema = @Schema(implementation = String.class)) AccountId sender,
+                                            @RequestParam @NotBlank String pass,
+                                            @RequestParam(required = false) @ValidAccount @Parameter(schema = @Schema(implementation = String.class)) AccountId recipient) throws InvalidKeyException, IOException {
         List<MessageEntity> entities = new ArrayList<>();
         VerifiedWallet wallet = keyStoreService.getWallet(sender.getAppSpecificAccount(), pass);
         if (wallet.getExtractStatus() != Status.OK) {
@@ -81,7 +85,12 @@ public class MessageController {
             ms.add(new Message(new String(bytes), sender.getAppSpecificAccount(), recipient == null ? null : recipient.getAppSpecificAccount(), entity.getHeight()));
         }
         return ResponseEntity.ok(ms);
+    }
 
+    @GetMapping("/chats")
+    public ResponseEntity<?> getChats(@RequestParam @ValidAccount @Parameter(schema = @Schema(implementation = String.class)) AccountId account) {
+        List<MessageEntity> chats = messageService.getChats(account);
+        return ResponseEntity.ok(chats);
     }
 
     @Data

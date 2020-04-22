@@ -2,10 +2,10 @@ package com.boyarsky.dapos.core.repository.feeprov;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
-import com.boyarsky.dapos.core.repository.ComparableByteArray;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;
+import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
 import jetbrains.exodus.entitystore.EntityIterable;
 import jetbrains.exodus.entitystore.StoreTransaction;
@@ -28,7 +28,7 @@ public class XodusAccountFeeRepository implements AccountFeeRepository {
     @Override
     @Transactional(readonly = true)
     public AccountFeeAllowance getBy(long feeProvId, AccountId accountId) {
-        Entity entity = find(feeProvId, accountId);
+        Entity entity = find(feeProvId, accountId, context.getTx());
         if (entity == null) {
             return null;
         }
@@ -46,9 +46,8 @@ public class XodusAccountFeeRepository implements AccountFeeRepository {
         return list;
     }
 
-    private Entity find(long feeProvId, AccountId accountId) {
-        StoreTransaction tx = context.getTx();
-        EntityIterable found = tx.find(name, "account", new ComparableByteArray(accountId.getAddressBytes()));
+    private Entity find(long feeProvId, AccountId accountId, StoreTransaction tx) {
+        EntityIterable found = tx.find(name, "account", Convert.toHexString(accountId.getAddressBytes()));
         EntityIterable feeProvider = tx.find(name, "feeProvider", feeProvId);
         return CollectionUtils.requireAtMostOne(found
                 .intersect(feeProvider));
@@ -56,7 +55,7 @@ public class XodusAccountFeeRepository implements AccountFeeRepository {
 
     private AccountFeeAllowance map(Entity entity) {
         AccountFeeAllowance allowance = new AccountFeeAllowance();
-        allowance.setAccount(AccountId.fromBytes(((ComparableByteArray) entity.getProperty("account")).getData()));
+        allowance.setAccount(AccountId.fromBytes(Convert.parseHexString((String) entity.getProperty("account"))));
         allowance.setProvId((Long) entity.getProperty("feeProvider"));
         allowance.setFeeRemaining((Long) entity.getProperty("feeRemaining"));
         allowance.setOperations((Integer) entity.getProperty("operations"));
@@ -68,15 +67,16 @@ public class XodusAccountFeeRepository implements AccountFeeRepository {
     @Transactional(requiredExisting = true)
     public void save(AccountFeeAllowance fee) {
         Entity toSave = null;
+        StoreTransaction tx = context.getBlockchainTx();
         if (fee.getDbId() != null) {
-            toSave = context.getTx().getEntity(fee.getDbId());
+            toSave = tx.getEntity(fee.getDbId());
         }
         if (toSave == null) {
-            toSave = find(fee.getProvId(), fee.getAccount());
+            toSave = find(fee.getProvId(), fee.getAccount(), tx);
         }
         if (toSave == null) {
-            toSave = context.getTx().newEntity(name);
-            toSave.setProperty("account", new ComparableByteArray(fee.getAccount().getAddressBytes()));
+            toSave = tx.newEntity(name);
+            toSave.setProperty("account", Convert.toHexString(fee.getAccount().getAddressBytes()));
             toSave.setProperty("feeProvider", fee.getProvId());
         }
         toSave.setProperty("operations", fee.getOperations());

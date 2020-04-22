@@ -19,6 +19,14 @@ public class XodusRepoContext {
         this.manager = manager;
     }
 
+    public StoreTransaction getBlockchainTx() {
+        StoreTransaction storeTransaction = manager.currentTx();
+        if (storeTransaction == null) {
+            throw new IllegalStateException("Tx was not started for tx manager");
+        }
+        return storeTransaction;
+    }
+
     public StoreTransaction getTx() {
         StoreTransaction storeTransaction = curTx();
         if (storeTransaction == null) {

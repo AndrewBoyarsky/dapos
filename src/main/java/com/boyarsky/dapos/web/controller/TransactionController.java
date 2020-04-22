@@ -7,6 +7,7 @@ import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.keystore.Status;
 import com.boyarsky.dapos.core.model.keystore.VerifiedWallet;
 import com.boyarsky.dapos.core.model.keystore.Wallet;
+import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.keystore.Keystore;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
@@ -58,12 +59,14 @@ public class TransactionController {
     NodeProxyClient proxyClient;
 
     @PostMapping("/payments")
+    @Transactional(readonly = true, startNew = true)
     public ResponseEntity<?> sendMoney(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException {
         AccountWithWallet accountWithWallet = parseAccount(request);
         return sendTransaction(new TxSendRequest(request, accountWithWallet, TxType.PAYMENT, new PaymentAttachment(), 1));
     }
 
     @PostMapping("/messages")
+    @Transactional(readonly = true, startNew = true)
     public ResponseEntity<?> sendMessage(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException {
         AccountWithWallet accountWithWallet = parseAccount(request);
         MessageWithResponse messageWithError = createMessageAttachment(request, accountWithWallet.wallet);
@@ -120,11 +123,6 @@ public class TransactionController {
         VerifiedWallet wallet = keystore.getWallet(request.getAccount().getAppSpecificAccount(), request.getPass());
         if (wallet.getExtractStatus() != Status.OK) {
             throw new TransactionSendingException("Incorrect password or account");
-        }
-        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), request.getAccount(), wallet.getWallet().getKeyPair(), 1, 2000)
-                .amount(request.getAmount());
-        if (request.getRecipient() != null) {
-            builder.recipient(request.getRecipient());
         }
         Account senderAcc = accountService.get(request.getAccount());
         if (senderAcc == null) {

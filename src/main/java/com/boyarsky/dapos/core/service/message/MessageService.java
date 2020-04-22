@@ -12,5 +12,7 @@ public interface MessageService {
 
     List<MessageEntity> getChat(AccountId acc1, AccountId acc2);
 
+    List<MessageEntity> getChats(AccountId acc1);
+
     List<MessageEntity> getToSelfNotes(AccountId id);
 }

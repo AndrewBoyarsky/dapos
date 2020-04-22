@@ -10,5 +10,7 @@ import java.lang.annotation.Target;
 public @interface Transactional {
     boolean readonly() default false;
 
+    boolean startNew() default false;
+
     boolean requiredExisting() default false; // when true -> require existing blockchain transactions, otherwise -> will open new
 }

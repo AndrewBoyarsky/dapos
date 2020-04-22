@@ -27,12 +27,13 @@ public class TransactionalAspect {
 
     @Around("annotated()")
     public Object inTransaction(ProceedingJoinPoint joinPoint) throws Throwable {
-        if (context.inTx()) {
+
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Transactional annotation = signature.getMethod().getAnnotation(Transactional.class);
+        if (!annotation.startNew() && context.inTx()) {
             log.info("Proceed in transaction for {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
             return joinPoint.proceed();
         }
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Transactional annotation = signature.getMethod().getAnnotation(Transactional.class);
         if (annotation.requiredExisting()) {
             throw new IllegalStateException("Transaction was not opened. Required tx before calling " + signature.getDeclaringTypeName() + "." + signature.getName());
         }

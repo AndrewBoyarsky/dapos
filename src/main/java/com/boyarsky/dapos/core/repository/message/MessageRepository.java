@@ -14,6 +14,8 @@ public interface MessageRepository {
 
     List<MessageEntity> getAll(AccountId sender);
 
+    List<MessageEntity> getAllChats(AccountId sender);
+
     void save(MessageEntity entity);
 
 }

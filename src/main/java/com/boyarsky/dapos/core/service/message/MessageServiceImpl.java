@@ -9,7 +9,11 @@ import com.boyarsky.dapos.core.tx.type.attachment.impl.MessageAttachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class MessageServiceImpl implements MessageService {
@@ -32,6 +36,34 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public List<MessageEntity> getChat(AccountId acc1, AccountId acc2) {
         return repo.getWith(acc1, acc2);
+    }
+
+    @Override
+    public List<MessageEntity> getChats(AccountId acc1) {
+        List<MessageEntity> allChats = repo.getAllChats(acc1);
+        Map<AccountId, MessageEntity> chats = new HashMap<>();
+        for (MessageEntity allChat : allChats) {
+            AccountId checkKey;
+            if (allChat.getSender().equals(acc1)) {
+                if (allChat.getRecipient() != null) {
+                    checkKey = allChat.getRecipient();
+                } else {
+                    checkKey = acc1;
+                }
+
+            } else {
+                checkKey = allChat.getRecipient();
+            }
+            MessageEntity currentValue = chats.get(checkKey);
+            if (currentValue == null) {
+                chats.put(checkKey, allChat);
+            } else if (currentValue.getHeight() < allChat.getHeight()) {
+                chats.put(checkKey, allChat);
+            }
+        }
+        List<MessageEntity> resultChats = chats.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.comparing(MessageEntity::getHeight))).map(Map.Entry::getValue).collect(Collectors.toList());
+
+        return resultChats;
     }
 
     @Override

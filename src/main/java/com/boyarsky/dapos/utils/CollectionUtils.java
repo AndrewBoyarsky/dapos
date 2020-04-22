@@ -2,6 +2,7 @@ package com.boyarsky.dapos.utils;
 
 import jetbrains.exodus.entitystore.Entity;
 import jetbrains.exodus.entitystore.EntityIterable;
+import jetbrains.exodus.entitystore.EntityIterator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,13 +13,21 @@ public class CollectionUtils {
     }
 
     public static Entity requireAtMostOne(EntityIterable collection) {
-        if (collection.size() == 0) {
-            return null;
+        EntityIterator iterator = collection.iterator();
+        Entity e = null;
+        if (iterator.hasNext()) {
+            e = iterator.next();
+            if (iterator.hasNext()) {
+                if (iterator.shouldBeDisposed()) {
+                    iterator.dispose();
+                }
+                throw new RuntimeException("Exception");
+            }
         }
-        if (collection.size() > 1) {
-            throw new RuntimeException("Expected at most one element inside " + collection);
+        if (iterator.shouldBeDisposed()) {
+            iterator.dispose();
         }
-        return collection.getFirst();
+        return e;
     }
 
     public static <T> List<T> toList(EntityIterable e, Function<Entity, T> mapper) {

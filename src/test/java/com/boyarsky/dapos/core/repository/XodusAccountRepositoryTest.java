@@ -47,8 +47,10 @@ public class XodusAccountRepositoryTest extends RepoTest {
         repository.save(acc2);
         repository.save(acc3);
         manager.commit();
+        manager.begin();
         List<Account> all = repository.getAll();
         assertEquals(List.of(acc1, acc2, acc3), all);
+        manager.commit();
     }
 
     @Test
