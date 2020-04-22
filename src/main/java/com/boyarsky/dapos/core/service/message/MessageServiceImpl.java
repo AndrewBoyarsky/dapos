@@ -44,15 +44,14 @@ public class MessageServiceImpl implements MessageService {
         Map<AccountId, MessageEntity> chats = new HashMap<>();
         for (MessageEntity allChat : allChats) {
             AccountId checkKey;
-            if (allChat.getSender().equals(acc1)) {
-                if (allChat.getRecipient() != null) {
+            if (allChat.isToSelf()) {
+                checkKey = allChat.getSender();
+            } else {
+                if (allChat.getSender().equals(acc1)) {
                     checkKey = allChat.getRecipient();
                 } else {
-                    checkKey = acc1;
+                    checkKey = allChat.getSender();
                 }
-
-            } else {
-                checkKey = allChat.getRecipient();
             }
             MessageEntity currentValue = chats.get(checkKey);
             if (currentValue == null) {

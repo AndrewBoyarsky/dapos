@@ -30,10 +30,19 @@ class CryptoUtilsTest {
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
+
     @RepeatedTest(value = 10)
     void testSignVerifySecp256k1() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
         testSignVerify(keyPair);
+    }
+
+    @Test
+    void testCompressUncompressBytes() throws IOException {
+        byte[] bytes = "Text to compress gzip".getBytes();
+        byte[] compress = CryptoUtils.compress(bytes);
+        byte[] uncompress = CryptoUtils.uncompress(compress);
+        assertArrayEquals(bytes, uncompress);
     }
 
 

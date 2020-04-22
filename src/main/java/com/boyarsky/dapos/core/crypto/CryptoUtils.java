@@ -134,11 +134,12 @@ public class CryptoUtils {
 
     public static byte[] compress(byte[] bytes) throws IOException {
 
-        try (ByteArrayOutputStream os = new ByteArrayOutputStream();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try (ByteArrayOutputStream os = stream;
              GZIPOutputStream gzipStream = new GZIPOutputStream(os)) {
             gzipStream.write(bytes);
-            return os.toByteArray();
         }
+        return stream.toByteArray();
     }
 
     public static byte[] uncompress(byte[] bytes) throws IOException {
