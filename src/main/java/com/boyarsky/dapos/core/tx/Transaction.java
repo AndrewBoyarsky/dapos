@@ -33,6 +33,15 @@ public class Transaction {
     private byte[] signature;
     private int gasPrice;
     private int maxGas;
+    private long height;
+
+    public long getHeight() {
+        return height;
+    }
+
+    public void setHeight(long height) {
+        this.height = height;
+    }
 
     private int gasUsed;
     private final Map<Class<? extends Attachment>, Attachment> attachments = new HashMap<>();

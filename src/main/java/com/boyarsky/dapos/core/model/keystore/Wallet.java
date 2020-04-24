@@ -1,15 +1,19 @@
 package com.boyarsky.dapos.core.model.keystore;
 
+import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.utils.Convert;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
+import java.io.IOException;
 import java.security.KeyPair;
 import java.util.Objects;
 
 @Data
 public class Wallet {
     private final AccountId account;
+    @JsonIgnore
     private final KeyPair keyPair;
 
     public String getAppSpecificAccount() {
@@ -22,6 +26,10 @@ public class Wallet {
                 "account='" + account + '\'' +
                 ", publicKey=" + Convert.toHexString(keyPair.getPublic().getEncoded()) +
                 '}';
+    }
+
+    public String getPublicKey() throws IOException {
+        return Convert.toHexString(CryptoUtils.compress(keyPair.getPublic().getEncoded()));
     }
 
     @Override

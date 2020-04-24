@@ -55,7 +55,9 @@ public class XodusAccountRepository implements AccountRepository {
             entity = tx.getEntity(account.getDbId());
         }
         entity.setProperty("balance", account.getBalance());
-        entity.setProperty("publicKey", Convert.toHexString(account.getPublicKey()));
+        if (account.getPublicKey() != null) {
+            entity.setProperty("publicKey", Convert.toHexString(account.getPublicKey()));
+        }
 
         entity.setProperty("type", account.getType().getCode());
         entity.setProperty("height", account.getHeight());

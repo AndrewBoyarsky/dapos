@@ -59,6 +59,15 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     @Autowired
     private BlockchainConfig config;
 
+    private boolean acceptRequest = true;
+
+    public boolean isAcceptRequest() {
+        return acceptRequest;
+    }
+
+    public void setAcceptRequest(boolean acceptRequest) {
+        this.acceptRequest = acceptRequest;
+    }
 
     @Override
     public void checkTx(RequestCheckTx req, StreamObserver<ResponseCheckTx> responseObserver) {
@@ -160,6 +169,9 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
     @Override
     public void beginBlock(RequestBeginBlock req, StreamObserver<ResponseBeginBlock> responseObserver) {
+        if (!acceptRequest) {
+            throw new RuntimeException("Dpos app was stopped");
+        }
         manager.begin();
         blockchain.beginBlock(req.getHeader().getHeight());
         var resp = ResponseBeginBlock.newBuilder().build();

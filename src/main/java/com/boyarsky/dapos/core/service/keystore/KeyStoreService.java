@@ -146,8 +146,15 @@
      }
 
      @Override
-     public Wallet createEd25(String pass) {
+     public PassphraseProtectedWallet createEd25(String pass) {
          Wallet wallet = CryptoUtils.generateEd25Wallet();
+         return save(pass, wallet);
+     }
+
+
+     @Override
+     public PassphraseProtectedWallet createVal(String pass) {
+         Wallet wallet = CryptoUtils.generateValidatorWallet();
          return save(pass, wallet);
      }
 

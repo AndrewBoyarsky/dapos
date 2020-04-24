@@ -25,7 +25,7 @@ class DefaultTransactionHandlerTest {
 
     @BeforeEach
     void setUp() {
-        handler = new DefaultTransactionHandler(service, null, null);
+        handler = new DefaultTransactionHandler(service, null, null, ledgerService);
     }
 
     @Test

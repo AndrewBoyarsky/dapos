@@ -12,4 +12,6 @@ public interface Keystore {
     Wallet createEd25(String pass);
 
     VerifiedWallet getWallet(String account, String pass);
+
+    PassphraseProtectedWallet createVal(String pass);
 }

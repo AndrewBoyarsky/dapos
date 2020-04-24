@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.model.account;
 
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.utils.Convert;
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -112,7 +113,7 @@ public class AccountId {
         }
     }
 
-
+    @JsonValue
     public String getAppSpecificAccount() {
         if (isBitcoin()) {
             return "dbt" + origAccount;
