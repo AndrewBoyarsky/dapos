@@ -1,12 +1,15 @@
 {
   "chainName": "Dapos mainnet",
-  "chainId": "1",
+  "chainId": 1,
+  "maxSupply": 500000000000000000,
   "heightConfigs": [
     {
       "height": 1,
       "maxSize": 10000,
       "maxGas": 10000,
-      "maxEvidenceAge": 10
+      "maxEvidenceAge": 10,
+      "maxValidators": 2,
+      "blockReward": 50000000000
     },
     {
       "height": 20,

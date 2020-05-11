@@ -1,13 +1,10 @@
 package com.boyarsky.dapos.core;
 
 import com.apollocurrency.aplwallet.apl.util.StringUtils;
-import com.boyarsky.dapos.core.config.BlockchainConfig;
 import com.boyarsky.dapos.core.config.HeightConfig;
-import com.boyarsky.dapos.core.genesis.Genesis;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.service.Blockchain;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
-import com.boyarsky.dapos.core.tx.TransactionProcessor;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
@@ -49,15 +46,7 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     @Autowired
     private Blockchain blockchain;
     @Autowired
-    private TransactionProcessor processor;
-    @Autowired
-    private TransactionManager manager;
-    @Autowired
     private QueryDispatcher dispatcher;
-    @Autowired
-    private Genesis genesis;
-    @Autowired
-    private BlockchainConfig config;
 
     private boolean acceptRequest = true;
 
@@ -72,7 +61,7 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     @Override
     public void checkTx(RequestCheckTx req, StreamObserver<ResponseCheckTx> responseObserver) {
         ResponseCheckTx.Builder respBuilder = ResponseCheckTx.newBuilder();
-        ProcessingResult result = processor.parseAndValidate(req.getTx().toByteArray());
+        ProcessingResult result = blockchain.checkTx(req.getTx().toByteArray());
         respBuilder
                 .setCode(result.getCode().getCode())
                 .setCodespace(result.getCode().getCodeSpace())
@@ -106,7 +95,6 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
             ResponseInfo.Builder builder = ResponseInfo.newBuilder();
             if (lastBlock != null) {
                 log.info("Current block {}", lastBlock.getHeight());
-                config.init(lastBlock.getHeight());
                 builder.setLastBlockHeight(lastBlock.getHeight())
                         .setLastBlockAppHash(ByteString.copyFrom(lastBlock.getAppHash()));
             } else {
@@ -125,31 +113,20 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
         @Override
         public void initChain(RequestInitChain request, StreamObserver<ResponseInitChain> responseObserver) {
-            manager.begin();
-            try {
-                log.info("Applying genesis");
-                genesis.initialize();
-                manager.commit();
-            } catch (Exception e) {
-                log.error("Genesis init error", e);
-                manager.rollback();
-            }
-            log.info("Genesis applied");
-            config.init(1);
+            HeightConfig config = blockchain.onInitChain();
+
             responseObserver.onNext(ResponseInitChain.newBuilder()
-                    .setConsensusParams(map(config.getCurrentConfig()))
+                    .setConsensusParams(map(config))
                     .build());
             responseObserver.onCompleted();
         }
 
     @Override
     public void endBlock(RequestEndBlock request, StreamObserver<ResponseEndBlock> responseObserver) {
-        boolean updated = config.tryUpdateForHeight(blockchain.getCurrentBlockHeight() + 1);
         ResponseEndBlock.Builder builder = ResponseEndBlock.newBuilder();
-        if (updated) {
-            HeightConfig currentConfig = config.getCurrentConfig();
-            log.info("Updation config to: " + currentConfig);
-            builder.setConsensusParamUpdates(map(currentConfig));
+        HeightConfig newConfig = blockchain.endBlock();
+        if (newConfig != null) {
+            builder.setConsensusParamUpdates(map(newConfig));
         }
         responseObserver.onNext(builder.build());
         responseObserver.onCompleted();
@@ -170,10 +147,9 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     @Override
     public void beginBlock(RequestBeginBlock req, StreamObserver<ResponseBeginBlock> responseObserver) {
         if (!acceptRequest) {
-            throw new RuntimeException("Dpos app was stopped");
+            throw new RuntimeException("Dapos app was stopped");
         }
-        manager.begin();
-        blockchain.beginBlock(req.getHeader().getHeight());
+        blockchain.beginBlock(req.getHeader().getHeight(), req.getHeader().getProposerAddress().toByteArray());
         var resp = ResponseBeginBlock.newBuilder().build();
         responseObserver.onNext(resp);
         responseObserver.onCompleted();
@@ -182,7 +158,7 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     @Override
     public void deliverTx(RequestDeliverTx req, StreamObserver<ResponseDeliverTx> responseObserver) {
         ResponseDeliverTx.Builder respBuilder = ResponseDeliverTx.newBuilder();
-        ProcessingResult parsingResult = processor.tryDeliver(req.getTx().toByteArray());
+        ProcessingResult parsingResult = blockchain.deliverTx(req.getTx().toByteArray());
         respBuilder
                 .setCode(parsingResult.getCode().getCode())
                 .setCodespace(parsingResult.getCode().getCodeSpace())
@@ -195,9 +171,7 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
 
     @Override
     public void commit(RequestCommit req, StreamObserver<ResponseCommit> responseObserver) {
-        byte[] hash = new byte[8];
-        blockchain.addNewBlock(hash);
-        manager.commit();
+        byte[] hash = blockchain.commitBlock();
         ByteString appData = ByteString.copyFrom(hash);
         var resp = ResponseCommit.newBuilder()
                 .setData(appData)

@@ -3,22 +3,22 @@
     {
       "accountId": "2515e1d552eb5cf63ea58aca4654f5b12f",
       "publicKey": "061075ffb7fbeb1090169e462ab20df12f9356fc760be5e2e06bec1e00315208",
-      "balance": 100000
+      "balance": 1000000000000000
     },
     {
       "accountId": "254d52eaf1114b8c68df983b0b272e4e2f",
       "publicKey": "817d49f067fefec39b8d62b01528d952f29e89626dcd1d29fef05594ec4e4462",
-      "balance": 100000
+      "balance": 1000000000000000
     },
     {
       "accountId": "1L5pPdFqgkRhuYhpBCZZ877qNHVYKT4VWT",
       "publicKey": "035b498eae1615d7edf5ceb542be0e39bbb6b44fcf65f4a74979edf5e95a3c455d",
-      "balance": 100000
+      "balance": 1000000000000000
     },
     {
       "accountId": "0xf1ff0edb0326e6a224c07fed1bdad3cebad5758d",
       "publicKey": "03163ae2f1682346f6e4d61649ade2250998eed15d0ef3f71b20118a3d64f58504",
-      "balance": 100000
+      "balance": 1000000000000000
     }
   ]
 }

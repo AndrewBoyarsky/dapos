@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.core.tx;
 
-import com.boyarsky.dapos.core.service.Blockchain;
 import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
 import com.boyarsky.dapos.core.tx.type.handler.TxHandlingException;
 import com.boyarsky.dapos.core.tx.type.validator.TxNotValidException;
@@ -16,15 +15,13 @@ public class TransactionProcessor {
     private final TransactionValidator validator;
     private final TransactionHandler handler;
     private final TxGasCalculator gasCalculator;
-    private final Blockchain blockchain;
 
     @Autowired
-    public TransactionProcessor(TransactionParser parser, TransactionValidator validator, TransactionHandler handler, TxGasCalculator gasCalculator, Blockchain blockchain) {
+    public TransactionProcessor(TransactionParser parser, TransactionValidator validator, TransactionHandler handler, TxGasCalculator gasCalculator) {
         this.parser = parser;
         this.validator = validator;
         this.handler = handler;
         this.gasCalculator = gasCalculator;
-        this.blockchain = blockchain;
     }
 
     public ProcessingResult parseAndValidate(byte[] tx) {
@@ -40,13 +37,13 @@ public class TransactionProcessor {
         return validationResult;
     }
 
-    public ProcessingResult tryDeliver(byte[] tx) {
+    public ProcessingResult tryDeliver(byte[] tx, long height) {
         ProcessingResult validationResult = parseAndValidate(tx);
         if (!validationResult.getCode().isOk()) {
             return validationResult;
         }
         validationResult.getTx().setGasUsed(validationResult.getGasData().getUsed());
-        validationResult.getTx().setHeight(blockchain.getCurrentBlockHeight());
+        validationResult.getTx().setHeight(height);
         ProcessingResult deliverResult = deliverTx(validationResult.getTx());
         if (!deliverResult.getCode().isOk()) {
             logErrorResult(deliverResult, tx, "Deliver error");

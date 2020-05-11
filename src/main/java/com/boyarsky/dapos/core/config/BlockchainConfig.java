@@ -12,12 +12,18 @@ public class BlockchainConfig {
 
     private Map<Long, HeightConfig> allConfigs = new HashMap<>();
     private Set<Long> updateHeights = new HashSet<>();
+    private int chainId;
+    private String chainName;
+    private long maxSupply;
 
 
     public BlockchainConfig(ChainSpec spec) {
         Map<Long, HeightConfig> map = spec.getHeightConfigs().stream().collect(Collectors.toMap(HeightConfig::getHeight, Function.identity()));
         updateHeights.addAll(map.keySet());
         this.allConfigs.putAll(map);
+        this.chainId = spec.getChainId();
+        this.chainName = spec.getChainName();
+        this.maxSupply = spec.getMaxSupply();
     }
 
     public boolean tryUpdateForHeight(long height) {

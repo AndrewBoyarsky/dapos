@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class ChainSpec {
     private String chainName;
-    private String chainId;
+    private int chainId;
+    private long maxSupply;
     private List<HeightConfig> heightConfigs = new ArrayList<>();
 }

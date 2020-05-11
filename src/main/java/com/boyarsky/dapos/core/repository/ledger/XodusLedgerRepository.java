@@ -39,7 +39,10 @@ public class XodusLedgerRepository implements LedgerRepository {
         ledgerRecord.setDbId(record.getId());
         ledgerRecord.setAmount((Long) record.getProperty("amount"));
         ledgerRecord.setFee((Long) record.getProperty("fee"));
-        ledgerRecord.setSender(AccountId.fromBytes(Convert.parseHexString((String) record.getProperty("sender"))));
+        Comparable senderProperty = record.getProperty("sender");
+        if (senderProperty != null) {
+            ledgerRecord.setSender(AccountId.fromBytes(Convert.parseHexString((String) senderProperty)));
+        }
         ledgerRecord.setId(((Long) record.getProperty("id")));
         Comparable recipient = record.getProperty("recipient");
         if (recipient != null) {
@@ -47,6 +50,7 @@ public class XodusLedgerRepository implements LedgerRepository {
         }
         ledgerRecord.setHeight((Long) record.getProperty("height"));
         ledgerRecord.setType(TxType.ofCode((Byte) record.getProperty("type")));
+        ledgerRecord.setRecordType(LedgerRecord.Type.fromCode((Byte) record.getProperty("recordType")));
         return ledgerRecord;
     }
 
@@ -67,7 +71,12 @@ public class XodusLedgerRepository implements LedgerRepository {
         Entity entity = tx.newEntity(entityType);
         entity.setProperty("id", record.getId());
         entity.setProperty("type", record.getType().getCode());
-        entity.setProperty("sender", Convert.toHexString(record.getSender().getAddressBytes()));
+        if (record.getRecordType() != null) {
+            entity.setProperty("recordType", record.getRecordType().getCode());
+        }
+        if (record.getSender() != null) {
+            entity.setProperty("sender", Convert.toHexString(record.getSender().getAddressBytes()));
+        }
         if (record.getRecipient() != null) {
             entity.setProperty("recipient", Convert.toHexString(record.getRecipient().getAddressBytes()));
         }
