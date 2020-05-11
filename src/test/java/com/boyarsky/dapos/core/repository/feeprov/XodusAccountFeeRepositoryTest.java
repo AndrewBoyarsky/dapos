@@ -1,6 +1,6 @@
 package com.boyarsky.dapos.core.repository.feeprov;
 
-import com.boyarsky.dapos.AccountUtil;
+import com.boyarsky.dapos.TestUtil;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
 import com.boyarsky.dapos.core.repository.RepoTest;
@@ -17,10 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class XodusAccountFeeRepositoryTest extends RepoTest {
     @Autowired
     AccountFeeRepository repository;
-    private AccountId alice = AccountUtil.generateEd25Acc().getCryptoId();
+    private AccountId alice = TestUtil.generateEd25Acc().getCryptoId();
     AccountFeeAllowance allowance1 = new AccountFeeAllowance(alice, 1, 10, 20);
     AccountFeeAllowance allowance4 = new AccountFeeAllowance(alice, 3, 0, 0);
-    private AccountId bob = AccountUtil.generateEd25Acc().getCryptoId();
+    private AccountId bob = TestUtil.generateEd25Acc().getCryptoId();
     AccountFeeAllowance allowance2 = new AccountFeeAllowance(bob, 1, 2, 3);
     AccountFeeAllowance allowance3 = new AccountFeeAllowance(bob, 2, 1, 5);
 

@@ -98,7 +98,7 @@ public class XodusMessageRepository implements MessageRepository {
     @Override
     @Transactional(requiredExisting = true)
     public void save(MessageEntity entity) {
-        StoreTransaction storeTransaction = context.getBlockchainTx();
+        StoreTransaction storeTransaction = context.getTx();
         Entity e = storeTransaction.newEntity(entityType);
         e.setProperty("id", entity.getMid());
         e.setProperty("data", Convert.toHexString(entity.getData().getEncrypted()));

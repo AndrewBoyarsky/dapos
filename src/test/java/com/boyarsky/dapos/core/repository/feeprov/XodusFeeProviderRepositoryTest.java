@@ -1,6 +1,6 @@
 package com.boyarsky.dapos.core.repository.feeprov;
 
-import com.boyarsky.dapos.AccountUtil;
+import com.boyarsky.dapos.TestUtil;
 import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.FeeConfig;
@@ -25,9 +25,9 @@ import static org.junit.Assert.assertEquals;
 public class XodusFeeProviderRepositoryTest extends RepoTest {
     @Autowired
     FeeProviderRepository repo;
-    private AccountId alice = AccountUtil.generateEd25Acc().getCryptoId();
-    private AccountId bob = AccountUtil.generateEd25Acc().getCryptoId();
-    private AccountId chuck = AccountUtil.generateEd25Acc().getCryptoId();
+    private AccountId alice = TestUtil.generateEd25Acc().getCryptoId();
+    private AccountId bob = TestUtil.generateEd25Acc().getCryptoId();
+    private AccountId chuck = TestUtil.generateEd25Acc().getCryptoId();
     private PartyFeeConfig allowAllConfig = new PartyFeeConfig(true, null, null);
     FeeProvider feeProvider1 = new FeeProvider(1L, alice, 100, State.ACTIVE, allowAllConfig, allowAllConfig);
     private PartyFeeConfig generalRestrictiveConfig = new PartyFeeConfig(true, new FeeConfig(10, 2, 20, Set.of()), null);

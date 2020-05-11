@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.tx.type.handler;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.service.account.AccountService;
+import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.handler.impl.DefaultTransactionHandler;
@@ -22,6 +23,8 @@ class DefaultTransactionHandlerTest {
     private DefaultTransactionHandler handler;
     @Mock
     private AccountService service;
+    @Mock
+    private LedgerService ledgerService;
 
     @BeforeEach
     void setUp() {

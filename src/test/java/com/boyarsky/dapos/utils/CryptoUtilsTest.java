@@ -31,7 +31,7 @@ class CryptoUtilsTest {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    @RepeatedTest(value = 10)
+    @RepeatedTest(value = 1000)
     void testSignVerifySecp256k1() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
         testSignVerify(keyPair);
@@ -45,6 +45,22 @@ class CryptoUtilsTest {
         assertArrayEquals(bytes, uncompress);
     }
 
+    @Test
+    void testCompressUncompressSig() throws InvalidKeyException {
+        testSignatureCompressionUncompression("304502203d694333a4119c5e27a40dae6c050753a76d62e2eeb5e9508229e2fa348aaf16022100bd67c5e0d2f5763d90b071e365a6ff4f756208fc56b393c1a935ba192d11f3e8");
+        testSignatureCompressionUncompression("3046022100bf694333a4119c5e27a40dae6c050753a76d62e2eeb5e9508229e2fa348aaf16022100bd67c5e0d2f5763d90b071e365a6ff4f756208fc56b393c1a935ba192d11f3e8");
+        testSignatureCompressionUncompression("3045022100bf694333a4119c5e27a40dae6c050753a76d62e2eeb5e9508229e2fa348aaf1602204867c5e0d2f5763d90b071e365a6ff4f756208fc56b393c1a935ba192d11f3e8");
+        testSignatureCompressionUncompression("3044022021694333a4119c5e27a40dae6c050753a76d62e2eeb5e9508229e2fa348aaf1602204867c5e0d2f5763d90b071e365a6ff4f756208fc56b393c1a935ba192d11f3e8");
+        testSignatureCompressionUncompression("30440220008221b1250bfc320bd6fc271bc31e59fc6a0f9c1cc62298faec6b8b86f20565022009cd82adb1664d297f7299369764eef8a13266bf0ba26f9b34644ec5f7e19d50");
+        testSignatureCompressionUncompression("30410220008221b1250bfc320bd6fc271bc31e59fc6a0f9c1cc62298faec6b8b86f20565021d09b1664d297f7299369764eef8a13266bf0ba26f9b34644ec5f7e19d50");
+    }
+
+    void testSignatureCompressionUncompression(String sig) {
+        byte[] sigBytes = Convert.parseHexString(sig);
+        byte[] compressed = CryptoUtils.compressSignature(sigBytes);
+        byte[] uncompressed = CryptoUtils.uncompressSignature(compressed);
+        assertEquals(Convert.toHexString(sigBytes), Convert.toHexString(uncompressed));
+    }
 
     @Test
     void testSignVerify_changed_message() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
@@ -54,7 +70,7 @@ class CryptoUtilsTest {
         assertFalse(verified);
     }
 
-    @Test
+    @RepeatedTest(1000)
     void testSignVerify_ed25519() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.ed25519KeyPair();
         testSignVerify(keyPair);
@@ -67,7 +83,7 @@ class CryptoUtilsTest {
         byte[] compressed = CryptoUtils.compressSignature(signature);
         assertEquals(64, compressed.length);
         byte[] restored = signature.length > 64 ? CryptoUtils.uncompressSignature(compressed) : compressed;
-        assertArrayEquals(signature, restored);
+        assertArrayEquals(signature, restored, Convert.toHexString(signature) + "\n" + Convert.toHexString(restored));
         boolean verifiedRestored = CryptoUtils.verifySignature(restored, keyPair.getPublic(), "Text to sign".getBytes());
         assertTrue(verifiedRestored);
     }

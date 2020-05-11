@@ -67,7 +67,8 @@ class DefaultTransactionValidatorTest {
     @Test
     void validate_txWithoutPubKey_newAccount() {
         Wallet wallet = CryptoUtils.generateBitcoinWallet();
-        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 0, 100).build(false);
+        Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(),
+                wallet.getKeyPair(), 0, 100).build(false);
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(tx.getSender());
 
         TxNotValidException exception = assertThrows(TxNotValidException.class, () -> validator.validate(tx));
@@ -78,7 +79,8 @@ class DefaultTransactionValidatorTest {
     @Test
     void validate_txWithIncorrectSignature_Format() {
         Wallet wallet = CryptoUtils.generateBitcoinWallet();
-        Transaction invalidTx = new Transaction((byte) 1, TxType.PAYMENT, wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), null, new byte[0], 0, 0, 1, new byte[64]);
+        Transaction invalidTx = new Transaction((byte) 1, TxType.PAYMENT, wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()),
+                null, new byte[0], 0, 0, 1, new byte[64]);
         doReturn(new Account(wallet.getAccount(), null, 100, Account.Type.ORDINARY)).when(service).get(invalidTx.getSender());
 
         TxNotValidException ex = assertThrows(TxNotValidException.class, () -> validator.validate(invalidTx));

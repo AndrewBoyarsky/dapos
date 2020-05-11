@@ -1,6 +1,6 @@
 package com.boyarsky.dapos.core.tx.type.attachment.impl;
 
-import com.boyarsky.dapos.AccountUtil;
+import com.boyarsky.dapos.TestUtil;
 import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.fee.FeeConfig;
 import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
@@ -26,9 +26,9 @@ class FeeProviderAttachmentTest {
                         new FeeConfig(10, 2, 15, Set.of(TxType.PAYMENT, TxType.DELEGATE)), null), //27
                 new PartyFeeConfig(false, null, //3
                         Map.of(new FeeConfig(5, 10, 12, Set.of()), //24
-                                List.of(AccountUtil.generateEd25Acc().getCryptoId(), AccountUtil.generateEd25Acc().getCryptoId()), // 36
+                                List.of(TestUtil.generateEd25Acc().getCryptoId(), TestUtil.generateEd25Acc().getCryptoId()), // 36
                                 new FeeConfig(-1, -1, 12, Set.of()), // 12
-                                List.of(AccountUtil.generateEd25Acc().getCryptoId()), // 19
+                                List.of(TestUtil.generateEd25Acc().getCryptoId()), // 19
                                 new FeeConfig(-1, -1, -1, Set.of(TxType.PAYMENT)), //5
                                 List.of() // 2
                         )));

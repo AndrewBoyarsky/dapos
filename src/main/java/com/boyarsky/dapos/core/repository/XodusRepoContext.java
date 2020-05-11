@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.core.repository;
 
-import com.boyarsky.dapos.core.TransactionManager;
 import jetbrains.exodus.entitystore.PersistentEntityStore;
 import jetbrains.exodus.entitystore.StoreTransaction;
 import lombok.Getter;
@@ -11,20 +10,10 @@ import org.springframework.stereotype.Component;
 @Getter
 public class XodusRepoContext {
     final PersistentEntityStore store;
-    final TransactionManager manager;
 
     @Autowired
-    public XodusRepoContext(PersistentEntityStore store, TransactionManager manager) {
+    public XodusRepoContext(PersistentEntityStore store) {
         this.store = store;
-        this.manager = manager;
-    }
-
-    public StoreTransaction getBlockchainTx() {
-        StoreTransaction storeTransaction = manager.currentTx();
-        if (storeTransaction == null) {
-            throw new IllegalStateException("Tx was not started for tx manager");
-        }
-        return storeTransaction;
     }
 
     public StoreTransaction getTx() {
@@ -36,9 +25,6 @@ public class XodusRepoContext {
     }
 
     private StoreTransaction curTx() {
-        if (manager.currentTx() != null) {
-            return manager.currentTx();
-        }
         if (store.getCurrentTransaction() != null) {
             return store.getCurrentTransaction();
         }

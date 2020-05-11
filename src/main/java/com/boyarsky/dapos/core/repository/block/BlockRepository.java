@@ -41,7 +41,7 @@ public class BlockRepository {
 
     @Transactional(requiredExisting = true)
     public void insert(LastSuccessBlockData blockData) {
-        StoreTransaction txn = context.getBlockchainTx();
+        StoreTransaction txn = context.getTx();
         Entity prev = CollectionUtils.requireAtMostOne(txn.getAll(storeName));
         if (prev == null) {
             prev = txn.newEntity(storeName);

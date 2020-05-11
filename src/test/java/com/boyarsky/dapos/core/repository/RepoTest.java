@@ -24,7 +24,7 @@ public abstract class RepoTest {
     public static class Config {
         @Bean
         XodusRepoContext context() {
-            return new XodusRepoContext(extension.getStore(), manager());
+            return new XodusRepoContext(extension.getStore());
         }
 
         @Bean

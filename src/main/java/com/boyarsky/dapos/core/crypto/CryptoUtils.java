@@ -201,55 +201,70 @@ public class CryptoUtils {
     }
 
     public static byte[] compressSignature(byte[] signature) {
-        if (signature.length == 64) {
+        if (signature.length <= 64) {
             return signature;
         }
+        byte firstPartSize = signature[3];
+        int pos = 5 + firstPartSize;
+        byte secondPartSize = signature[pos];
         byte[] compressed = new byte[64];
-        if (signature[3] == 32) {
-            System.arraycopy(signature, 4, compressed, 0, 32);
+        if (signature[4] != 0) {
+            System.arraycopy(signature, 4, compressed, 32 - firstPartSize, firstPartSize);
         } else {
-            System.arraycopy(signature, 5, compressed, 0, 32);
+            System.arraycopy(signature, 5, compressed, 32 - firstPartSize + 1, firstPartSize - 1);
         }
-        int pos = 3 + signature[3] + 2;
-        if (signature[pos] == 32) {
-            System.arraycopy(signature, pos + 1, compressed, 32, 32);
+        if (signature[pos + 1] != 0) {
+            System.arraycopy(signature, pos + 1, compressed, 32 + (32 - secondPartSize), secondPartSize);
         } else {
-            System.arraycopy(signature, pos + 2, compressed, 32, 32);
+            System.arraycopy(signature, pos + 2, compressed, 32 + (32 - secondPartSize + 1), secondPartSize - 1);
         }
         return compressed;
     }
 
     public static byte[] uncompressSignature(byte[] signature) {
-        int additionalSize = 0;
-        if (signature[0] < 0) {
-            additionalSize++;
+        int firstPart = 32, secondPart = 32, firstSrcStartPos = 0, secondSrcStartPos = 32;
+        for (int i = 0; i < 32; i++) {
+            if (signature[i] == 0) {
+                firstPart--;
+                firstSrcStartPos++;
+            } else {
+                break;
+            }
         }
-        if (signature[32] < 0) {
-            additionalSize++;
+        for (int i = 32; i < 64; i++) {
+            if (signature[i] == 0) {
+                secondPart--;
+                secondSrcStartPos++;
+            } else {
+                break;
+            }
         }
-        byte[] uncompressed = new byte[70 + additionalSize];
+        int firstStartPos = 4;
+        if (signature[firstSrcStartPos] < 0) {
+            firstPart++;
+            firstStartPos++;
+        }
+        if (signature[secondSrcStartPos] < 0) {
+            secondPart++;
+        }
+        byte[] uncompressed = new byte[firstPart + secondPart + 6];
         uncompressed[0] = 48;
         uncompressed[1] = (byte) (uncompressed.length - 2);
         uncompressed[2] = 2;
-        int firstStartPos;
-        if (signature[0] < 0) {
-            uncompressed[3] = 33;
-            firstStartPos = 5;
-        } else {
-            uncompressed[3] = 32;
-            firstStartPos = 4;
+        uncompressed[3] = (byte) firstPart;
+        if (signature[firstSrcStartPos] < 0) {
+            firstPart--;
         }
-        System.arraycopy(signature, 0, uncompressed, firstStartPos, 32);
-        int secondPos = firstStartPos + 32;
-        uncompressed[secondPos] = 2;
-        if (signature[32] < 0) {
-            uncompressed[++secondPos] = 33;
-            ++secondPos;
-        } else {
-            uncompressed[++secondPos] = 32;
+        System.arraycopy(signature, firstSrcStartPos, uncompressed, firstStartPos, firstPart);
+
+        int secondPos = firstStartPos + firstPart;
+        uncompressed[secondPos++] = 2;
+        uncompressed[secondPos++] = (byte) secondPart;
+        if (signature[secondSrcStartPos] < 0) {
+            secondPart--;
+            secondPos++;
         }
-        secondPos++;
-        System.arraycopy(signature, 32, uncompressed, secondPos, 32);
+        System.arraycopy(signature, secondSrcStartPos, uncompressed, secondPos, secondPart);
         return uncompressed;
     }
 

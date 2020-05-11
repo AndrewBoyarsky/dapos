@@ -31,7 +31,7 @@ public class XodusFeeProviderRepository implements FeeProviderRepository {
     @Override
     @Transactional(requiredExisting = true)
     public void save(FeeProvider feeProvider) {
-        StoreTransaction tx = context.getBlockchainTx();
+        StoreTransaction tx = context.getTx();
         Entity toSave = null;
         if (feeProvider.getDbId() != null) {
             toSave = tx.getEntity(feeProvider.getDbId());

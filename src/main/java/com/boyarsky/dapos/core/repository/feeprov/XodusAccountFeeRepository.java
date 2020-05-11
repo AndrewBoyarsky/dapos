@@ -67,7 +67,7 @@ public class XodusAccountFeeRepository implements AccountFeeRepository {
     @Transactional(requiredExisting = true)
     public void save(AccountFeeAllowance fee) {
         Entity toSave = null;
-        StoreTransaction tx = context.getBlockchainTx();
+        StoreTransaction tx = context.getTx();
         if (fee.getDbId() != null) {
             toSave = tx.getEntity(fee.getDbId());
         }

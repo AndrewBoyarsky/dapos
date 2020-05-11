@@ -9,7 +9,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 
-import static com.boyarsky.dapos.AccountUtil.generateEd25Acc;
+import static com.boyarsky.dapos.TestUtil.generateEd25Acc;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 

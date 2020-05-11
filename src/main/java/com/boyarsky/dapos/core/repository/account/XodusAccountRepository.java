@@ -46,7 +46,7 @@ public class XodusAccountRepository implements AccountRepository {
     @Override
     @Transactional(requiredExisting = true)
     public void save(Account account) {
-        StoreTransaction tx = context.getBlockchainTx();
+        StoreTransaction tx = context.getTx();
         Entity entity;
         if (account.getDbId() == null) {
             entity = tx.newEntity(entityType);

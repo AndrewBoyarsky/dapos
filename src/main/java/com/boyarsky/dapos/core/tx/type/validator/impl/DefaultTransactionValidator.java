@@ -69,7 +69,11 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
         try {
             byte[] sig = tx.getSignature();
             if (!tx.isEd()) {
-                sig = CryptoUtils.uncompressSignature(sig);
+                try {
+                    sig = CryptoUtils.uncompressSignature(sig);
+                } catch (RuntimeException e) {
+                    throw new TxNotValidException("Invalid signature content", e, tx, ErrorCodes.WRONG_SIG_FORMAT);
+                }
             }
             byte[] signableBytes = tx.bytes(true);
             verified = CryptoUtils.verifySignature(tx.isEd(), sig, verifKey, signableBytes);
