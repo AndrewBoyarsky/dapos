@@ -50,7 +50,7 @@ public class DefaultTransactionHandler implements TransactionTypeHandler {
         record.setRecipient(tx.getRecipient());
         record.setType(tx.getType());
         if (nofee != null) {
-            feeProviderService.charge(nofee.getPayer(), tx.getFee(), tx.getSender(), tx.getRecipient());
+            feeProviderService.charge(nofee.getPayer(), tx.getHeight(), tx.getFee(), tx.getSender(), tx.getRecipient());
             record.setFee(0);
         } else {
             accountService.transferMoney(sender, null, tx.getFee());

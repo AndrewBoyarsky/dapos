@@ -4,6 +4,8 @@ import com.apollocurrency.aplwallet.apl.util.StringUtils;
 import com.boyarsky.dapos.core.config.HeightConfig;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.service.Blockchain;
+import com.boyarsky.dapos.core.service.EndBlockEnvelope;
+import com.boyarsky.dapos.core.service.ValidatorUpdate;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
@@ -14,6 +16,7 @@ import types.ABCIApplicationGrpc;
 import types.BlockParams;
 import types.ConsensusParams;
 import types.EvidenceParams;
+import types.PubKey;
 import types.RequestBeginBlock;
 import types.RequestCheckTx;
 import types.RequestCommit;
@@ -38,11 +41,14 @@ import types.ResponseQuery;
 import types.ResponseSetOption;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+
 @Component
 @Slf4j
-public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
+public class DPoSApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     public static final String version = "1.0.0.PRE-ALPHA";
     public static final long protocolVersion = 2;
+    public static final String PUBLIC_KEY_TYPE = "ed25519";
     @Autowired
     private Blockchain blockchain;
     @Autowired
@@ -124,9 +130,20 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     @Override
     public void endBlock(RequestEndBlock request, StreamObserver<ResponseEndBlock> responseObserver) {
         ResponseEndBlock.Builder builder = ResponseEndBlock.newBuilder();
-        HeightConfig newConfig = blockchain.endBlock();
+        EndBlockEnvelope endBlockEnvelope = blockchain.endBlock();
+        HeightConfig newConfig = endBlockEnvelope.getNewConfig();
         if (newConfig != null) {
             builder.setConsensusParamUpdates(map(newConfig));
+        }
+        List<ValidatorUpdate> validators = endBlockEnvelope.getValidators();
+        for (ValidatorUpdate validator : validators) {
+            builder.addValidatorUpdates(types.ValidatorUpdate.newBuilder()
+                    .setPower(validator.getPower())
+                    .setPubKey(PubKey.newBuilder()
+                            .setType(PUBLIC_KEY_TYPE)
+                            .setData(ByteString.copyFrom(validator.getPublicKey()))
+                            .build()));
+
         }
         responseObserver.onNext(builder.build());
         responseObserver.onCompleted();
@@ -149,7 +166,7 @@ public class DPoSApp  extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         if (!acceptRequest) {
             throw new RuntimeException("Dapos app was stopped");
         }
-        blockchain.beginBlock(req.getHeader().getHeight(), req.getHeader().getProposerAddress().toByteArray());
+        blockchain.beginBlock(req.getHeader().getHeight(), req.getLastCommitInfo().getVotesList(), req.getByzantineValidatorsList(), req.getHeader().getProposerAddress().toByteArray());
         var resp = ResponseBeginBlock.newBuilder().build();
         responseObserver.onNext(resp);
         responseObserver.onCompleted();

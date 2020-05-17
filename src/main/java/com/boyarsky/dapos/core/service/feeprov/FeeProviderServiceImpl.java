@@ -6,7 +6,6 @@ import com.boyarsky.dapos.core.model.fee.FeeConfig;
 import com.boyarsky.dapos.core.model.fee.FeeProvider;
 import com.boyarsky.dapos.core.repository.feeprov.AccountFeeRepository;
 import com.boyarsky.dapos.core.repository.feeprov.FeeProviderRepository;
-import com.boyarsky.dapos.core.service.Blockchain;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,36 +16,34 @@ import java.util.Optional;
 @Service
 public class FeeProviderServiceImpl implements FeeProviderService {
     FeeProviderRepository repository;
-    Blockchain blockchain;
     final AccountFeeRepository accountFeeRepository;
 
     @Autowired
-    public FeeProviderServiceImpl(FeeProviderRepository repository, Blockchain blockchain, AccountFeeRepository accountFeeRepository) {
+    public FeeProviderServiceImpl(FeeProviderRepository repository, AccountFeeRepository accountFeeRepository) {
         this.repository = repository;
-        this.blockchain = blockchain;
         this.accountFeeRepository = accountFeeRepository;
     }
 
     @Override
     public void handle(FeeProviderAttachment attachment, Transaction tx) {
         FeeProvider feeProvider = new FeeProvider(tx.getTxId(), tx.getSender(), tx.getAmount(), attachment.getState(), attachment.getFromFeeConfig(), attachment.getToFeeConfig());
-        feeProvider.setHeight(blockchain.getCurrentBlockHeight());
+        feeProvider.setHeight(tx.getHeight());
         repository.save(feeProvider);
     }
 
     @Override
-    public void charge(long id, long amount, AccountId sender, AccountId recipient) {
+    public void charge(long id, long amount, long height, AccountId sender, AccountId recipient) {
         FeeProvider feeProvider = get(id);
         feeProvider.setBalance(feeProvider.getBalance() - amount);
-        feeProvider.setHeight(blockchain.getCurrentBlockHeight());
+        feeProvider.setHeight(height);
         repository.save(feeProvider);
-        chargeAllowance(feeProvider, sender, amount);
+        chargeAllowance(feeProvider, height, sender, amount);
         if (recipient != null) {
-            chargeAllowance(feeProvider, recipient, amount);
+            chargeAllowance(feeProvider, height, recipient, amount);
         }
     }
 
-    private void chargeAllowance(FeeProvider feeProvider, AccountId account, long amount) {
+    private void chargeAllowance(FeeProvider feeProvider, long height, AccountId account, long amount) {
         AccountFeeAllowance allowance = accountFeeRepository.getBy(feeProvider.getId(), account);
         Optional<FeeConfig> feeConfigOpt = feeProvider.getFromFeeConfig().forAccount(account);
         if (allowance == null && feeConfigOpt.isPresent()) {
@@ -56,7 +53,7 @@ public class FeeProviderServiceImpl implements FeeProviderService {
         if (allowance != null) {
             allowance.setOperations(allowance.getOperations() - 1);
             allowance.setFeeRemaining(allowance.getFeeRemaining() - amount);
-            allowance.setHeight(blockchain.getCurrentBlockHeight());
+            allowance.setHeight(height);
             accountFeeRepository.save(allowance);
         }
     }

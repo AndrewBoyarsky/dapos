@@ -16,6 +16,17 @@ public class BlockchainConfig {
     private String chainName;
     private long maxSupply;
 
+    public int getChainId() {
+        return chainId;
+    }
+
+    public String getChainName() {
+        return chainName;
+    }
+
+    public long getMaxSupply() {
+        return maxSupply;
+    }
 
     public BlockchainConfig(ChainSpec spec) {
         Map<Long, HeightConfig> map = spec.getHeightConfigs().stream().collect(Collectors.toMap(HeightConfig::getHeight, Function.identity()));
@@ -32,6 +43,16 @@ public class BlockchainConfig {
             return true;
         }
         return false;
+    }
+
+    public long maxValidatorsForHeight(long height) {
+        if (currentConfig.getHeight() < height) {
+            return currentConfig.getMaxValidators();
+        } else if (height <= 1) {
+            return allConfigs.get(height).getMaxValidators();
+        } else {
+            return findConfigForHeight(height).getMaxValidators();
+        }
     }
 
     public void init(long height) {
@@ -52,7 +73,21 @@ public class BlockchainConfig {
         if (newConfig.getMaxSize() == null) {
             newConfig.setMaxSize(currentConfig.getMaxSize());
         }
+        if (newConfig.getAbsentPeriod() == null) {
+            newConfig.setAbsentPeriod(currentConfig.getAbsentPeriod());
+        }
         this.currentConfig = newConfig;
+    }
+
+    HeightConfig findConfigForHeight(long height) {
+        return this.allConfigs.entrySet()
+                .stream()
+                .filter(e -> e.getKey() <= height + 1)
+                .sorted((o1, o2) -> Long.compare(o2.getKey(), o1.getKey()))
+                .limit(1)
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("For height " + height + " unable to find config from " + allConfigs));
     }
 
     public HeightConfig getCurrentConfig() {

@@ -1,4 +1,4 @@
-package com.boyarsky.dapos.core.model;
+package com.boyarsky.dapos.core.model.fee;
 
 public enum State {
     SUSPENDED(1), ACTIVE(2), STOPPED(3);

@@ -10,4 +10,5 @@ public class HeightConfig {
     private Long maxEvidenceAge;
     private Long maxValidators;
     private Long blockReward;
+    private Long absentPeriod;
 }

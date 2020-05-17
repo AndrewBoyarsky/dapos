@@ -1,7 +1,7 @@
 package com.boyarsky.dapos.core.tx.type.attachment.impl;
 
-import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
+import com.boyarsky.dapos.core.model.fee.State;
 import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

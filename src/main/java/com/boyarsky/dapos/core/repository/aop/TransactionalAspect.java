@@ -31,7 +31,7 @@ public class TransactionalAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Transactional annotation = signature.getMethod().getAnnotation(Transactional.class);
         if (!annotation.startNew() && context.inTx()) {
-            log.info("Proceed in transaction for {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
+            log.trace("Proceed in transaction for {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
             return joinPoint.proceed();
         }
         if (annotation.requiredExisting()) {
@@ -40,9 +40,9 @@ public class TransactionalAspect {
         if (annotation.readonly()) {
             return context.getStore().computeInReadonlyTransaction((txn) -> {
                 try {
-                    log.info("Evaluate in readonly transaction for {}.{}", signature.getDeclaringTypeName(), signature.getName());
+                    log.debug("Evaluate in readonly transaction for {}.{}", signature.getDeclaringTypeName(), signature.getName());
                     Object result = joinPoint.proceed();
-                    log.info("Finish readonly transaction for {}.{}", signature.getDeclaringTypeName(), signature.getName());
+                    log.debug("Finish readonly transaction for {}.{}", signature.getDeclaringTypeName(), signature.getName());
                     return result;
                 } catch (Throwable throwable) {
                     throw new RuntimeException(throwable);
@@ -51,9 +51,9 @@ public class TransactionalAspect {
         } else {
             return context.getStore().computeInTransaction((txn) -> {
                 try {
-                    log.info("Evaluate in write transaction for {}.{}", signature.getDeclaringTypeName(), signature.getName());
+                    log.debug("Evaluate in write transaction for {}.{}", signature.getDeclaringTypeName(), signature.getName());
                     Object result = joinPoint.proceed();
-                    log.info("Finish write transaction for {}.{}", signature.getDeclaringTypeName(), signature.getName());
+                    log.debug("Finish write transaction for {}.{}", signature.getDeclaringTypeName(), signature.getName());
                     return result;
                 } catch (Throwable throwable) {
                     throw new RuntimeException(throwable);

@@ -1,13 +1,13 @@
 package com.boyarsky.dapos.core.tx.type.validator.impl;
 
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
-import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
 import com.boyarsky.dapos.core.model.fee.FeeConfig;
 import com.boyarsky.dapos.core.model.fee.FeeProvider;
 import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
+import com.boyarsky.dapos.core.model.fee.State;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.feeprov.FeeProviderService;
 import com.boyarsky.dapos.core.tx.ErrorCodes;

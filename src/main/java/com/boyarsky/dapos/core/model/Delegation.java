@@ -1,4 +1,4 @@
-package com.boyarsky.dapos.core.validator;
+package com.boyarsky.dapos.core.model;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 

@@ -1,9 +1,9 @@
 package com.boyarsky.dapos.core.repository.feeprov;
 
-import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.FeeProvider;
 import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
+import com.boyarsky.dapos.core.model.fee.State;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;

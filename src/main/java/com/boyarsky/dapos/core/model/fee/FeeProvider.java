@@ -1,7 +1,6 @@
 package com.boyarsky.dapos.core.model.fee;
 
 import com.boyarsky.dapos.core.model.BlockchainEntity;
-import com.boyarsky.dapos.core.model.State;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
