@@ -19,6 +19,7 @@ import com.boyarsky.dapos.core.tx.type.attachment.Attachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.MessageAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.NoFeeAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.PaymentAttachment;
+import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
 import com.boyarsky.dapos.utils.Convert;
 import com.boyarsky.dapos.web.API;
 import com.boyarsky.dapos.web.NodeProxyClient;
@@ -60,14 +61,14 @@ public class TransactionController {
 
     @PostMapping("/payments")
     @Transactional(readonly = true, startNew = true)
-    public ResponseEntity<?> sendMoney(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException {
+    public ResponseEntity<?> sendMoney(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
         AccountWithWallet accountWithWallet = parseAccount(request);
         return sendTransaction(new TxSendRequest(request, accountWithWallet, TxType.PAYMENT, new PaymentAttachment(), 1));
     }
 
     @PostMapping("/messages")
     @Transactional(readonly = true, startNew = true)
-    public ResponseEntity<?> sendMessage(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException {
+    public ResponseEntity<?> sendMessage(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
         AccountWithWallet accountWithWallet = parseAccount(request);
         MessageWithResponse messageWithError = createMessageAttachment(request, accountWithWallet.wallet);
         if (messageWithError.errorResponse != null) {
@@ -131,7 +132,7 @@ public class TransactionController {
         return new AccountWithWallet(senderAcc, wallet.getWallet());
     }
 
-    private ResponseEntity<?> sendTransaction(TxSendRequest request) throws IOException, URISyntaxException, InterruptedException, InvalidKeyException {
+    private ResponseEntity<?> sendTransaction(TxSendRequest request) throws IOException, URISyntaxException, InterruptedException, InvalidKeyException, GasCalculationException {
         Account sender = request.accountWithWallet.account;
         Wallet wallet = request.accountWithWallet.wallet;
 

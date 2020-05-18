@@ -20,7 +20,7 @@ public class FeeProviderTransactionValidator implements TransactionTypeValidator
     @Override
     public void validate(Transaction tx) throws TxNotValidException {
         if (tx.getRecipient() != null) {
-            throw new TxNotValidException("Fee provider tx should not has recipient.", null, tx, ErrorCodes.RECIPIENT_EXIST);
+            throw new TxNotValidException("Fee provider tx should not has recipient.", null, tx, ErrorCodes.NOT_FOUND_VALIDATOR);
         }
         long amount = tx.getAmount();
         if (amount == 0) {
@@ -34,18 +34,19 @@ public class FeeProviderTransactionValidator implements TransactionTypeValidator
         validateFeeConfig(tx, toConfigs, allAccounts);
     }
 
-    private void validateFeeConfig(Transaction tx, Map<FeeConfig, List<AccountId>> configs, Set<AccountId> allAccounts) {
-        configs.forEach((e, v) -> {
-            if (e.getMaxAllowedFee() != -1 && e.getMaxAllowedTotalFee() != -1 && e.getMaxAllowedTotalFee() < e.getMaxAllowedFee()) {
+    private void validateFeeConfig(Transaction tx, Map<FeeConfig, List<AccountId>> configs, Set<AccountId> allAccounts) throws TxNotValidException {
+        for (Map.Entry<FeeConfig, List<AccountId>> entry : configs.entrySet()) {
+            FeeConfig feeConfig = entry.getKey();
+            if (feeConfig.getMaxAllowedFee() != -1 && feeConfig.getMaxAllowedTotalFee() != -1 && feeConfig.getMaxAllowedTotalFee() < feeConfig.getMaxAllowedFee()) {
                 throw new TxNotValidException("Total fee is less than max fee for one operation", null, tx, ErrorCodes.TOTAL_FEE_LESS_OP_FEE);
             }
-            v.forEach(acc -> {
-                if (allAccounts.contains(acc)) {
-                    throw new TxNotValidException("Duplicate account found in fee config: " + acc, null, tx, ErrorCodes.DUPLICATE_FEE_ACCOUNT);
+            for (AccountId id : entry.getValue()) {
+                if (allAccounts.contains(id)) {
+                    throw new TxNotValidException("Duplicate account found in fee config: " + id, null, tx, ErrorCodes.VALIDATOR_ALREADY_UP);
                 }
-                allAccounts.add(acc);
-            });
-        });
+                allAccounts.add(id);
+            }
+        }
     }
 
     @Override

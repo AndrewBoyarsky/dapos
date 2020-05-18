@@ -11,4 +11,7 @@ public class HeightConfig {
     private Long maxValidators;
     private Long blockReward;
     private Long absentPeriod;
+    private Long maxValidatorVotes;
+    private Integer byzantinePunishment;
+    private Integer absentPunishment;
 }

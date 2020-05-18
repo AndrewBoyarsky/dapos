@@ -1,5 +1,6 @@
 package com.boyarsky.dapos.core.config;
 
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,6 +16,7 @@ public class BlockchainConfig {
     private int chainId;
     private String chainName;
     private long maxSupply;
+    private long oneCoinFractions;
 
     public int getChainId() {
         return chainId;
@@ -30,11 +32,23 @@ public class BlockchainConfig {
 
     public BlockchainConfig(ChainSpec spec) {
         Map<Long, HeightConfig> map = spec.getHeightConfigs().stream().collect(Collectors.toMap(HeightConfig::getHeight, Function.identity()));
+        BigInteger totalSupply = BigInteger.valueOf(spec.getMaxSupply()).multiply(BigInteger.valueOf(spec.getOneCoinFractions()));
+        try {
+            this.maxSupply = totalSupply.longValueExact();
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("Total max supply is bounded by " + Long.MAX_VALUE + ", but configured max supply is " + totalSupply.toString());
+        }
+
         updateHeights.addAll(map.keySet());
         this.allConfigs.putAll(map);
         this.chainId = spec.getChainId();
         this.chainName = spec.getChainName();
+        this.oneCoinFractions = spec.getOneCoinFractions();
         this.maxSupply = spec.getMaxSupply();
+    }
+
+    public long getOneCoinFractions() {
+        return oneCoinFractions;
     }
 
     public boolean tryUpdateForHeight(long height) {

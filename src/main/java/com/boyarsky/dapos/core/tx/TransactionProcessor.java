@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.tx;
 
 import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
 import com.boyarsky.dapos.core.tx.type.handler.TxHandlingException;
+import com.boyarsky.dapos.core.tx.type.parser.TxParsingException;
 import com.boyarsky.dapos.core.tx.type.validator.TxNotValidException;
 import com.boyarsky.dapos.utils.Convert;
 import lombok.extern.slf4j.Slf4j;
@@ -94,6 +95,8 @@ public class TransactionProcessor {
         Transaction transaction;
         try {
             transaction = parser.parseTx(tx);
+        } catch (TxParsingException e) {
+            return new ProcessingResult("Error during parsing: " + e.getMessage(), e.getCode(), e.getTx(), e);
         } catch (Exception e) {
             return new ProcessingResult("Unable to parse transaction: " + e.getMessage(), ErrorCodes.GENERAL_PARSING_ERROR, null, e);
         }

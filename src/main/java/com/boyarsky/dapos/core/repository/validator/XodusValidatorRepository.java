@@ -24,14 +24,14 @@ public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorE
     protected void storeToDbEntity(Entity e, ValidatorEntity validatorEntity) {
         e.setProperty("fee", validatorEntity.getFee());
         e.setProperty("id", Convert.toHexString(validatorEntity.getId().getAddressBytes()));
-        e.setProperty("delegatedBalance", validatorEntity.getDelegatedBalance());
+        e.setProperty("delegatedBalance", validatorEntity.getVotePower());
         e.setProperty("enabled", validatorEntity.isEnabled());
     }
 
     @Override
     protected ValidatorEntity doMap(Entity e) {
         ValidatorEntity validatorEntity = new ValidatorEntity();
-        validatorEntity.setDelegatedBalance((Long) e.getProperty("delegatedBalance"));
+        validatorEntity.setVotePower((Long) e.getProperty("delegatedBalance"));
         validatorEntity.setId(AccountId.fromBytes(Convert.parseHexString((String) e.getProperty("id"))));
         validatorEntity.setFee((Long) e.getProperty("fee"));
         validatorEntity.setEnabled((Boolean) e.getProperty("enabled"));

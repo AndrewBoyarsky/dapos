@@ -166,7 +166,7 @@ public class DPoSApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         if (!acceptRequest) {
             throw new RuntimeException("Dapos app was stopped");
         }
-        blockchain.beginBlock(req.getHeader().getHeight(), req.getLastCommitInfo().getVotesList(), req.getByzantineValidatorsList(), req.getHeader().getProposerAddress().toByteArray());
+        blockchain.beginBlock(req.getHeader().getHeight(), req.getLastCommitInfo().getVotesList(), req.getByzantineValidatorsList());
         var resp = ResponseBeginBlock.newBuilder().build();
         responseObserver.onNext(resp);
         responseObserver.onCompleted();

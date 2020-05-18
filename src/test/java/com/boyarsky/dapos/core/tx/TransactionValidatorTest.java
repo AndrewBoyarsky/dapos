@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.tx;
 
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.validator.TransactionTypeValidator;
+import com.boyarsky.dapos.core.tx.type.validator.TxNotValidException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -22,7 +23,7 @@ class TransactionValidatorTest {
     Transaction tx;
 
     @Test
-    void validate_Ok() {
+    void validate_Ok() throws TxNotValidException {
         doReturn(TxType.PAYMENT).when(tx).getType();
         TransactionValidator v = new TransactionValidator(Map.of(TxType.PAYMENT, validator1, TxType.ALL, validator2));
 

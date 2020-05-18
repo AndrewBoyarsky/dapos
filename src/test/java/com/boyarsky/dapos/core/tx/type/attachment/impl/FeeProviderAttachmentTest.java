@@ -23,7 +23,7 @@ class FeeProviderAttachmentTest {
 
         FeeProviderAttachment restrictedAttachment = new FeeProviderAttachment((byte) 2, State.SUSPENDED, //2
                 new PartyFeeConfig(true,
-                        new FeeConfig(10, 2, 15, Set.of(TxType.PAYMENT, TxType.DELEGATE)), null), //27
+                        new FeeConfig(10, 2, 15, Set.of(TxType.PAYMENT, TxType.VOTE)), null), //27
                 new PartyFeeConfig(false, null, //3
                         Map.of(new FeeConfig(5, 10, 12, Set.of()), //24
                                 List.of(TestUtil.generateEd25Acc().getCryptoId(), TestUtil.generateEd25Acc().getCryptoId()), // 36

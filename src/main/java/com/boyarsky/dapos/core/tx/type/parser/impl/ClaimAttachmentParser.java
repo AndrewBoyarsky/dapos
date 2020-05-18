@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public class ClaimAttachmentParser implements AttachmentTxTypeParser<ClaimAttachment> {
     @Override
     public TxType type() {
-        return TxType.CLAIM;
+        return TxType.REVOKE;
     }
 
     @Override

@@ -58,6 +58,17 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public void addToBalance(AccountId accountId, long amount, long height) {
+        Account account = get(accountId);
+        if (account == null) {
+            account = new Account(accountId, null, 0, Account.Type.ORDINARY);
+        }
+        account.setHeight(height);
+        account.setBalance(account.getBalance() + amount);
+        save(account);
+    }
+
+    @Override
     public void save(Account account) {
         repository.save(account);
     }

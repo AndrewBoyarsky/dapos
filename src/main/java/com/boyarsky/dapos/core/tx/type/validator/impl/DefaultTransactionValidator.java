@@ -117,7 +117,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
 
     }
 
-    private void validateForParty(Transaction tx, PartyFeeConfig partyFeeConfig, AccountId accountId, FeeProvider feeProvider) {
+    private void validateForParty(Transaction tx, PartyFeeConfig partyFeeConfig, AccountId accountId, FeeProvider feeProvider) throws TxNotValidException {
         if (partyFeeConfig.isWhitelistAll()) {
             FeeConfig rootConfig = partyFeeConfig.getRootConfig();
             if (rootConfig != null) {
@@ -134,7 +134,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
         }
     }
 
-    private void validateForConfig(Transaction tx, FeeConfig config, FeeProvider feeProvider, AccountId accountId) {
+    private void validateForConfig(Transaction tx, FeeConfig config, FeeProvider feeProvider, AccountId accountId) throws TxNotValidException {
         if (!config.allowed(tx.getType())) {
             throw new TxNotValidException("Transaction of type " + tx.getType() + " is not allowed for provider " + feeProvider.getId() + ", expected - " + config.getAllowedTxs(), null, tx, ErrorCodes.FEE_PROVIDER_NOT_SUPPORTED_TX_TYPE);
         }

@@ -31,7 +31,7 @@ class DefaultTransactionValidatorTest {
     }
 
     @Test
-    void validate_correctTx() {
+    void validate_correctTx() throws TxNotValidException {
         Wallet wallet = CryptoUtils.generateBitcoinWallet();
         Transaction tx = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 0, 100)
                 .amount(100)

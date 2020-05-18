@@ -15,6 +15,6 @@ public class ClaimTransactionHandler implements TransactionTypeHandler {
 
     @Override
     public TxType type() {
-        return TxType.CLAIM;
+        return TxType.REVOKE;
     }
 }

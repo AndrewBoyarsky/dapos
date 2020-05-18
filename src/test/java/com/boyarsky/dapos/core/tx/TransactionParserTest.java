@@ -8,6 +8,7 @@ import com.boyarsky.dapos.core.tx.type.attachment.IndependentAttachmentType;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.MessageAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.NoFeeAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.PaymentAttachment;
+import com.boyarsky.dapos.core.tx.type.parser.TxParsingException;
 import com.boyarsky.dapos.core.tx.type.parser.impl.DefaultAttachmentParser;
 import com.boyarsky.dapos.core.tx.type.parser.impl.MessageAttachmentTxTypeParser;
 import com.boyarsky.dapos.core.tx.type.parser.impl.NoFeeAttachmentParser;
@@ -26,7 +27,7 @@ class TransactionParserTest {
     );
 
     @Test
-    void parsePaymentWithMessageAndNoFee() {
+    void parsePaymentWithMessageAndNoFee() throws TxParsingException {
         Wallet wallet = CryptoUtils.generateEthWallet();
         EncryptedData encryptedData = new EncryptedData(new byte[64], new byte[32]);
         Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 2, 100)
@@ -44,7 +45,7 @@ class TransactionParserTest {
     }
 
     @Test
-    void parsePlainPaymentTx() {
+    void parsePlainPaymentTx() throws TxParsingException {
         Wallet wallet = CryptoUtils.generateValidatorWallet();
         Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(TxType.PAYMENT, new PaymentAttachment(), wallet.getAccount(), wallet.getKeyPair(), 1, 10)
                 .recipient(wallet.getAccount())

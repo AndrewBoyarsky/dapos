@@ -44,6 +44,18 @@ public class ErrorCodes {
     public static final ErrorCode DUPLICATE_FEE_ACCOUNT = new ErrorCode(FEE_PROV_VALIDATION, 23);
     public static final ErrorCode TOTAL_FEE_LESS_OP_FEE = new ErrorCode(FEE_PROV_VALIDATION, 24);
 
+    public static final String VALIDATOR_CONTROL_VALIDATION = "Validator Control Validation";
+    public static final ErrorCode NOT_FOUND_VALIDATOR = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 31);
+    public static final ErrorCode ACCOUNT_NOT_ELIGIBLE_TO_CONTROL_VALIDATOR = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 32);
+    public static final ErrorCode VALIDATOR_ALREADY_UP = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 33);
+    public static final ErrorCode VALIDATOR_ALREADY_DOWN = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 34);
+//    public static final ErrorCode TOTAL_FEE_LESS_OP_FEE = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 24);
+
+
+    public static final String VOTE_VALIDATION = "Vote Validation";
+    public static final ErrorCode VOTE_VALIDATOR_NOT_SPECIFIED = new ErrorCode(VOTE_VALIDATION, 71);
+    public static final ErrorCode VOTE_VALIDATOR_NOT_FOUND = new ErrorCode(VOTE_VALIDATION, 72);
+    public static final ErrorCode VOTE_VALIDATOR_DISABLED = new ErrorCode(VOTE_VALIDATION, 73);
 
     public static final String TX_HANDLING = "Transaction Handling";
     public static final ErrorCode HANDLING_ERROR = new ErrorCode(TX_HANDLING, 127);

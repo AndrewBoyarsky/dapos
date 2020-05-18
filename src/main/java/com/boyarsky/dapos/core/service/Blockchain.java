@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -82,19 +83,31 @@ public class Blockchain {
             validatorStatuses.put(validatorId, voteInfo.getSignedLastBlock());
         }
         byzantineValidators.forEach(validatorStatuses::remove); // avoid double punishment
-        byzantineValidators.forEach(validatorService::punishByzantine);
-        validatorStatuses.entrySet().stream().filter(e -> !e.getValue()).map(Map.Entry::getKey).forEach(validatorService::punishAbsent);
+        long totalPunishmentAmount = byzantineValidators
+                .stream()
+                .mapToLong(id -> validatorService.punishByzantine(id, currentHeight))
+                .sum();
+        totalPunishmentAmount += validatorStatuses.entrySet()
+                .stream()
+                .filter(e -> !e.getValue())
+                .map(Map.Entry::getKey)
+                .mapToLong(id -> validatorService.punishByzantine(id, currentHeight))
+                .sum();
         long maxValidators = config.maxValidatorsForHeight(this.currentHeight);
         List<ValidatorEntity> fairValidators = validatorStatuses.entrySet()
                 .stream()
                 .filter(Map.Entry::getValue)
                 .map(Map.Entry::getKey)
-                .map(validatorService::get)
+                .map(id -> {
+                    ValidatorEntity validator = validatorService.get(id);
+                    return Objects.requireNonNullElseGet(validator, ValidatorEntity::new);
+                })
                 .filter(ValidatorEntity::isEnabled)
-                .sorted(Comparator.comparing(ValidatorEntity::getDelegatedBalance).reversed())
+                .sorted(Comparator.comparing(ValidatorEntity::getVotePower).reversed())
                 .limit(maxValidators)
                 .collect(Collectors.toList());
-        validatorService.distributeReward(fairValidators, rewardAmount.get());
+        rewardAmount.addAndGet(totalPunishmentAmount);
+        validatorService.distributeReward(fairValidators, rewardAmount.get(), 0);
 
 
         this.currentHeight = height;

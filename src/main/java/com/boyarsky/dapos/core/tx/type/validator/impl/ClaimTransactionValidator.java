@@ -15,6 +15,6 @@ public class ClaimTransactionValidator implements TransactionTypeValidator {
 
     @Override
     public TxType type() {
-        return TxType.CLAIM;
+        return TxType.REVOKE;
     }
 }

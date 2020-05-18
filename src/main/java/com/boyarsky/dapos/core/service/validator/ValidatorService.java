@@ -3,25 +3,23 @@ package com.boyarsky.dapos.core.service.validator;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.tx.Transaction;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.ValidatorAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.RegisterValidatorAttachment;
 
 import java.util.List;
 
 public interface ValidatorService {
-    void controlValidator(Transaction tx, ValidatorAttachment attachment);
+    void registerValidator(Transaction tx, RegisterValidatorAttachment attachment);
 
-    List<ValidatorEntity> updatedAt(long height);
-
-    List<ValidatorEntity> getAbsentNodes();
+    void toggleValidator(AccountId validatorId, boolean enabled, long height);
 
     void absentValidator(AccountId validatorId);
 
-    long punishByzantine(AccountId validatorId);
+    long punishByzantine(AccountId validatorId, long height);
 
-    long punishAbsent(AccountId validatorId);
+    long punishAbsent(AccountId validatorId, long height);
 
-    void distributeReward(List<ValidatorEntity> fairValidators, long rewardAmount);
+    void distributeReward(List<ValidatorEntity> fairValidators, long rewardAmount, long height);
 
-    ValidatorEntity get(AccountId fairValidator);
+    ValidatorEntity get(AccountId id);
 }
 

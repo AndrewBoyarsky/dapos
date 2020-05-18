@@ -25,7 +25,7 @@ public class TransactionParser {
         this.indAttachmentParsers.putAll(indAttachmentParsers);
     }
 
-    public Transaction parseTx(byte[] txBytes) {
+    public Transaction parseTx(byte[] txBytes) throws TxParsingException {
         Transaction transaction = new Transaction(txBytes);
         AttachmentTxTypeParser<? extends Attachment> attachmentTxTypeParser = txTypeParsers.get(transaction.getType());
         ByteBuffer attachmentBuffer = ByteBuffer.wrap(transaction.getData());

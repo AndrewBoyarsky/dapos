@@ -3,29 +3,29 @@ package com.boyarsky.dapos.core.tx.type.handler.impl;
 import com.boyarsky.dapos.core.service.validator.ValidatorService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.RegisterValidatorAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.ValidatorControlAttachment;
 import com.boyarsky.dapos.core.tx.type.handler.TransactionTypeHandler;
 import com.boyarsky.dapos.core.tx.type.handler.TxHandlingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ValidatorTxHandler implements TransactionTypeHandler {
-    private ValidatorService validatorService;
+public class StartValidatorTxHandler implements TransactionTypeHandler {
+    private ValidatorService service;
 
     @Autowired
-    public ValidatorTxHandler(ValidatorService validatorService) {
-        this.validatorService = validatorService;
+    public StartValidatorTxHandler(ValidatorService service) {
+        this.service = service;
     }
 
     @Override
     public void handle(Transaction tx) throws TxHandlingException {
-        RegisterValidatorAttachment attachment = tx.getAttachment(RegisterValidatorAttachment.class);
-        validatorService.registerValidator(tx, attachment);
+        ValidatorControlAttachment attachment = tx.getAttachment(ValidatorControlAttachment.class);
+        service.toggleValidator(attachment.getValidatorId(), true, tx.getHeight());
     }
 
     @Override
     public TxType type() {
-        return TxType.REGISTER_VALIDATOR;
+        return TxType.START_VALIDATOR;
     }
 }

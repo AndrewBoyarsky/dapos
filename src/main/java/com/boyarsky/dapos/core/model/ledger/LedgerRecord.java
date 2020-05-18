@@ -46,7 +46,7 @@ public class LedgerRecord extends BlockchainEntity {
 
     @Getter
     public enum Type {
-        BLOCK_REWARD(1), FINE(2);
+        BLOCK_REWARD(1), FINE(2), ABSENT(3), ABSENT_FINE(4), BYZANTINE_FINE(5);
         private final byte code;
 
         Type(int code) {

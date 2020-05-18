@@ -7,7 +7,7 @@ import com.boyarsky.dapos.core.tx.type.handler.TxHandlingException;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DelegateTransactionHandler implements TransactionTypeHandler {
+public class VoteTransactionHandler implements TransactionTypeHandler {
     @Override
     public void handle(Transaction tx) throws TxHandlingException {
 
@@ -15,6 +15,6 @@ public class DelegateTransactionHandler implements TransactionTypeHandler {
 
     @Override
     public TxType type() {
-        return TxType.DELEGATE;
+        return TxType.VOTE;
     }
 }

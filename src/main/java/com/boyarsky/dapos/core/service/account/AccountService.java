@@ -16,6 +16,8 @@ public interface AccountService {
     void transferMoney(AccountId sender, AccountId recipient, long amount);
 
 
+    void addToBalance(AccountId accountId, long amount, long height);
+
     void save(Account account);
 
 }

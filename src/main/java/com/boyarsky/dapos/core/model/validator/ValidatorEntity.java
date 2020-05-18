@@ -12,7 +12,9 @@ public class ValidatorEntity extends BlockchainEntity {
     private byte[] publicKey;
     private long absentFor;
     private AccountId id;
+    private AccountId rewardId;
+    private int votes;
     //    private long balance;
-    private long delegatedBalance;
+    private long votePower;
     private long fee;
 }
