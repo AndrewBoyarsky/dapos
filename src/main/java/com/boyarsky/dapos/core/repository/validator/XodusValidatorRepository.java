@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.repository.validator;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
+import com.boyarsky.dapos.core.repository.DbParam;
 import com.boyarsky.dapos.core.repository.DbParamImpl;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
@@ -36,6 +37,11 @@ public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorE
         validatorEntity.setFee((Long) e.getProperty("fee"));
         validatorEntity.setEnabled((Boolean) e.getProperty("enabled"));
         return validatorEntity;
+    }
+
+    @Override
+    protected List<DbParam> idParams(ValidatorEntity value) {
+        return List.of(new DbParamImpl("id", Convert.toHexString(value.getId().getAddressBytes())));
     }
 
     @Override

@@ -28,9 +28,9 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         if (t.getDbId() != null) {
             toSave = getTx().getEntity(t.getDbId());
         } else {
-            DbParam id = idParam(t);
-            if (id != null) {
-                toSave = getByDbParam(id);
+            List<DbParam> ids = idParams(t);
+            if (ids != null && !ids.isEmpty()) {
+                toSave = getByDbParams(ids);
             }
         }
 
@@ -48,7 +48,7 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
 
     @Transactional(readonly = true)
     public <V extends DbParam> T get(@NonNull V id) {
-        Entity e = getByDbParam(id);
+        Entity e = getByDbParams(List.of(id));
         if (e == null) {
             return null;
         }
@@ -58,7 +58,13 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
     @SafeVarargs
     @Transactional(readonly = true)
     public final <V extends DbParam> List<T> getAll(@NonNull V... params) {
-        if (params != null && params.length != 0) {
+        EntityIterable allEntities = getAllEntities(params);
+        return CollectionUtils.toList(allEntities, this::map);
+    }
+
+    @SafeVarargs
+    protected final <V extends DbParam> EntityIterable getAllEntities(@NonNull V... params) {
+        if (params.length != 0) {
             EntityIterable iterable = null;
             for (V param : params) {
                 EntityIterable filtered = getTx().find(entityName, param.name(), param.value());
@@ -68,14 +74,14 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
                     iterable = filtered;
                 }
             }
-            return CollectionUtils.toList(iterable, this::map);
+            return iterable;
         } else {
-            return CollectionUtils.toList(getTx().getAll(entityName), this::map);
+            return getTx().getAll(entityName);
         }
     }
 
-    public <V extends DbParam> Entity getByDbParam(@NonNull V id) {
-        return CollectionUtils.requireAtMostOne(context.getTx().find(entityName, id.name(), id.value()));
+    public Entity getByDbParams(@NonNull List<DbParam> id) {
+        return CollectionUtils.requireAtMostOne(getAllEntities(id.toArray(new DbParam[]{})));
     }
 
     protected T map(Entity e) {
@@ -90,8 +96,8 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
 
     protected abstract T doMap(Entity e);
 
-    protected <V extends DbParam> V idParam(T value) {
-        return null;
+    protected List<DbParam> idParams(T value) {
+        return List.of();
     }
 
     protected StoreTransaction getTx() {

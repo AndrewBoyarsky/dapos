@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.RegisterValidatorAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.VoteAttachment;
 
 import java.util.List;
 
@@ -16,9 +17,13 @@ public interface ValidatorService {
 
     long punishByzantine(AccountId validatorId, long height);
 
+    void revoke(AccountId validator, AccountId voter, long height);
+
     long punishAbsent(AccountId validatorId, long height);
 
     void distributeReward(List<ValidatorEntity> fairValidators, long rewardAmount, long height);
+
+    void addVote(Transaction tx, VoteAttachment attachment);
 
     ValidatorEntity get(AccountId id);
 }

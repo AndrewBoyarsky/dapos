@@ -16,6 +16,6 @@ public class VoteAttachmentParser implements AttachmentTxTypeParser<VoteAttachme
 
     @Override
     public VoteAttachment parseAttachment(ByteBuffer buffer) {
-        return new VoteAttachment();
+        return new VoteAttachment(buffer);
     }
 }

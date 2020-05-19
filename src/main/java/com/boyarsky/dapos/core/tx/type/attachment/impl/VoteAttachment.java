@@ -1,29 +1,31 @@
 package com.boyarsky.dapos.core.tx.type.attachment.impl;
 
 import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
 import java.nio.ByteBuffer;
 
+@Getter
+@ToString
+@EqualsAndHashCode(callSuper = true)
 public class VoteAttachment extends AbstractAttachment {
-    private final long voteStake;
 
-    public VoteAttachment(byte version, long voteStake) {
+    public VoteAttachment(byte version) {
         super(version);
-        this.voteStake = voteStake;
     }
 
     public VoteAttachment(ByteBuffer buffer) {
         super(buffer);
-        this.voteStake = buffer.getLong();
     }
 
     @Override
     public int mySize() {
-        return 8;
+        return 0;
     }
 
     @Override
     public void putMyBytes(ByteBuffer buffer) {
-        buffer.putLong(voteStake);
     }
 }

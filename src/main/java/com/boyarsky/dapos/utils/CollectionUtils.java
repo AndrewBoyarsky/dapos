@@ -21,13 +21,24 @@ public class CollectionUtils {
                 if (iterator.shouldBeDisposed()) {
                     iterator.dispose();
                 }
-                throw new RuntimeException("Exception");
+                throw new RuntimeException("Required 1 entity, got more " + collection.size());
             }
         }
         if (iterator.shouldBeDisposed()) {
             iterator.dispose();
         }
         return e;
+    }
+
+
+    public static <T> T requireAtMostOne(List<T> tlist) {
+        if (tlist.isEmpty()) {
+            return null;
+        }
+        if (tlist.size() > 1) {
+            throw new RuntimeException("Required at most one entity, got " + tlist.size() + ": " + tlist);
+        }
+        return tlist.get(0);
     }
 
     public static <T> List<T> toList(EntityIterable e, Function<Entity, T> mapper) {

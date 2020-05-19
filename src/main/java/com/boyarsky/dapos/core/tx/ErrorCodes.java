@@ -49,13 +49,20 @@ public class ErrorCodes {
     public static final ErrorCode ACCOUNT_NOT_ELIGIBLE_TO_CONTROL_VALIDATOR = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 32);
     public static final ErrorCode VALIDATOR_ALREADY_UP = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 33);
     public static final ErrorCode VALIDATOR_ALREADY_DOWN = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 34);
-//    public static final ErrorCode TOTAL_FEE_LESS_OP_FEE = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 24);
+    public static final ErrorCode VALIDATOR_FEE_RANGE_VIOLATED = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 35);
+    public static final ErrorCode VALIDATOR_ALREADY_REGISTERED = new ErrorCode(VALIDATOR_CONTROL_VALIDATION, 36);
 
 
     public static final String VOTE_VALIDATION = "Vote Validation";
     public static final ErrorCode VOTE_VALIDATOR_NOT_SPECIFIED = new ErrorCode(VOTE_VALIDATION, 71);
     public static final ErrorCode VOTE_VALIDATOR_NOT_FOUND = new ErrorCode(VOTE_VALIDATION, 72);
     public static final ErrorCode VOTE_VALIDATOR_DISABLED = new ErrorCode(VOTE_VALIDATION, 73);
+    public static final ErrorCode VOTE_FAILED_TO_SUPERSEDE = new ErrorCode(VOTE_VALIDATION, 74);
+    public static final ErrorCode VOTE_POWER_LESSER_THAN_MINIMAL_STAKE = new ErrorCode(VOTE_VALIDATION, 75);
+    public static final ErrorCode REVOKE_VALIDATOR_NOT_SPECIFIED = new ErrorCode(VOTE_VALIDATION, 75);
+    public static final ErrorCode REVOKE_VALIDATOR_INCORRECT_ADDRESS_TYPE = new ErrorCode(VOTE_VALIDATION, 76);
+    public static final ErrorCode REVOKE_UNKNOWN_VALIDATOR = new ErrorCode(VOTE_VALIDATION, 77);
+    public static final ErrorCode REVOKE_VOTE_FOR_VALIDATOR_NOT_EXIST = new ErrorCode(VOTE_VALIDATION, 78);
 
     public static final String TX_HANDLING = "Transaction Handling";
     public static final ErrorCode HANDLING_ERROR = new ErrorCode(TX_HANDLING, 127);

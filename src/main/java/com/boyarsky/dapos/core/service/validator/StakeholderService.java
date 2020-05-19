@@ -8,13 +8,17 @@ import java.math.BigDecimal;
 
 public interface StakeholderService {
 
-    long punishStakeholders(AccountId validatorId, long height);
+    StakeholderPunishmentData punishStakeholders(AccountId validatorId, long height);
 
-    long punishByzantineStakeholders(AccountId validatorId, long height);
+    StakeholderPunishmentData punishByzantineStakeholders(AccountId validatorId, long height);
 
-    void voteFor(Transaction tx, VoteAttachment attachment);
+    long voteFor(Transaction tx, VoteAttachment attachment);
 
-    void revokeVote(Transaction tx, VoteAttachment attachment);
+    long revokeVote(AccountId validator, AccountId voter, long height);
 
     void distributeRewardForValidator(AccountId id, BigDecimal stakeholdersReward);
+
+    boolean exists(AccountId validator, AccountId voter);
+
+    long minStake(AccountId validator);
 }

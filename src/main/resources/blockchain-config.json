@@ -11,8 +11,9 @@
       "maxEvidenceAge": 10000,
       "absentPeriod": 30,
       "maxValidators": 2,
-      "maxValidatorVotes": 5,
-      "byzantinePunishment": 350,
+      "maxValidatorVotes": "0.5",
+      "minVoteStake": 100000000,
+      "byzantinePunishment": "3.5",
       "absentPunishment": 50,
       "blockReward": 50000000000
     },

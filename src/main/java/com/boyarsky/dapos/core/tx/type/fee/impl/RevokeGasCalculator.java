@@ -6,7 +6,7 @@ import com.boyarsky.dapos.core.tx.type.fee.GasCalculator;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ClaimGasCalculator implements GasCalculator {
+public class RevokeGasCalculator implements GasCalculator {
 
     @Override
     public TxType type() {
@@ -15,7 +15,7 @@ public class ClaimGasCalculator implements GasCalculator {
 
     @Override
     public int gasRequired(Transaction tx) {
-        return 0;
+        return 500;
 
     }
 }

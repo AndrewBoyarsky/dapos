@@ -10,6 +10,7 @@ import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.RegisterValidatorAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.VoteAttachment;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,9 +28,12 @@ public class ValidatorServiceImpl implements ValidatorService {
     private AccountService accountService;
 
     @Autowired
-    public ValidatorServiceImpl(ValidatorRepository repository, BlockchainConfig config) {
+    public ValidatorServiceImpl(ValidatorRepository repository, BlockchainConfig config, LedgerService ledgerService, StakeholderService stakeholderService, AccountService accountService) {
         this.repository = repository;
         this.config = config;
+        this.ledgerService = ledgerService;
+        this.stakeholderService = stakeholderService;
+        this.accountService = accountService;
     }
 
     @Override
@@ -80,12 +84,22 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
         byId.setHeight(height);
         byId.setEnabled(false);
-        long punishmentAmount = stakeholderService.punishByzantineStakeholders(validatorId, height);
-        ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.BYZANTINE_FINE, null, validatorId));
+        long punishmentAmount = stakeholderService.punishByzantineStakeholders(validatorId, height).getPunishmentAmount();
+        ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.VALIDATOR_BYZANTINE_FINE, null, validatorId));
         byId.setVotePower(0);
         byId.setVotes(0);
         repository.save(byId);
         return punishmentAmount;
+    }
+
+    @Override
+    public void revoke(AccountId validator, AccountId voter, long height) {
+        long votePowerLoss = stakeholderService.revokeVote(validator, voter, height);
+        ValidatorEntity entity = get(validator);
+        entity.setHeight(height);
+        entity.setVotes(entity.getVotes() - 1);
+        entity.setVotePower(entity.getVotePower() - votePowerLoss);
+        repository.save(entity);
     }
 
     @Override
@@ -101,12 +115,12 @@ public class ValidatorServiceImpl implements ValidatorService {
         byId.setHeight(height);
         if (byId.getAbsentFor() >= config.getCurrentConfig().getAbsentPeriod()) {
             byId.setEnabled(false);
-            punishmentAmount = stakeholderService.punishStakeholders(validatorId, height);
-            ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.ABSENT_FINE, null, validatorId));
+            punishmentAmount = stakeholderService.punishStakeholders(validatorId, height).getPunishmentAmount();
+            ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.ABSENT_VALIDATOR_FINE, null, validatorId));
             byId.setVotePower(byId.getVotePower() - punishmentAmount);
         } else {
             byId.setAbsentFor(byId.getAbsentFor() + 1);
-            ledgerService.add(new LedgerRecord(height, byId.getAbsentFor(), LedgerRecord.Type.ABSENT, null, validatorId));
+            ledgerService.add(new LedgerRecord(height, byId.getAbsentFor(), LedgerRecord.Type.ABSENT_VALIDATOR, null, validatorId));
         }
         repository.save(byId);
         return punishmentAmount;
@@ -130,8 +144,19 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public ValidatorEntity get(AccountId fairValidator) {
-        return null;
+    public void addVote(Transaction tx, VoteAttachment attachment) {
+        ValidatorEntity byId = repository.getById(tx.getRecipient());
+        if (!stakeholderService.exists(tx.getRecipient(), tx.getSender())) {
+            byId.setVotes(byId.getVotes() + 1);
+        }
+        byId.setHeight(tx.getHeight());
+        byId.setVotePower(byId.getVotePower() + attachment.getVoteStake());
+        stakeholderService.voteFor(tx, attachment);
+    }
+
+    @Override
+    public ValidatorEntity get(AccountId id) {
+        return repository.getById(id);
     }
 
 }

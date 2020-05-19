@@ -41,6 +41,7 @@ public class TransactionProcessor {
     public ProcessingResult tryDeliver(byte[] tx, long height) {
         ProcessingResult validationResult = parseAndValidate(tx);
         if (!validationResult.getCode().isOk()) {
+
             return validationResult;
         }
         validationResult.getTx().setGasUsed(validationResult.getGasData().getUsed());
@@ -81,7 +82,7 @@ public class TransactionProcessor {
             return new ProcessingResult("Unknown gas calculation error: " + e.getMessage(), ErrorCodes.UNKNOWN_GAS_CALC_ERROR, tx, e);
         }
 
-        if (gasUsed < tx.getGasPrice()) {
+        if (gasUsed > tx.getMaxGas()) {
             return new ProcessingResult("Not enough gas: required - " + gasUsed + ", provided - " + tx.getMaxGas(), ErrorCodes.NOT_ENOUGH_GAS, tx, null);
         }
         ProcessingResult ok = new ProcessingResult("Estimation OK", ErrorCodes.OK, tx, null);

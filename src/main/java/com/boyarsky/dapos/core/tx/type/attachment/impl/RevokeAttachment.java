@@ -4,9 +4,14 @@ import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
 
 import java.nio.ByteBuffer;
 
-public class ClaimAttachment extends AbstractAttachment {
-    public ClaimAttachment(byte version) {
+public class RevokeAttachment extends AbstractAttachment {
+
+    public RevokeAttachment(byte version) {
         super(version);
+    }
+
+    public RevokeAttachment(ByteBuffer buffer) {
+        super(buffer);
     }
 
     @Override
@@ -16,6 +21,5 @@ public class ClaimAttachment extends AbstractAttachment {
 
     @Override
     public void putMyBytes(ByteBuffer buffer) {
-
     }
 }

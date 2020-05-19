@@ -38,7 +38,7 @@ public class DefaultTransactionHandler implements TransactionTypeHandler {
     public void handle(Transaction tx) {
         AccountId sender = tx.getSender();
         accountService.assignPublicKey(sender, tx.getSenderPublicKey());
-        if (tx.getAmount() > 0) {
+        if (tx.getAmount() > 0 && !tx.isVal()) {
             accountService.transferMoney(sender, tx.getRecipient(), tx.getAmount());
         }
         NoFeeAttachment nofee = tx.getAttachment(NoFeeAttachment.class);

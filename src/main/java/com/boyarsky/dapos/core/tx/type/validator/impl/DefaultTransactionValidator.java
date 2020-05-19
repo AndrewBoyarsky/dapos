@@ -85,11 +85,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
         if (!verified) {
             throw new TxNotValidException("Incorrect signature", null, tx, ErrorCodes.BAD_SIG);
         }
-
-        long balance = account.getBalance();
-        if (balance < tx.getAmount()) {
-            throw new TxNotValidException("Not sufficient funds, got " + balance + ", expected " + tx.getAmount(), null, tx, ErrorCodes.NOT_ENOUGH_MONEY);
-        }
+        long totalChargeAmount = tx.getAmount();
         NoFeeAttachment noFeeAttachment = tx.getAttachment(NoFeeAttachment.class);
         if (noFeeAttachment != null) {
             FeeProvider feeProvider = feeProviderService.get(noFeeAttachment.getPayer());
@@ -109,6 +105,12 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
             if (tx.getRecipient() != null) {
                 validateForParty(tx, toFeeConfig, tx.getRecipient(), feeProvider);
             }
+        } else {
+            totalChargeAmount += tx.getMaxFee();
+        }
+        long balance = account.getBalance();
+        if (balance < totalChargeAmount) {
+            throw new TxNotValidException("Not sufficient funds, got " + balance + ", expected " + totalChargeAmount, null, tx, ErrorCodes.NOT_ENOUGH_MONEY);
         }
         MessageAttachment messageAttachment = tx.getAttachment(MessageAttachment.class);
         if (messageAttachment != null) {

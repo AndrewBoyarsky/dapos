@@ -14,6 +14,7 @@ public class ValidatorEntity extends BlockchainEntity {
     private AccountId id;
     private AccountId rewardId;
     private int votes;
+    private boolean justUpdated;
     //    private long balance;
     private long votePower;
     private long fee;

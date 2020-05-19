@@ -2,6 +2,8 @@ package com.boyarsky.dapos.core.config;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class HeightConfig {
     private Long height;
@@ -12,6 +14,7 @@ public class HeightConfig {
     private Long blockReward;
     private Long absentPeriod;
     private Long maxValidatorVotes;
-    private Integer byzantinePunishment;
-    private Integer absentPunishment;
+    private Long minVoteStake;
+    private BigDecimal byzantinePunishment;
+    private BigDecimal absentPunishment;
 }
