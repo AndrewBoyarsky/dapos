@@ -14,9 +14,9 @@ public interface StakeholderService {
 
     long voteFor(Transaction tx, VoteAttachment attachment);
 
-    long revokeVote(AccountId validator, AccountId voter, long height);
+    long revokeVote(Transaction tx);
 
-    void distributeRewardForValidator(AccountId id, BigDecimal stakeholdersReward);
+    void distributeRewardForValidator(AccountId id, BigDecimal stakeholdersReward, long height);
 
     boolean exists(AccountId validator, AccountId voter);
 

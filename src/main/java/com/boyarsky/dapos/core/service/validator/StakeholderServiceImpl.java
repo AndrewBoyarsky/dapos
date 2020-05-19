@@ -8,6 +8,7 @@ import com.boyarsky.dapos.core.repository.validator.VoteRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
+import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.VoteAttachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,7 +64,7 @@ public class StakeholderServiceImpl implements StakeholderService {
     }
 
     long remove(VoteEntity vote, LedgerRecord.Type event) {
-        repository.remove(vote);
+        repository.remove(vote.getValidatorId(), vote.getAccountId());
         accountService.addToBalance(vote.getAccountId(), vote.getTotalStake(), vote.getHeight());
         ledgerService.add(new LedgerRecord(vote.getHeight(), vote.getTotalStake(), event, vote.getValidatorId(), vote.getAccountId()));
         return vote.getTotalStake();
@@ -99,12 +100,14 @@ public class StakeholderServiceImpl implements StakeholderService {
     public long voteFor(Transaction tx, VoteAttachment attachment) {
         long voteStake = tx.getAmount();
         long votes = repository.countAllVotesForValidator(tx.getRecipient());
-        long stakeDiff = 0;
+        long stakeDiff;
         if (votes == blockchainConfig.getCurrentConfig().getMaxValidatorVotes()) {
             VoteEntity voteEntity = repository.minVoteForValidator(tx.getRecipient());
             voteEntity.setHeight(tx.getHeight());
             remove(voteEntity, LedgerRecord.Type.VOTE_SUPERSEDED);
             stakeDiff = tx.getAmount() - voteEntity.getTotalStake();
+        } else {
+            stakeDiff = tx.getAmount();
         }
         VoteEntity entity = repository.getBy(tx.getRecipient(), tx.getSender());
         if (entity == null) {
@@ -118,13 +121,30 @@ public class StakeholderServiceImpl implements StakeholderService {
     }
 
     @Override
-    public long revokeVote(AccountId validator, AccountId voter, long height) {
-        return 0;
+    public long revokeVote(Transaction tx) {
+        AccountId validator = tx.getRecipient();
+        AccountId voter = tx.getSender();
+        VoteEntity entity = repository.getBy(validator, voter);
+        accountService.addToBalance(voter, entity.getTotalStake(), tx.getHeight());
+        ledgerService.add(new LedgerRecord(tx.getHeight(), tx.getTxId(), tx.getFee(), entity.getTotalStake(), TxType.REVOKE, voter, tx.getRecipient()));
+        repository.remove(validator, voter);
+        return entity.getTotalStake();
     }
 
     @Override
-    public void distributeRewardForValidator(AccountId id, BigDecimal stakeholdersReward) {
-
+    public void distributeRewardForValidator(AccountId id, BigDecimal stakeholdersReward, long height) {
+        List<VoteEntity> votes = repository.getAllVotesForValidator(id);
+        long totalStake = 0;
+        for (VoteEntity vote : votes) {
+            totalStake += vote.getTotalStake();
+        }
+        for (VoteEntity vote : votes) {
+            BigDecimal votePercent = BigDecimal.valueOf(vote.getTotalStake()).divide(BigDecimal.valueOf(totalStake), RoundingMode.DOWN);
+            BigDecimal voteReward = stakeholdersReward.multiply(votePercent);
+            vote.setTotalStake(vote.getTotalStake() + voteReward.toBigInteger().longValueExact());
+            vote.setHeight(height);
+            repository.save(vote);
+        }
     }
 
     @Override

@@ -8,7 +8,7 @@ import java.util.List;
 public interface VoteRepository {
     void save(VoteEntity v);
 
-    void remove(VoteEntity v);
+    void remove(AccountId validator, AccountId voter);
 
     VoteEntity getBy(AccountId validatorId, AccountId voterId);
 

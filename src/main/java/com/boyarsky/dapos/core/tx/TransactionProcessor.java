@@ -31,7 +31,8 @@ public class TransactionProcessor {
             logErrorResult(parsingResult, tx, "Parsing error");
             return parsingResult;
         }
-        ProcessingResult validationResult = checkTx(parsingResult.getTx());
+        Transaction transaction = parsingResult.getTx();
+        ProcessingResult validationResult = checkTx(transaction);
         if (!validationResult.getCode().isOk()) {
             logErrorResult(validationResult, tx, "Validation error");
         }
@@ -41,7 +42,6 @@ public class TransactionProcessor {
     public ProcessingResult tryDeliver(byte[] tx, long height) {
         ProcessingResult validationResult = parseAndValidate(tx);
         if (!validationResult.getCode().isOk()) {
-
             return validationResult;
         }
         validationResult.getTx().setGasUsed(validationResult.getGasData().getUsed());

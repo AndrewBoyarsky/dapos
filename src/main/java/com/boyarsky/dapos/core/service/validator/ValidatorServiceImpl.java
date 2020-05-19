@@ -93,10 +93,10 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public void revoke(AccountId validator, AccountId voter, long height) {
-        long votePowerLoss = stakeholderService.revokeVote(validator, voter, height);
-        ValidatorEntity entity = get(validator);
-        entity.setHeight(height);
+    public void revoke(Transaction tx) {
+        long votePowerLoss = stakeholderService.revokeVote(tx);
+        ValidatorEntity entity = get(tx.getRecipient());
+        entity.setHeight(tx.getHeight());
         entity.setVotes(entity.getVotes() - 1);
         entity.setVotePower(entity.getVotePower() - votePowerLoss);
         repository.save(entity);
@@ -138,7 +138,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             fairValidator.setAbsentFor(0);
             accountService.addToBalance(fairValidator.getId(), validatorFee.longValueExact(), height);
             BigDecimal stakeholdersReward = validatorReward.subtract(validatorFee);
-            stakeholderService.distributeRewardForValidator(fairValidator.getId(), stakeholdersReward);
+            stakeholderService.distributeRewardForValidator(fairValidator.getId(), stakeholdersReward, height);
             repository.save(fairValidator);
         }
     }
@@ -146,12 +146,12 @@ public class ValidatorServiceImpl implements ValidatorService {
     @Override
     public void addVote(Transaction tx, VoteAttachment attachment) {
         ValidatorEntity byId = repository.getById(tx.getRecipient());
-        if (!stakeholderService.exists(tx.getRecipient(), tx.getSender())) {
+        if (!stakeholderService.exists(tx.getRecipient(), tx.getSender()) && byId.getVotes() != config.getCurrentConfig().getMaxValidatorVotes()) {
             byId.setVotes(byId.getVotes() + 1);
         }
         byId.setHeight(tx.getHeight());
-        byId.setVotePower(byId.getVotePower() + attachment.getVoteStake());
-        stakeholderService.voteFor(tx, attachment);
+        long stakeDiff = stakeholderService.voteFor(tx, attachment);
+        byId.setVotePower(byId.getVotePower() + stakeDiff);
     }
 
     @Override

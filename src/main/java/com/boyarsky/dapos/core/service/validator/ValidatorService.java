@@ -17,7 +17,7 @@ public interface ValidatorService {
 
     long punishByzantine(AccountId validatorId, long height);
 
-    void revoke(AccountId validator, AccountId voter, long height);
+    void revoke(Transaction tx);
 
     long punishAbsent(AccountId validatorId, long height);
 

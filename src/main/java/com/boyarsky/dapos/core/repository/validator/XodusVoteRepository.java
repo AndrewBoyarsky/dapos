@@ -42,8 +42,8 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
     }
 
     @Override
-    public void remove(VoteEntity v) {
-        Entity entity = getByDbParams(idParams(v));
+    public void remove(AccountId validator, AccountId voter) {
+        Entity entity = getByDbParams(List.of(new DbParamImpl("id", Convert.toHexString(voter.getAddressBytes())), new DbParamImpl("validatorId", Convert.toHexString(validator.getAddressBytes()))));
         entity.delete();
     }
 
