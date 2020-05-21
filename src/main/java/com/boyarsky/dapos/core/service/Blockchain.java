@@ -5,9 +5,11 @@ import com.boyarsky.dapos.core.config.BlockchainConfig;
 import com.boyarsky.dapos.core.config.HeightConfig;
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.genesis.Genesis;
+import com.boyarsky.dapos.core.genesis.GenesisInitResponse;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
+import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.core.repository.block.BlockRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
@@ -40,20 +42,20 @@ public class Blockchain {
     private final Genesis genesis;
     private final TransactionProcessor processor;
     private final TransactionManager manager;
-    private final AccountService service;
+    private final AccountService accountService;
     private final LedgerService ledgerService;
     private final ValidatorService validatorService;
 
     private AtomicLong rewardAmount = new AtomicLong();
 
     @Autowired
-    public Blockchain(BlockRepository blockRepository, BlockchainConfig config, Genesis genesis, TransactionProcessor processor, TransactionManager manager, AccountService service, LedgerService ledgerService, ValidatorService validatorService) {
+    public Blockchain(BlockRepository blockRepository, BlockchainConfig config, Genesis genesis, TransactionProcessor processor, TransactionManager manager, AccountService accountService, LedgerService ledgerService, ValidatorService validatorService) {
         this.blockRepository = blockRepository;
         this.config = config;
         this.genesis = genesis;
         this.processor = processor;
         this.manager = manager;
-        this.service = service;
+        this.accountService = accountService;
         this.ledgerService = ledgerService;
         this.validatorService = validatorService;
     }
@@ -91,7 +93,7 @@ public class Blockchain {
                 .stream()
                 .filter(e -> !e.getValue())
                 .map(Map.Entry::getKey)
-                .mapToLong(id -> validatorService.punishByzantine(id, currentHeight))
+                .mapToLong(id -> validatorService.punishAbsent(id, currentHeight))
                 .sum();
         long maxValidators = config.maxValidatorsForHeight(this.currentHeight);
         List<ValidatorEntity> fairValidators = validatorStatuses.entrySet()
@@ -135,19 +137,16 @@ public class Blockchain {
         return processor.parseAndValidate(tx);
     }
 
-    public HeightConfig onInitChain() {
-        manager.begin();
-        try {
-            log.info("Applying genesis");
-            genesis.initialize();
-            manager.commit();
-        } catch (Exception e) {
-            log.error("Genesis init error", e);
-            manager.rollback();
-        }
-        log.info("Genesis applied");
+    @Transactional(startNew = true)
+    public InitChainResponse onInitChain() {
+        log.info("Applying genesis");
+        GenesisInitResponse genesisInitResponse = genesis.initialize();
+        log.info("Genesis applied, accounts: {}, validators: {}", genesisInitResponse.getNumberOfAccount(), genesisInitResponse.getValidatorEntities().size());
         config.init(1);
-        return config.getCurrentConfig();
+        InitChainResponse initChainResponse = new InitChainResponse();
+        initChainResponse.setConfig(config.getCurrentConfig());
+        initChainResponse.setGenesisInitResponse(genesisInitResponse);
+        return initChainResponse;
     }
 
     public byte[] commitBlock() {
@@ -158,15 +157,6 @@ public class Blockchain {
     }
 
     public EndBlockEnvelope endBlock() {
-//        AccountId validatorAddress = new AccountId(CryptoUtils.encodeValidatorAddress(proposerAddress));
-//        Account account = service.get(validatorAddress);
-//        account.setBalance(account.getBalance() + rewardAmount.get());
-//        account.setHeight(currentHeight);
-//        service.save(account);
-//        ledgerService.add(new LedgerRecord(currentHeight, rewardAmount.get(), LedgerRecord.Type.BLOCK_REWARD, null, validatorAddress));
-//        validatorService.
-//        int validatorSize = config.getCurrentConfig().getMaxValidators();
-
         boolean updated = config.tryUpdateForHeight(getCurrentBlockHeight() + 1);
         HeightConfig currentConfig = null;
         if (updated) {
@@ -175,8 +165,10 @@ public class Blockchain {
         }
         EndBlockEnvelope response = new EndBlockEnvelope();
         response.setNewConfig(currentConfig);
-
-        response.setValidators(null);
+        if (currentHeight - 1 > 0) {
+            List<ValidatorEntity> allUpdated = validatorService.getAllUpdated(currentHeight - 1);
+            response.setValidators(allUpdated);
+        }
         return response;
     }
 }

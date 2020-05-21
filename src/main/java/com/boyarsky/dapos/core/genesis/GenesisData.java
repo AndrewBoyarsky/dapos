@@ -5,13 +5,21 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-class GenesisAccounts {
+class GenesisData {
     private List<GenesisAccount> accounts;
+    private List<ValidatorDefinition> validators;
 
     @Data
     static class GenesisAccount {
         private String accountId;
         private String publicKey;
         private Long balance;
+    }
+
+    @Data
+    static class ValidatorDefinition {
+        private int fee;
+        private String publicKey;
+        private String rewardId;
     }
 }

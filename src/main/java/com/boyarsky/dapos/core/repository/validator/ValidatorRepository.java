@@ -10,6 +10,8 @@ public interface ValidatorRepository {
 
     List<ValidatorEntity> getAll();
 
+    List<ValidatorEntity> getAll(long height);
+
 
     List<ValidatorEntity> getAllWith(long absentFor, boolean enabled);
 

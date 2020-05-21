@@ -9,7 +9,6 @@ import com.boyarsky.dapos.core.repository.validator.ValidatorRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.RegisterValidatorAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.VoteAttachment;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,16 +36,22 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public void registerValidator(Transaction tx, RegisterValidatorAttachment attachment) {
-        AccountId id = new AccountId(CryptoUtils.validatorAddress(attachment.getPublicKey()));
+    public ValidatorEntity registerValidator(byte[] pubKey, int fee, AccountId rewardAddress, boolean enable, long height) {
+        AccountId id = new AccountId(CryptoUtils.validatorAddress(pubKey));
         ValidatorEntity newValidator = new ValidatorEntity();
-        newValidator.setEnabled(attachment.isEnable());
+        newValidator.setEnabled(enable);
         newValidator.setId(id);
-        newValidator.setPublicKey(attachment.getPublicKey());
-        newValidator.setFee(attachment.getFee());
-        newValidator.setHeight(tx.getHeight());
-        newValidator.setRewardId(attachment.getRewardId());
+        newValidator.setPublicKey(pubKey);
+        newValidator.setFee(fee);
+        newValidator.setHeight(height);
+        newValidator.setRewardId(rewardAddress);
         repository.save(newValidator);
+        return newValidator;
+    }
+
+    @Override
+    public List<ValidatorEntity> getAllUpdated(long height) {
+        return repository.getAll(height);
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.boyarsky.dapos.core.repository.DbParam;
 import com.boyarsky.dapos.core.repository.DbParamImpl;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
+import com.boyarsky.dapos.utils.CollectionUtils;
 import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorE
         ValidatorEntity validatorEntity = new ValidatorEntity();
         validatorEntity.setVotePower((Long) e.getProperty("delegatedBalance"));
         validatorEntity.setId(AccountId.fromBytes(Convert.parseHexString((String) e.getProperty("id"))));
-        validatorEntity.setFee((Long) e.getProperty("fee"));
+        validatorEntity.setFee((Integer) e.getProperty("fee"));
         validatorEntity.setEnabled((Boolean) e.getProperty("enabled"));
         return validatorEntity;
     }
@@ -47,6 +48,12 @@ public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorE
     @Override
     public List<ValidatorEntity> getAll() {
         return super.getAll();
+    }
+
+    @Override
+    public List<ValidatorEntity> getAll(long height) {
+        return CollectionUtils.toList(getTx().find("validator", "height", height, Long.MAX_VALUE), this::map);
+
     }
 
     @Override

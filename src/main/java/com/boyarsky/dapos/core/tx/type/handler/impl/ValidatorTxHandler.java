@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ValidatorTxHandler implements TransactionTypeHandler {
-    private ValidatorService validatorService;
+    private final ValidatorService validatorService;
 
     @Autowired
     public ValidatorTxHandler(ValidatorService validatorService) {
@@ -21,7 +21,7 @@ public class ValidatorTxHandler implements TransactionTypeHandler {
     @Override
     public void handle(Transaction tx) throws TxHandlingException {
         RegisterValidatorAttachment attachment = tx.getAttachment(RegisterValidatorAttachment.class);
-        validatorService.registerValidator(tx, attachment);
+        validatorService.registerValidator(attachment.getPublicKey(), attachment.getFee(), attachment.getRewardId(), attachment.isEnable(), tx.getHeight());
     }
 
     @Override
