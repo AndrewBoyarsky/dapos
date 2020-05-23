@@ -8,8 +8,6 @@ import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.repository.validator.ValidatorRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
-import com.boyarsky.dapos.core.tx.Transaction;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.VoteAttachment;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -68,16 +66,6 @@ public class ValidatorServiceImpl implements ValidatorService {
         repository.save(validatorEntity);
     }
 
-    //    @Override
-    public List<ValidatorEntity> getAbsentNodes() {
-        return repository.getAllWith(config.getCurrentConfig().getAbsentPeriod(), true);
-    }
-
-    @Override
-    public void absentValidator(AccountId validatorId) {
-
-    }
-
     @Override
     public long punishByzantine(AccountId validatorId, long height) {
         ValidatorEntity byId = repository.getById(validatorId);
@@ -98,10 +86,10 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public void revoke(Transaction tx) {
-        long votePowerLoss = stakeholderService.revokeVote(tx);
-        ValidatorEntity entity = get(tx.getRecipient());
-        entity.setHeight(tx.getHeight());
+    public void revoke(AccountId validatorId, AccountId voterId, long height) {
+        long votePowerLoss = stakeholderService.revokeVote(validatorId, voterId, );
+        ValidatorEntity entity = get(validatorId);
+        entity.setHeight(height);
         entity.setVotes(entity.getVotes() - 1);
         entity.setVotePower(entity.getVotePower() - votePowerLoss);
         repository.save(entity);
@@ -141,7 +129,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             fairValidator.setHeight(height);
             fairValidator.setVotePower(fairValidator.getVotePower() + validatorReward.toBigInteger().longValueExact());
             fairValidator.setAbsentFor(0);
-            accountService.addToBalance(fairValidator.getId(), validatorFee.longValueExact(), height);
+            accountService.addToBalance(fairValidator.getId(), , validatorFee.longValueExact());
             BigDecimal stakeholdersReward = validatorReward.subtract(validatorFee);
             stakeholderService.distributeRewardForValidator(fairValidator.getId(), stakeholdersReward, height);
             repository.save(fairValidator);
@@ -149,13 +137,13 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public void addVote(Transaction tx, VoteAttachment attachment) {
-        ValidatorEntity byId = repository.getById(tx.getRecipient());
-        if (!stakeholderService.exists(tx.getRecipient(), tx.getSender()) && byId.getVotes() != config.getCurrentConfig().getMaxValidatorVotes()) {
+    public void addVote(AccountId validatorId, AccountId voterId, long voterPower, long height) {
+        ValidatorEntity byId = repository.getById(validatorId);
+        if (!stakeholderService.exists(validatorId, voterId) && byId.getVotes() != config.getCurrentConfig().getMaxValidatorVotes()) {
             byId.setVotes(byId.getVotes() + 1);
         }
-        byId.setHeight(tx.getHeight());
-        long stakeDiff = stakeholderService.voteFor(tx, attachment);
+        byId.setHeight(height);
+        long stakeDiff = stakeholderService.voteFor(validatorId, voterId, voterPower, height);
         byId.setVotePower(byId.getVotePower() + stakeDiff);
     }
 

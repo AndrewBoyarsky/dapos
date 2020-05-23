@@ -2,7 +2,9 @@ package com.boyarsky.dapos.core.service.account;
 
 import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.repository.account.AccountRepository;
+import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,10 +13,12 @@ import java.util.List;
 @Service
 public class AccountServiceImpl implements AccountService {
     private AccountRepository repository;
+    private LedgerService ledgerService;
 
     @Autowired
-    public AccountServiceImpl(AccountRepository repository) {
+    public AccountServiceImpl(AccountRepository repository, LedgerService ledgerService) {
         this.repository = repository;
+        this.ledgerService = ledgerService;
     }
 
     @Override
@@ -43,29 +47,37 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void transferMoney(AccountId sender, AccountId recipient, long amount) {
-        Account senderAccount = get(sender);
+    public void transferMoney(AccountId sender, AccountId recipient, Operation op) {
         if (recipient != null) {
-            Account recAccount = repository.find(recipient);
-            if (recAccount == null) {
-                recAccount = new Account(recipient, null, 0, Account.Type.ORDINARY);
-            }
-            recAccount.setBalance(recAccount.getBalance() + amount);
-            save(recAccount);
+            addToBalance(recipient, op);
         }
-        senderAccount.setBalance(senderAccount.getBalance() - amount);
-        save(senderAccount);
+        op.setAmount(-op.getAmount());
+        addToBalance(sender, op);
+        ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), sender, recipient));
     }
 
     @Override
-    public void addToBalance(AccountId accountId, long amount, long height) {
+    public void addToBalance(AccountId accountId, Operation op) {
         Account account = get(accountId);
         if (account == null) {
             account = new Account(accountId, null, 0, Account.Type.ORDINARY);
         }
-        account.setHeight(height);
-        account.setBalance(account.getBalance() + amount);
+        account.setHeight(op.getHeight());
+        account.setBalance(account.getBalance() + op.getAmount());
         save(account);
+    }
+
+    /**
+     * Do not charge sender, will deposit balance for the given account and track ledger
+     *
+     * @param acc      account whose balance should be deposited
+     * @param senderId account which is assumed to send these funds but it will not be verified
+     * @param op       operation under which balance should be credited
+     */
+    @Override
+    public void addToBalance(AccountId acc, AccountId senderId, Operation op) {
+        addToBalance(acc, op);
+        ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), senderId, acc));
     }
 
     @Override

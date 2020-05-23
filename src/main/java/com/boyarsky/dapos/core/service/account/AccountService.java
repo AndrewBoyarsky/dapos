@@ -13,10 +13,11 @@ public interface AccountService {
 
     List<Account> getAll();
 
-    void transferMoney(AccountId sender, AccountId recipient, long amount);
+    void transferMoney(AccountId sender, AccountId recipient, Operation op);
 
+    void addToBalance(AccountId accountId, Operation op);
 
-    void addToBalance(AccountId accountId, long amount, long height);
+    void addToBalance(AccountId accountId, AccountId senderId, Operation op);
 
     void save(Account account);
 

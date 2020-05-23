@@ -1,8 +1,8 @@
 package com.boyarsky.dapos.core.tx.type.handler.impl;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
-import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.service.account.AccountService;
+import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.feeprov.FeeProviderService;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.service.message.MessageService;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class DefaultTransactionHandler implements TransactionTypeHandler {
     private final AccountService accountService;
-    private final LedgerService ledgerService;
     private final FeeProviderService feeProviderService;
     private final MessageService messageService;
 
@@ -26,7 +25,6 @@ public class DefaultTransactionHandler implements TransactionTypeHandler {
         this.accountService = accountService;
         this.feeProviderService = feeProviderService;
         this.messageService = messageService;
-        this.ledgerService = ledgerService;
     }
 
     @Override
@@ -39,24 +37,16 @@ public class DefaultTransactionHandler implements TransactionTypeHandler {
         AccountId sender = tx.getSender();
         accountService.assignPublicKey(sender, tx.getSenderPublicKey());
         if (tx.getAmount() > 0 && !tx.isVal()) {
-            accountService.transferMoney(sender, tx.getRecipient(), tx.getAmount());
+            Operation op = new Operation(tx.getTxId(), tx.getHeight(), tx.getType().toString(), tx.getAmount());
+            accountService.transferMoney(sender, tx.getRecipient(), op);
         }
         NoFeeAttachment nofee = tx.getAttachment(NoFeeAttachment.class);
-        LedgerRecord record = new LedgerRecord();
-        record.setAmount(tx.getAmount());
-        record.setId(tx.getTxId());
-        record.setHeight(tx.getHeight());
-        record.setSender(tx.getSender());
-        record.setRecipient(tx.getRecipient());
-        record.setType(tx.getType());
         if (nofee != null) {
             feeProviderService.charge(nofee.getPayer(), tx.getHeight(), tx.getFee(), tx.getSender(), tx.getRecipient());
-            record.setFee(0);
         } else {
-            accountService.transferMoney(sender, null, tx.getFee());
-            record.setFee(tx.getFee());
+            Operation op = new Operation(tx.getTxId(), tx.getHeight(), "Tx Fee", tx.getFee());
+            accountService.transferMoney(sender, null, op);
         }
-        ledgerService.add(record);
         MessageAttachment messageAttachment = tx.getAttachment(MessageAttachment.class);
         if (messageAttachment != null && tx.getType() != TxType.MESSAGE) {
             messageService.handle(messageAttachment, tx);

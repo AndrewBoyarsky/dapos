@@ -38,7 +38,7 @@ class DefaultTransactionHandlerTest {
         handler.handle(tx);
 
         verify(service).assignPublicKey(senderId, new byte[32]);
-        verify(service).transferMoney(senderId, null, 1);
+        verify(service).transferMoney(senderId, null, 1, );
         verifyNoMoreInteractions(service);
     }
 
@@ -49,8 +49,8 @@ class DefaultTransactionHandlerTest {
         handler.handle(tx);
 
         verify(service).assignPublicKey(senderId, new byte[32]);
-        verify(service).transferMoney(senderId, null, 10);
-        verify(service).transferMoney(senderId, null, 1);
+        verify(service).transferMoney(senderId, null, 10, );
+        verify(service).transferMoney(senderId, null, 1, );
         verifyNoMoreInteractions(service);
     }
 
@@ -61,8 +61,8 @@ class DefaultTransactionHandlerTest {
         handler.handle(tx);
 
         verify(service).assignPublicKey(senderId, new byte[32]);
-        verify(service).transferMoney(senderId, recipientId, 1);
-        verify(service).transferMoney(senderId, null, 4);
+        verify(service).transferMoney(senderId, recipientId, 1, );
+        verify(service).transferMoney(senderId, null, 4, );
         verifyNoMoreInteractions(service);
     }
 }

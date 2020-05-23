@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
 import com.boyarsky.dapos.core.model.fee.FeeConfig;
 import com.boyarsky.dapos.core.model.fee.FeeProvider;
+import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
 import com.boyarsky.dapos.core.repository.feeprov.AccountFeeRepository;
 import com.boyarsky.dapos.core.repository.feeprov.FeeProviderRepository;
 import com.boyarsky.dapos.core.tx.Transaction;
@@ -15,8 +16,8 @@ import java.util.Optional;
 
 @Service
 public class FeeProviderServiceImpl implements FeeProviderService {
-    FeeProviderRepository repository;
-    final AccountFeeRepository accountFeeRepository;
+    private final AccountFeeRepository accountFeeRepository;
+    private FeeProviderRepository repository;
 
     @Autowired
     public FeeProviderServiceImpl(FeeProviderRepository repository, AccountFeeRepository accountFeeRepository) {
@@ -37,18 +38,18 @@ public class FeeProviderServiceImpl implements FeeProviderService {
         feeProvider.setBalance(feeProvider.getBalance() - amount);
         feeProvider.setHeight(height);
         repository.save(feeProvider);
-        chargeAllowance(feeProvider, height, sender, amount);
+        chargeAllowance(id, feeProvider.getFromFeeConfig(), height, sender, amount);
         if (recipient != null) {
-            chargeAllowance(feeProvider, height, recipient, amount);
+            chargeAllowance(id, feeProvider.getToFeeConfig(), height, recipient, amount);
         }
     }
 
-    private void chargeAllowance(FeeProvider feeProvider, long height, AccountId account, long amount) {
-        AccountFeeAllowance allowance = accountFeeRepository.getBy(feeProvider.getId(), account);
-        Optional<FeeConfig> feeConfigOpt = feeProvider.getFromFeeConfig().forAccount(account);
+    private void chargeAllowance(long id, PartyFeeConfig config, long height, AccountId account, long amount) {
+        AccountFeeAllowance allowance = accountFeeRepository.getBy(id, account);
+        Optional<FeeConfig> feeConfigOpt = config.forAccount(account);
         if (allowance == null && feeConfigOpt.isPresent()) {
             FeeConfig feeConfig = feeConfigOpt.get();
-            allowance = new AccountFeeAllowance(account, feeProvider.getId(), feeConfig.getMaxAllowedOperations(), feeConfig.getMaxAllowedTotalFee());
+            allowance = new AccountFeeAllowance(account, id, feeConfig.getMaxAllowedOperations(), feeConfig.getMaxAllowedTotalFee());
         }
         if (allowance != null) {
             allowance.setOperations(allowance.getOperations() - 1);

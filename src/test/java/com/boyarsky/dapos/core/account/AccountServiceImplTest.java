@@ -66,7 +66,7 @@ class AccountServiceImplTest {
         doReturn(expected1).when(repository).find(id1);
         doReturn(null).when(repository).find(id2);
 
-        service.transferMoney(id1, id2, 90);
+        service.transferMoney(id1, id2, 90, );
 
         verify(repository).save(new Account(id2, null, 90, Account.Type.ORDINARY));
         verify(repository).save(expected1);
@@ -78,7 +78,7 @@ class AccountServiceImplTest {
         doReturn(expected1).when(repository).find(id1);
         doReturn(expected2).when(repository).find(id2);
 
-        service.transferMoney(id1, id2, 50);
+        service.transferMoney(id1, id2, 50, );
 
         verify(repository).save(expected2);
         verify(repository).save(expected1);
@@ -90,7 +90,7 @@ class AccountServiceImplTest {
     void burnMoney() {
         doReturn(expected1).when(repository).find(id1);
 
-        service.transferMoney(id1, null, 50);
+        service.transferMoney(id1, null, 50, );
 
         verify(repository).save(expected1);
         verifyNoMoreInteractions(repository);

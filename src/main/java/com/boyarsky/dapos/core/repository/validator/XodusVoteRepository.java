@@ -29,7 +29,7 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
     protected void storeToDbEntity(Entity e, VoteEntity voteEntity) {
         e.setProperty("id", Convert.toHexString(voteEntity.getAccountId().getAddressBytes()));
         e.setProperty("validatorId", Convert.toHexString(voteEntity.getValidatorId().getAddressBytes()));
-        e.setProperty("totalStake", voteEntity.getTotalStake());
+        e.setProperty("totalStake", voteEntity.getTotalPower());
     }
 
     @Override
@@ -37,7 +37,7 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
         VoteEntity voteEntity = new VoteEntity();
         voteEntity.setAccountId(AccountId.fromBytes(Convert.parseHexString((String) e.getProperty("id"))));
         voteEntity.setValidatorId(AccountId.fromBytes(Convert.parseHexString((String) e.getProperty("validatorId"))));
-        voteEntity.setTotalStake((Long) e.getProperty("totalStake"));
+        voteEntity.setTotalPower((Long) e.getProperty("totalStake"));
         return voteEntity;
     }
 

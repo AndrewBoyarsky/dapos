@@ -38,7 +38,6 @@ public class XodusLedgerRepository implements LedgerRepository {
         LedgerRecord ledgerRecord = new LedgerRecord();
         ledgerRecord.setDbId(record.getId());
         ledgerRecord.setAmount((Long) record.getProperty("amount"));
-        ledgerRecord.setFee((Long) record.getProperty("fee"));
         Comparable senderProperty = record.getProperty("sender");
         if (senderProperty != null) {
             ledgerRecord.setSender(AccountId.fromBytes(Convert.parseHexString((String) senderProperty)));
@@ -49,8 +48,7 @@ public class XodusLedgerRepository implements LedgerRepository {
             ledgerRecord.setRecipient(AccountId.fromBytes(Convert.parseHexString((String) recipient)));
         }
         ledgerRecord.setHeight((Long) record.getProperty("height"));
-        ledgerRecord.setType(TxType.ofCode((Byte) record.getProperty("type")));
-        ledgerRecord.setRecordType(LedgerRecord.Type.fromCode((Byte) record.getProperty("recordType")));
+        ledgerRecord.setType(((String) record.getProperty("type")));
         return ledgerRecord;
     }
 
@@ -70,10 +68,7 @@ public class XodusLedgerRepository implements LedgerRepository {
         StoreTransaction tx = context.getTx();
         Entity entity = tx.newEntity(entityType);
         entity.setProperty("id", record.getId());
-        entity.setProperty("type", record.getType().getCode());
-        if (record.getRecordType() != null) {
-            entity.setProperty("recordType", record.getRecordType().getCode());
-        }
+        entity.setProperty("type", record.getType());
         if (record.getSender() != null) {
             entity.setProperty("sender", Convert.toHexString(record.getSender().getAddressBytes()));
         }
@@ -81,7 +76,6 @@ public class XodusLedgerRepository implements LedgerRepository {
             entity.setProperty("recipient", Convert.toHexString(record.getRecipient().getAddressBytes()));
         }
         entity.setProperty("amount", record.getAmount());
-        entity.setProperty("fee", record.getFee());
         entity.setProperty("height", record.getHeight());
     }
 }

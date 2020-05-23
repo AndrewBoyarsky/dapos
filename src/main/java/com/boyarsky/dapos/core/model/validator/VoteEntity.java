@@ -10,6 +10,6 @@ import lombok.EqualsAndHashCode;
 public class VoteEntity extends BlockchainEntity {
     private AccountId accountId;
     private AccountId validatorId;
-    private long totalStake;
+    private long totalPower;
 
 }
