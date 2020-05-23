@@ -26,21 +26,6 @@
       "publicKey": "6b245bcebd96847989a780b62f15a2b1b973e1dd866b4d2ea3dae836a628da73",
       "rewardId": "254d52eaf1114b8c68df983b0b272e4e2f",
       "fee": 2000
-    },
-    {
-      "publicKey": "dd66eb860be5927914a35e7e5913801e1d2b9d6f06e57efbe5295793f7497888",
-      "rewardId": "254d52eaf1114b8c68df983b0b272e4e2f",
-      "fee": 1000
-    },
-    {
-      "publicKey": "cb2f3f812b293d01149fb2c88d49c0abc6f6dc1b60492a29544ec7c43e04bb0b",
-      "rewardId": "2515e1d552eb5cf63ea58aca4654f5b12f",
-      "fee": 10000
-    },
-    {
-      "publicKey": "a41868faba09a5ba0691da37b436a8c9b1b87960c47fb1b0ce681585b5ba43ff",
-      "rewardId": "2515e1d552eb5cf63ea58aca4654f5b12f",
-      "fee": 0
     }
   ]
 }

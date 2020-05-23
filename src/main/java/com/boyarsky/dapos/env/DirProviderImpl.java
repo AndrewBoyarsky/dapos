@@ -2,6 +2,7 @@ package com.boyarsky.dapos.env;
 
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +24,13 @@ public class DirProviderImpl implements DirProvider {
 
     public DirProviderImpl() throws IOException {
         this(System.getProperty("user.home"));
+    }
+
+    @PostConstruct
+    void init() throws IOException {
+        dataPath();
+        dbPath();
+        keystorePath();
     }
 
 

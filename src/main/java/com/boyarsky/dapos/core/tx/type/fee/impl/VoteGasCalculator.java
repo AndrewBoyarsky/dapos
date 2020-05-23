@@ -15,7 +15,7 @@ public class VoteGasCalculator implements GasCalculator {
 
     @Override
     public int gasRequired(Transaction tx) {
-        return 0;
+        return 50;
     }
 
 }

@@ -63,7 +63,7 @@ public class BlockchainConfig {
         if (currentConfig.getHeight() < height) {
             return currentConfig.getMaxValidators();
         } else if (height <= 1) {
-            return allConfigs.get(height).getMaxValidators();
+            return allConfigs.get(1L).getMaxValidators();
         } else {
             return findConfigForHeight(height).getMaxValidators();
         }
