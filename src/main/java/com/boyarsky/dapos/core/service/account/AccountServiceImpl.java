@@ -48,6 +48,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void transferMoney(AccountId sender, AccountId recipient, Operation op) {
+        if (op.getAmount() == 0) {
+            return;
+        }
         if (recipient != null) {
             addToBalance(recipient, op);
         }
@@ -58,6 +61,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void addToBalance(AccountId accountId, Operation op) {
+        if (op.getAmount() == 0) {
+            return;
+        }
         Account account = repository.find(accountId);
         if (account == null) {
             account = new Account(accountId, null, 0, Account.Type.ORDINARY);
@@ -76,6 +82,9 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     public void addToBalance(AccountId acc, AccountId senderId, Operation op) {
+        if (op.getAmount() == 0) {
+            return;
+        }
         addToBalance(acc, op);
         ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), senderId, acc, op.getHeight()));
     }

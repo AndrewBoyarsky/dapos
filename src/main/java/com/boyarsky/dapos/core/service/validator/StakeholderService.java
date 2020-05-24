@@ -2,8 +2,6 @@ package com.boyarsky.dapos.core.service.validator;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 
-import java.math.BigDecimal;
-
 public interface StakeholderService {
 
     StakeholderPunishmentData punishStakeholders(AccountId validatorId, long height);
@@ -14,7 +12,7 @@ public interface StakeholderService {
 
     long revokeVote(AccountId validatorId, AccountId voterId, long height);
 
-    void distributeRewardForValidator(AccountId id, BigDecimal stakeholdersReward, long height);
+    void distributeRewardForValidator(AccountId id, long stakeholdersReward, long height);
 
     boolean exists(AccountId validator, AccountId voter);
 

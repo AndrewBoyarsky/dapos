@@ -36,7 +36,7 @@ public class StakeholderServiceImpl implements StakeholderService {
         long totalPunishment = 0;
         int removed = 0;
         for (VoteEntity vote : votes) {
-            long resultStakeToBeSaved = imposeFine(vote.getTotalPower(), blockchainConfig.getCurrentConfig().getAbsentPunishment());
+            long resultStakeToBeSaved = imposeFine(vote.getTotalPower(), blockchainConfig.getAbsentPunishment());
             long prevStake = vote.getTotalPower();
             if (prevStake != resultStakeToBeSaved) {
                 ledgerService.add(new LedgerRecord(height, -prevStake + resultStakeToBeSaved, LedgerRecord.Type.ABSENT_VOTER_FINE.toString(), validatorId, vote.getAccountId(), height));
@@ -55,7 +55,7 @@ public class StakeholderServiceImpl implements StakeholderService {
 
     long save(VoteEntity vote, LedgerRecord.Type event) {
         long refunded = 0;
-        if (vote.getTotalPower() <= blockchainConfig.getCurrentConfig().getMinVoteStake()) {
+        if (vote.getTotalPower() <= blockchainConfig.getMinVoteStake()) {
             refunded = remove(vote, event);
         } else {
             repository.save(vote);
@@ -76,7 +76,7 @@ public class StakeholderServiceImpl implements StakeholderService {
         long totalPunishment = 0;
         int removed = votes.size();
         for (VoteEntity vote : votes) {
-            BigDecimal punishmentPercent = blockchainConfig.getCurrentConfig().getByzantinePunishment();
+            BigDecimal punishmentPercent = blockchainConfig.getByzantinePunishment();
             long resultStakeToBeSaved = imposeFine(vote.getTotalPower(), punishmentPercent);
             long prevStake = vote.getTotalPower();
             long fine = prevStake - resultStakeToBeSaved;
@@ -100,7 +100,7 @@ public class StakeholderServiceImpl implements StakeholderService {
     public long voteFor(AccountId validatorId, AccountId voterId, long votePower, long height) {
         long votes = repository.countAllVotesForValidator(validatorId);
         long stakeDiff;
-        if (votes == blockchainConfig.getCurrentConfig().getMaxValidatorVotes()) {
+        if (votes >= blockchainConfig.getMaxValidatorVotes()) {
             VoteEntity voteEntity = repository.minVoteForValidator(validatorId);
             voteEntity.setHeight(height);
             remove(voteEntity, LedgerRecord.Type.VOTE_SUPERSEDED);
@@ -128,16 +128,16 @@ public class StakeholderServiceImpl implements StakeholderService {
     }
 
     @Override
-    public void distributeRewardForValidator(AccountId id, BigDecimal stakeholdersReward, long height) {
+    public void distributeRewardForValidator(AccountId id, long stakeholdersReward, long height) {
         List<VoteEntity> votes = repository.getAllVotesForValidator(id);
         long totalStake = 0;
         for (VoteEntity vote : votes) {
             totalStake += vote.getTotalPower();
         }
         for (VoteEntity vote : votes) {
-            BigDecimal votePercent = BigDecimal.valueOf(vote.getTotalPower()).divide(BigDecimal.valueOf(totalStake), RoundingMode.DOWN);
-            BigDecimal voteReward = stakeholdersReward.multiply(votePercent);
-            vote.setTotalPower(vote.getTotalPower() + voteReward.toBigInteger().longValueExact());
+            BigDecimal votePercent = BigDecimal.valueOf(vote.getTotalPower()).divide(BigDecimal.valueOf(totalStake), 8, RoundingMode.DOWN);
+            BigDecimal voteReward = BigDecimal.valueOf(stakeholdersReward).multiply(votePercent);
+            accountService.addToBalance(vote.getAccountId(), vote.getValidatorId(), new Operation(height, height, "VOTE REWARD", voteReward.toBigInteger().longValueExact()));
             vote.setHeight(height);
             repository.save(vote);
         }

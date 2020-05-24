@@ -1,5 +1,6 @@
 package com.boyarsky.dapos.core.config;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,12 +52,12 @@ public class BlockchainConfig {
         return oneCoinFractions;
     }
 
-    public boolean tryUpdateForHeight(long height) {
+    public HeightConfig tryUpdateForHeight(long height) {
         if (updateHeights.contains(height)) {
             currentConfig = allConfigs.get(height);
-            return true;
+            return currentConfig;
         }
-        return false;
+        return null;
     }
 
     public long maxValidatorsForHeight(long height) {
@@ -69,7 +70,7 @@ public class BlockchainConfig {
         }
     }
 
-    public void init(long height) {
+    public HeightConfig init(long height) {
         HeightConfig newConfig = this.allConfigs.entrySet()
                 .stream()
                 .filter(e -> e.getKey() <= height)
@@ -91,6 +92,7 @@ public class BlockchainConfig {
             newConfig.setAbsentPeriod(currentConfig.getAbsentPeriod());
         }
         this.currentConfig = newConfig;
+        return newConfig;
     }
 
     HeightConfig findConfigForHeight(long height) {
@@ -104,7 +106,43 @@ public class BlockchainConfig {
                 .orElseThrow(() -> new RuntimeException("For height " + height + " unable to find config from " + allConfigs));
     }
 
-    public HeightConfig getCurrentConfig() {
-        return currentConfig;
+    public Long getMaxSize() {
+        return currentConfig.getMaxSize();
+    }
+
+    public Long getMaxGas() {
+        return currentConfig.getMaxGas();
+    }
+
+    public Long getMaxEvidenceAge() {
+        return currentConfig.getMaxEvidenceAge();
+    }
+
+    public Long getMaxValidators() {
+        return currentConfig.getMaxValidators();
+    }
+
+    public Long getBlockReward() {
+        return currentConfig.getBlockReward();
+    }
+
+    public Long getAbsentPeriod() {
+        return currentConfig.getAbsentPeriod();
+    }
+
+    public Long getMaxValidatorVotes() {
+        return currentConfig.getMaxValidatorVotes();
+    }
+
+    public Long getMinVoteStake() {
+        return currentConfig.getMinVoteStake();
+    }
+
+    public BigDecimal getByzantinePunishment() {
+        return currentConfig.getByzantinePunishment();
+    }
+
+    public BigDecimal getAbsentPunishment() {
+        return currentConfig.getAbsentPunishment();
     }
 }

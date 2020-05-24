@@ -16,6 +16,14 @@ public class TestUtil {
         return acc;
     }
 
+    public static Account generateValidatorAcc() {
+        Random random = new Random();
+        Wallet wallet = CryptoUtils.generateValidatorWallet();
+        Account acc = new Account(wallet.getAccount(), CryptoUtils.compress(wallet.getKeyPair().getPublic()), random.nextInt(1000), Account.Type.ORDINARY);
+        acc.setHeight(random.nextInt(103));
+        return acc;
+    }
+
     public static byte[] generateBytes(int size) {
         Random random = new Random();
         byte[] bytes = new byte[size];

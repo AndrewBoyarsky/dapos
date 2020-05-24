@@ -41,11 +41,11 @@ public class VoteTransactionValidator implements TransactionTypeValidator {
         if (!validator.isEnabled()) {
             throw new TxNotValidException("Validator " + validator.getId() + " is disabled", null, tx, ErrorCodes.VOTE_VALIDATOR_DISABLED);
         }
-        if (tx.getAmount() < config.getCurrentConfig().getMinVoteStake()) {
-            throw new TxNotValidException("Vote power is less than minimal limit, required >= " + config.getCurrentConfig().getMinVoteStake() + ", got " + tx.getAmount(), null, tx, ErrorCodes.VOTE_POWER_LESSER_THAN_MINIMAL_STAKE);
+        if (tx.getAmount() < config.getMinVoteStake()) {
+            throw new TxNotValidException("Vote power is less than minimal limit, required >= " + config.getMinVoteStake() + ", got " + tx.getAmount(), null, tx, ErrorCodes.VOTE_POWER_LESSER_THAN_MINIMAL_STAKE);
         }
         if (!stakeholderService.exists(tx.getRecipient(), tx.getSender())) {
-            if (config.getCurrentConfig().getMaxValidatorVotes() == validator.getVotes()) {
+            if (config.getMaxValidatorVotes() == validator.getVotes()) {
                 long minStake = stakeholderService.minStake(validator.getId());
                 if (tx.getAmount() <= minStake) {
                     throw new TxNotValidException("Vote power is not enough to supersede the weakest validator's voter, required more than " + minStake + ", got " + tx.getAmount(), null, tx, ErrorCodes.VOTE_FAILED_TO_SUPERSEDE);

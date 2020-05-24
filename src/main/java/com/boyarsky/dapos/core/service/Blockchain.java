@@ -114,7 +114,7 @@ public class Blockchain {
 
         this.currentHeight = height;
         rewardAmount.set(0);
-        rewardAmount.addAndGet(config.getCurrentConfig().getBlockReward());
+        rewardAmount.addAndGet(config.getBlockReward());
     }
 
     public void addNewBlock(byte[] hash) {
@@ -142,9 +142,9 @@ public class Blockchain {
         log.info("Applying genesis");
         GenesisInitResponse genesisInitResponse = genesis.initialize();
         log.info("Genesis applied, accounts: {}, validators: {}", genesisInitResponse.getNumberOfAccount(), genesisInitResponse.getValidatorEntities().size());
-        config.init(1);
+        HeightConfig initConfig = config.init(1);
         InitChainResponse initChainResponse = new InitChainResponse();
-        initChainResponse.setConfig(config.getCurrentConfig());
+        initChainResponse.setConfig(initConfig);
         initChainResponse.setGenesisInitResponse(genesisInitResponse);
         return initChainResponse;
     }
@@ -157,14 +157,12 @@ public class Blockchain {
     }
 
     public EndBlockEnvelope endBlock() {
-        boolean updated = config.tryUpdateForHeight(getCurrentBlockHeight() + 1);
-        HeightConfig currentConfig = null;
-        if (updated) {
-            currentConfig = config.getCurrentConfig();
-            log.info("Update config to: " + currentConfig);
+        HeightConfig newConfig = config.tryUpdateForHeight(getCurrentBlockHeight() + 1);
+        if (newConfig != null) {
+            log.info("Update config to: " + newConfig);
         }
         EndBlockEnvelope response = new EndBlockEnvelope();
-        response.setNewConfig(currentConfig);
+        response.setNewConfig(newConfig);
         if (currentHeight - 1 > 0) {
             List<ValidatorEntity> allUpdated = validatorService.getAllUpdated(currentHeight - 1);
             response.setValidators(allUpdated);
