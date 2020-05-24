@@ -25,11 +25,13 @@
     {
       "publicKey": "8bd574fdb05c2dc5017188a2f4c32d5b81963e0a33eccba92404e968c665006d",
       "rewardId": "1P8LnS8QAVe23GGfdoy9XBU9hGacDaS1xe",
+      "power": 100,
       "fee": 3500
     },
     {
       "publicKey": "427e170f76f81f7742e9da100d71346aa631acb3f9980a1a41680883c0654431",
       "rewardId": "0xd3ef7139bdea050bd26543294aad956c1333a723",
+      "power": 200,
       "fee": 10
     }
   ]

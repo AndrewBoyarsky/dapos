@@ -19,6 +19,14 @@ public class LedgerRecord extends BlockchainEntity {
     private AccountId sender;
     private AccountId recipient;
 
+    public LedgerRecord(long id, long amount, String type, AccountId sender, AccountId recipient, long height) {
+        super(height);
+        this.id = id;
+        this.amount = amount;
+        this.type = type;
+        this.sender = sender;
+        this.recipient = recipient;
+    }
 
     @Getter
     public enum Type {

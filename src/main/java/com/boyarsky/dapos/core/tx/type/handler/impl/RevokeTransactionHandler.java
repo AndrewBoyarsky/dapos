@@ -19,7 +19,7 @@ public class RevokeTransactionHandler implements TransactionTypeHandler {
 
     @Override
     public void handle(Transaction tx) throws TxHandlingException {
-        validatorService.revoke(, tx, );
+        validatorService.revoke(tx.getRecipient(), tx.getSender(), tx.getHeight());
     }
 
     @Override

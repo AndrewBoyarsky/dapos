@@ -19,6 +19,7 @@ class GenesisData {
     @Data
     static class ValidatorDefinition {
         private int fee;
+        private long power;
         private String publicKey;
         private String rewardId;
     }

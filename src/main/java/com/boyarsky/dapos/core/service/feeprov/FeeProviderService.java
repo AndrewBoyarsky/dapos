@@ -9,7 +9,7 @@ import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
 public interface FeeProviderService {
     void handle(FeeProviderAttachment attachment, Transaction tx);
 
-    void charge(long id, long amount, long height, AccountId sender, AccountId recipient);
+    void charge(long id, long amount, long height, AccountId sender, AccountId recipient, long eventId);
 
     AccountFeeAllowance allowance(long id, AccountId accountId);
 

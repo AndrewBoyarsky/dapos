@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.service.account.AccountService;
+import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.validator.ValidatorService;
 import com.boyarsky.dapos.utils.Convert;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,7 +53,9 @@ public class GenesisImpl implements Genesis {
         List<ValidatorEntity> entities = new ArrayList<>();
         for (GenesisData.ValidatorDefinition validator : validators) {
             ValidatorEntity validatorEntity = validatorService.registerValidator(Convert.parseHexString(validator.getPublicKey()), validator.getFee(), new AccountId(validator.getRewardId()), true, 0);
-            validatorEntity.setVotePower(10); // just init non null vote power to remain in validator set
+            accountService.addToBalance(validatorEntity.getRewardId(), null, new Operation(0, 0, "Init Validator Balance", validator.getPower()));
+            validatorService.addVote(validatorEntity.getId(), validatorEntity.getRewardId(), validator.getPower(), 0);
+            validatorEntity.setVotePower(validator.getPower());
             entities.add(validatorEntity);
         }
         GenesisInitResponse response = new GenesisInitResponse();

@@ -53,12 +53,12 @@ public class AccountServiceImpl implements AccountService {
         }
         op.setAmount(-op.getAmount());
         addToBalance(sender, op);
-        ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), sender, recipient));
+        ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), sender, recipient, op.getHeight()));
     }
 
     @Override
     public void addToBalance(AccountId accountId, Operation op) {
-        Account account = get(accountId);
+        Account account = repository.find(accountId);
         if (account == null) {
             account = new Account(accountId, null, 0, Account.Type.ORDINARY);
         }
@@ -77,7 +77,7 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void addToBalance(AccountId acc, AccountId senderId, Operation op) {
         addToBalance(acc, op);
-        ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), senderId, acc));
+        ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), senderId, acc, op.getHeight()));
     }
 
     @Override

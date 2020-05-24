@@ -6,6 +6,8 @@ import com.boyarsky.dapos.core.repository.account.AccountRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.AccountServiceImpl;
 import com.boyarsky.dapos.core.service.account.NotFoundException;
+import com.boyarsky.dapos.core.service.account.Operation;
+import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,11 +32,13 @@ class AccountServiceImplTest {
     Account expected2 = new Account(id2, new byte[32], 101, Account.Type.ORDINARY);
     @Mock
     AccountRepository repository;
+    @Mock
+    LedgerService ledgerService;
     AccountService service;
 
     @BeforeEach
     void setUp() {
-        service = new AccountServiceImpl(repository);
+        service = new AccountServiceImpl(repository, ledgerService);
     }
 
     @Test
@@ -66,7 +70,7 @@ class AccountServiceImplTest {
         doReturn(expected1).when(repository).find(id1);
         doReturn(null).when(repository).find(id2);
 
-        service.transferMoney(id1, id2, 90, );
+        service.transferMoney(id1, id2, new Operation(0, 0, "Transfer", 90));
 
         verify(repository).save(new Account(id2, null, 90, Account.Type.ORDINARY));
         verify(repository).save(expected1);
@@ -78,7 +82,7 @@ class AccountServiceImplTest {
         doReturn(expected1).when(repository).find(id1);
         doReturn(expected2).when(repository).find(id2);
 
-        service.transferMoney(id1, id2, 50, );
+        service.transferMoney(id1, id2, new Operation(0, 0, "Transfer", 50));
 
         verify(repository).save(expected2);
         verify(repository).save(expected1);
@@ -90,7 +94,7 @@ class AccountServiceImplTest {
     void burnMoney() {
         doReturn(expected1).when(repository).find(id1);
 
-        service.transferMoney(id1, null, 50, );
+        service.transferMoney(id1, null, new Operation(0, 0, "Burn", 50));
 
         verify(repository).save(expected1);
         verifyNoMoreInteractions(repository);

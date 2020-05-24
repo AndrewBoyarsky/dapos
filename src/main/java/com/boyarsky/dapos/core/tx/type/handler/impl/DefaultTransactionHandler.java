@@ -4,7 +4,6 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.feeprov.FeeProviderService;
-import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.service.message.MessageService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
@@ -21,7 +20,7 @@ public class DefaultTransactionHandler implements TransactionTypeHandler {
     private final MessageService messageService;
 
     @Autowired
-    public DefaultTransactionHandler(AccountService accountService, FeeProviderService feeProviderService, MessageService messageService, LedgerService ledgerService) {
+    public DefaultTransactionHandler(AccountService accountService, FeeProviderService feeProviderService, MessageService messageService) {
         this.accountService = accountService;
         this.feeProviderService = feeProviderService;
         this.messageService = messageService;
@@ -42,7 +41,7 @@ public class DefaultTransactionHandler implements TransactionTypeHandler {
         }
         NoFeeAttachment nofee = tx.getAttachment(NoFeeAttachment.class);
         if (nofee != null) {
-            feeProviderService.charge(nofee.getPayer(), tx.getHeight(), tx.getFee(), tx.getSender(), tx.getRecipient());
+            feeProviderService.charge(nofee.getPayer(), tx.getHeight(), tx.getFee(), tx.getSender(), tx.getRecipient(), tx.getTxId());
         } else {
             Operation op = new Operation(tx.getTxId(), tx.getHeight(), "Tx Fee", tx.getFee());
             accountService.transferMoney(sender, null, op);

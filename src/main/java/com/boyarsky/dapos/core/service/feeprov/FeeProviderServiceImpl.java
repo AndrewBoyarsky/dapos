@@ -5,8 +5,10 @@ import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
 import com.boyarsky.dapos.core.model.fee.FeeConfig;
 import com.boyarsky.dapos.core.model.fee.FeeProvider;
 import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
+import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.repository.feeprov.AccountFeeRepository;
 import com.boyarsky.dapos.core.repository.feeprov.FeeProviderRepository;
+import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,11 +20,13 @@ import java.util.Optional;
 public class FeeProviderServiceImpl implements FeeProviderService {
     private final AccountFeeRepository accountFeeRepository;
     private FeeProviderRepository repository;
+    private LedgerService ledgerService;
 
     @Autowired
-    public FeeProviderServiceImpl(FeeProviderRepository repository, AccountFeeRepository accountFeeRepository) {
-        this.repository = repository;
+    public FeeProviderServiceImpl(AccountFeeRepository accountFeeRepository, FeeProviderRepository repository, LedgerService ledgerService) {
         this.accountFeeRepository = accountFeeRepository;
+        this.repository = repository;
+        this.ledgerService = ledgerService;
     }
 
     @Override
@@ -33,10 +37,11 @@ public class FeeProviderServiceImpl implements FeeProviderService {
     }
 
     @Override
-    public void charge(long id, long amount, long height, AccountId sender, AccountId recipient) {
+    public void charge(long id, long amount, long height, AccountId sender, AccountId recipient, long eventId) {
         FeeProvider feeProvider = get(id);
         feeProvider.setBalance(feeProvider.getBalance() - amount);
         feeProvider.setHeight(height);
+        ledgerService.add(new LedgerRecord(id, amount, "Charge Fee Provider", sender, recipient, height));
         repository.save(feeProvider);
         chargeAllowance(id, feeProvider.getFromFeeConfig(), height, sender, amount);
         if (recipient != null) {

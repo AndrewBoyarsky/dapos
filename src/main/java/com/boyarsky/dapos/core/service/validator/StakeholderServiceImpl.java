@@ -8,7 +8,6 @@ import com.boyarsky.dapos.core.repository.validator.VoteRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
-import com.boyarsky.dapos.core.tx.type.TxType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +23,11 @@ public class StakeholderServiceImpl implements StakeholderService {
     private BlockchainConfig blockchainConfig;
 
     @Autowired
-    public StakeholderServiceImpl(VoteRepository repository, AccountService accountService) {
+    public StakeholderServiceImpl(VoteRepository repository, AccountService accountService, LedgerService ledgerService, BlockchainConfig blockchainConfig) {
         this.repository = repository;
         this.accountService = accountService;
+        this.ledgerService = ledgerService;
+        this.blockchainConfig = blockchainConfig;
     }
 
     @Override
@@ -38,7 +39,7 @@ public class StakeholderServiceImpl implements StakeholderService {
             long resultStakeToBeSaved = imposeFine(vote.getTotalPower(), blockchainConfig.getCurrentConfig().getAbsentPunishment());
             long prevStake = vote.getTotalPower();
             if (prevStake != resultStakeToBeSaved) {
-                ledgerService.add(new LedgerRecord(height, -prevStake + resultStakeToBeSaved, LedgerRecord.Type.ABSENT_VOTER_FINE, validatorId, vote.getAccountId()));
+                ledgerService.add(new LedgerRecord(height, -prevStake + resultStakeToBeSaved, LedgerRecord.Type.ABSENT_VOTER_FINE.toString(), validatorId, vote.getAccountId(), height));
                 vote.setTotalPower(resultStakeToBeSaved);
                 vote.setHeight(height);
                 totalPunishment += (prevStake - resultStakeToBeSaved);
@@ -65,7 +66,7 @@ public class StakeholderServiceImpl implements StakeholderService {
     long remove(VoteEntity vote, LedgerRecord.Type event) {
         repository.remove(vote.getValidatorId(), vote.getAccountId());
         Operation operation = new Operation(vote.getHeight(), vote.getHeight(), event.toString(), vote.getTotalPower());
-        accountService.addToBalance(vote.getAccountId(), operation);
+        accountService.addToBalance(vote.getAccountId(), vote.getValidatorId(), operation);
         return vote.getTotalPower();
     }
 
@@ -81,7 +82,7 @@ public class StakeholderServiceImpl implements StakeholderService {
             long fine = prevStake - resultStakeToBeSaved;
             vote.setTotalPower(resultStakeToBeSaved);
             vote.setHeight(height);
-            ledgerService.add(new LedgerRecord(height, -fine, LedgerRecord.Type.VOTER_BYZANTINE_FINE, validatorId, vote.getAccountId()));
+            ledgerService.add(new LedgerRecord(height, -fine, LedgerRecord.Type.VOTER_BYZANTINE_FINE.toString(), validatorId, vote.getAccountId(), height));
             remove(vote, LedgerRecord.Type.VOTER_BYZANTINE_AUTO_REVOCATION);
             totalPunishment += fine;
         }
@@ -121,8 +122,7 @@ public class StakeholderServiceImpl implements StakeholderService {
     @Override
     public long revokeVote(AccountId validatorId, AccountId voterId, long height) {
         VoteEntity entity = repository.getBy(validatorId, voterId);
-        accountService.addToBalance(voterId, , entity.getTotalPower());
-        ledgerService.add(new LedgerRecord(height, , tx.getFee(), entity.getTotalPower(), TxType.REVOKE, voterId, validatorId));
+        accountService.addToBalance(voterId, validatorId, new Operation(height, height, "REVOKE", entity.getTotalPower()));
         repository.remove(validatorId, voterId);
         return entity.getTotalPower();
     }

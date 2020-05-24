@@ -5,6 +5,7 @@ import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.service.account.AccountService;
+import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.validator.ValidatorService;
 import com.boyarsky.dapos.utils.Convert;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,8 +34,8 @@ class GenesisTest {
     private final byte[] pubKey2 = Convert.parseHexString("427e170f76f81f7742e9da100d71346aa631acb3f9980a1a41680883c0654431");
     @Mock
     ValidatorService validatorService;
-    private ValidatorEntity validator1 = new ValidatorEntity(true, pubKey1, 0, new AccountId(CryptoUtils.validatorAddress(pubKey1)), new AccountId("1P8LnS8QAVe23GGfdoy9XBU9hGacDaS1xe"), 0, 0, 3500);
-    private ValidatorEntity validator2 = new ValidatorEntity(true, pubKey2, 0, new AccountId(CryptoUtils.validatorAddress(pubKey2)), new AccountId("0xd3ef7139bdea050bd26543294aad956c1333a723"), 0, 0, 10);
+    private ValidatorEntity validator1 = new ValidatorEntity(true, pubKey1, 0, new AccountId(CryptoUtils.validatorAddress(pubKey1)), new AccountId("1P8LnS8QAVe23GGfdoy9XBU9hGacDaS1xe"), 0, 100, 3500);
+    private ValidatorEntity validator2 = new ValidatorEntity(true, pubKey2, 0, new AccountId(CryptoUtils.validatorAddress(pubKey2)), new AccountId("0xd3ef7139bdea050bd26543294aad956c1333a723"), 0, 200, 10);
 
     @Test
     void initialize() {
@@ -48,6 +49,10 @@ class GenesisTest {
         verify(accountService).save(account2);
         verify(accountService).save(account3);
         verify(accountService).save(account4);
+        verify(accountService).addToBalance(validator1.getRewardId(), null, new Operation(0, 0, "Init Validator Balance", 100));
+        verify(accountService).addToBalance(validator2.getRewardId(), null, new Operation(0, 0, "Init Validator Balance", 200));
+        verify(validatorService).addVote(validator1.getId(), validator1.getRewardId(), 100, 0);
+        verify(validatorService).addVote(validator2.getId(), validator2.getRewardId(), 200, 0);
     }
 
     @Test

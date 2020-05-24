@@ -7,6 +7,7 @@ import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.repository.validator.ValidatorRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
+import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -78,7 +79,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         byId.setHeight(height);
         byId.setEnabled(false);
         long punishmentAmount = stakeholderService.punishByzantineStakeholders(validatorId, height).getPunishmentAmount();
-        ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.VALIDATOR_BYZANTINE_FINE, null, validatorId));
+        ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.VALIDATOR_BYZANTINE_FINE.toString(), null, validatorId, height));
         byId.setVotePower(0);
         byId.setVotes(0);
         repository.save(byId);
@@ -87,7 +88,7 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     @Override
     public void revoke(AccountId validatorId, AccountId voterId, long height) {
-        long votePowerLoss = stakeholderService.revokeVote(validatorId, voterId, );
+        long votePowerLoss = stakeholderService.revokeVote(validatorId, voterId, height);
         ValidatorEntity entity = get(validatorId);
         entity.setHeight(height);
         entity.setVotes(entity.getVotes() - 1);
@@ -109,11 +110,11 @@ public class ValidatorServiceImpl implements ValidatorService {
         if (byId.getAbsentFor() >= config.getCurrentConfig().getAbsentPeriod()) {
             byId.setEnabled(false);
             punishmentAmount = stakeholderService.punishStakeholders(validatorId, height).getPunishmentAmount();
-            ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.ABSENT_VALIDATOR_FINE, null, validatorId));
+            ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.ABSENT_VALIDATOR_FINE.toString(), null, validatorId, height));
             byId.setVotePower(byId.getVotePower() - punishmentAmount);
         } else {
             byId.setAbsentFor(byId.getAbsentFor() + 1);
-            ledgerService.add(new LedgerRecord(height, byId.getAbsentFor(), LedgerRecord.Type.ABSENT_VALIDATOR, null, validatorId));
+            ledgerService.add(new LedgerRecord(height, byId.getAbsentFor(), LedgerRecord.Type.ABSENT_VALIDATOR.toString(), null, validatorId, height));
         }
         repository.save(byId);
         return punishmentAmount;
@@ -129,7 +130,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             fairValidator.setHeight(height);
             fairValidator.setVotePower(fairValidator.getVotePower() + validatorReward.toBigInteger().longValueExact());
             fairValidator.setAbsentFor(0);
-            accountService.addToBalance(fairValidator.getId(), , validatorFee.longValueExact());
+            accountService.addToBalance(fairValidator.getId(), null, new Operation(height, height, "VALIDATOR REWARD", validatorFee.longValueExact()));
             BigDecimal stakeholdersReward = validatorReward.subtract(validatorFee);
             stakeholderService.distributeRewardForValidator(fairValidator.getId(), stakeholdersReward, height);
             repository.save(fairValidator);
@@ -145,6 +146,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         byId.setHeight(height);
         long stakeDiff = stakeholderService.voteFor(validatorId, voterId, voterPower, height);
         byId.setVotePower(byId.getVotePower() + stakeDiff);
+        repository.save(byId);
     }
 
     @Override

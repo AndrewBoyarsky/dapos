@@ -42,11 +42,11 @@ public class Blockchain {
     private final Genesis genesis;
     private final TransactionProcessor processor;
     private final TransactionManager manager;
-    private final AccountService accountService;
-    private final LedgerService ledgerService;
+    //    private final AccountService accountService;
+//    private final LedgerService ledgerService;
     private final ValidatorService validatorService;
 
-    private AtomicLong rewardAmount = new AtomicLong();
+    private final AtomicLong rewardAmount = new AtomicLong();
 
     @Autowired
     public Blockchain(BlockRepository blockRepository, BlockchainConfig config, Genesis genesis, TransactionProcessor processor, TransactionManager manager, AccountService accountService, LedgerService ledgerService, ValidatorService validatorService) {
@@ -55,8 +55,8 @@ public class Blockchain {
         this.genesis = genesis;
         this.processor = processor;
         this.manager = manager;
-        this.accountService = accountService;
-        this.ledgerService = ledgerService;
+//        this.accountService = accountService;
+//        this.ledgerService = ledgerService;
         this.validatorService = validatorService;
     }
 
@@ -109,7 +109,7 @@ public class Blockchain {
                 .limit(maxValidators)
                 .collect(Collectors.toList());
         rewardAmount.addAndGet(totalPunishmentAmount);
-        validatorService.distributeReward(fairValidators, rewardAmount.get(), 0);
+        validatorService.distributeReward(fairValidators, rewardAmount.get(), currentHeight);
 
 
         this.currentHeight = height;

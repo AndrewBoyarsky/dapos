@@ -21,7 +21,7 @@ public class VoteTransactionHandler implements TransactionTypeHandler {
     @Override
     public void handle(Transaction tx) throws TxHandlingException {
         VoteAttachment attachment = tx.getAttachment(VoteAttachment.class);
-        service.addVote(, tx, , attachment, );
+        service.addVote(tx.getRecipient(), tx.getSender(), tx.getAmount(), tx.getHeight());
     }
 
     @Override
