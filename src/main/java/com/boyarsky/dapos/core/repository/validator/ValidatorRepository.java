@@ -13,7 +13,7 @@ public interface ValidatorRepository {
     List<ValidatorEntity> getAll(long height);
 
 
-    List<ValidatorEntity> getAllWith(long absentFor, boolean enabled);
+//    List<ValidatorEntity> getAllWith(long absentFor, boolean enabled);
 
     ValidatorEntity getById(AccountId id);
 }

@@ -6,6 +6,7 @@ import com.boyarsky.dapos.core.repository.DbParam;
 import com.boyarsky.dapos.core.repository.DbParamImpl;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
+import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;
 import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
@@ -26,17 +27,25 @@ public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorE
     protected void storeToDbEntity(Entity e, ValidatorEntity validatorEntity) {
         e.setProperty("fee", validatorEntity.getFee());
         e.setProperty("id", Convert.toHexString(validatorEntity.getId().getAddressBytes()));
-        e.setProperty("delegatedBalance", validatorEntity.getVotePower());
+        e.setProperty("publicKey", Convert.toHexString(validatorEntity.getPublicKey()));
+        e.setProperty("power", validatorEntity.getVotePower());
+        e.setProperty("votes", validatorEntity.getVotes());
+        e.setProperty("absent", validatorEntity.getAbsentFor());
+        e.setProperty("rewardAddress", Convert.toHexString(validatorEntity.getRewardId().getAddressBytes()));
         e.setProperty("enabled", validatorEntity.isEnabled());
     }
 
     @Override
     protected ValidatorEntity doMap(Entity e) {
         ValidatorEntity validatorEntity = new ValidatorEntity();
-        validatorEntity.setVotePower((Long) e.getProperty("delegatedBalance"));
+        validatorEntity.setVotePower((Long) e.getProperty("power"));
         validatorEntity.setId(AccountId.fromBytes(Convert.parseHexString((String) e.getProperty("id"))));
         validatorEntity.setFee((Integer) e.getProperty("fee"));
         validatorEntity.setEnabled((Boolean) e.getProperty("enabled"));
+        validatorEntity.setVotes((Integer) e.getProperty("votes"));
+        validatorEntity.setPublicKey(Convert.parseHexString((String) e.getProperty("publicKey")));
+        validatorEntity.setRewardId(AccountId.fromBytes(Convert.parseHexString((String) e.getProperty("rewardAddress"))));
+        validatorEntity.setAbsentFor((Long) e.getProperty("absent"));
         return validatorEntity;
     }
 
@@ -46,21 +55,19 @@ public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorE
     }
 
     @Override
+    @Transactional(readonly = true)
     public List<ValidatorEntity> getAll() {
-        return super.getAll();
+        return CollectionUtils.toList(getTx().sort("validator", "power", getTx().getAll("validator"), false), this::map);
     }
 
     @Override
+    @Transactional(readonly = true)
     public List<ValidatorEntity> getAll(long height) {
-        return CollectionUtils.toList(getTx().find("validator", "height", height, Long.MAX_VALUE), this::map);
+        return CollectionUtils.toList(getTx().sort("validator", "power", getTx().find("validator", "height", height, Long.MAX_VALUE), false), this::map);
     }
 
     @Override
-    public List<ValidatorEntity> getAllWith(long absentFor, boolean enabled) {
-        return getAll(new DbParamImpl("absentFor", absentFor), new DbParamImpl("enabled", enabled));
-    }
-
-    @Override
+    @Transactional(readonly = true)
     public ValidatorEntity getById(AccountId id) {
         return get(new DbParamImpl("id", Convert.toHexString(id.getAddressBytes())));
     }

@@ -31,7 +31,7 @@ class CryptoUtilsTest {
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    @RepeatedTest(value = 1000)
+    @RepeatedTest(value = 100)
     void testSignVerifySecp256k1() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.secp256k1KeyPair();
         testSignVerify(keyPair);
@@ -70,7 +70,7 @@ class CryptoUtilsTest {
         assertFalse(verified);
     }
 
-    @RepeatedTest(1000)
+    @RepeatedTest(100)
     void testSignVerify_ed25519() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException {
         KeyPair keyPair = CryptoUtils.ed25519KeyPair();
         testSignVerify(keyPair);
