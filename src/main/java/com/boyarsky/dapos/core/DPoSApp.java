@@ -5,7 +5,7 @@ import com.boyarsky.dapos.core.config.HeightConfig;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.service.Blockchain;
-import com.boyarsky.dapos.core.service.EndBlockEnvelope;
+import com.boyarsky.dapos.core.service.EndBlockResponse;
 import com.boyarsky.dapos.core.service.InitChainResponse;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
 import com.google.protobuf.ByteString;
@@ -147,12 +147,12 @@ public class DPoSApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
     @Override
     public void endBlock(RequestEndBlock request, StreamObserver<ResponseEndBlock> responseObserver) {
         ResponseEndBlock.Builder builder = ResponseEndBlock.newBuilder();
-        EndBlockEnvelope endBlockEnvelope = blockchain.endBlock();
-        HeightConfig newConfig = endBlockEnvelope.getNewConfig();
+        EndBlockResponse endBlockResponse = blockchain.endBlock();
+        HeightConfig newConfig = endBlockResponse.getNewConfig();
         if (newConfig != null) {
             builder.setConsensusParamUpdates(map(newConfig));
         }
-        builder.addAllValidatorUpdates(map(endBlockEnvelope.getValidators()));
+        builder.addAllValidatorUpdates(map(endBlockResponse.getValidators()));
         responseObserver.onNext(builder.build());
         responseObserver.onCompleted();
     }

@@ -35,6 +35,7 @@ public class StakeholderServiceImpl implements StakeholderService {
         List<VoteEntity> votes = repository.getAllVotesForValidator(validatorId);
         long totalPunishment = 0;
         int removed = 0;
+        long totalRevoked = 0;
         for (VoteEntity vote : votes) {
             long resultStakeToBeSaved = imposeFine(vote.getTotalPower(), blockchainConfig.getAbsentPunishment());
             long prevStake = vote.getTotalPower();
@@ -46,9 +47,9 @@ public class StakeholderServiceImpl implements StakeholderService {
             if (refundAmount != 0) {
                 removed++;
             }
-            totalPunishment += refundAmount;
+            totalRevoked += refundAmount;
         }
-        return new StakeholderPunishmentData(totalPunishment, removed);
+        return new StakeholderPunishmentData(totalPunishment, totalRevoked, removed);
     }
 
     long save(VoteEntity vote, LedgerRecord.Type event) {
@@ -72,19 +73,20 @@ public class StakeholderServiceImpl implements StakeholderService {
     public StakeholderPunishmentData punishByzantineStakeholders(AccountId validatorId, long height) {
         List<VoteEntity> votes = repository.getAllVotesForValidator(validatorId);
         long totalPunishment = 0;
+        long totalRevoked = 0;
         int removed = votes.size();
         for (VoteEntity vote : votes) {
-            totalPunishment += vote.getTotalPower();
             BigDecimal punishmentPercent = blockchainConfig.getByzantinePunishment();
             long resultStakeToBeSaved = imposeFine(vote.getTotalPower(), punishmentPercent);
             long prevStake = vote.getTotalPower();
             long fine = prevStake - resultStakeToBeSaved;
+            totalPunishment += fine;
             vote.setTotalPower(resultStakeToBeSaved);
             vote.setHeight(height);
             ledgerService.add(new LedgerRecord(height, -fine, LedgerRecord.Type.VOTER_BYZANTINE_FINE.toString(), validatorId, vote.getAccountId(), height));
-            remove(vote, LedgerRecord.Type.VOTER_BYZANTINE_AUTO_REVOCATION);
+            totalRevoked += remove(vote, LedgerRecord.Type.VOTER_BYZANTINE_AUTO_REVOCATION);
         }
-        return new StakeholderPunishmentData(totalPunishment, removed);
+        return new StakeholderPunishmentData(totalPunishment, totalRevoked, removed);
     }
 
     long imposeFine(long stake, BigDecimal punishmentPercent) {

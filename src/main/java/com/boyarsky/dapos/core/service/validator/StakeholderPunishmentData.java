@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class StakeholderPunishmentData {
-    private long punishmentAmount;
+    private long burned;
+    private long revoked;
     private int removed;
 }

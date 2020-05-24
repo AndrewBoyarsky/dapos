@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class EndBlockEnvelope {
+public class EndBlockResponse {
     private HeightConfig newConfig;
     private List<ValidatorEntity> validators = new ArrayList<>();
 }

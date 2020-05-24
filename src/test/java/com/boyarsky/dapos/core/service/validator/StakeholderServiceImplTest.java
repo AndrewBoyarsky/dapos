@@ -65,12 +65,14 @@ class StakeholderServiceImplTest {
         StakeholderPunishmentData data = service.punishStakeholders(validatorId1, 300);
 
         assertEquals(2, data.getRemoved());
-        assertEquals(776, data.getPunishmentAmount());
+        assertEquals(39, data.getBurned());
+        assertEquals(737, data.getRevoked());
         verify(repository).remove(validatorId1, voter2);
         verify(repository).remove(validatorId1, voter4);
         verify(accountService).addToBalance(voter2, validatorId1, new Operation(300, 300, "ABSENT_VOTER_AUTO_REVOCATION", 658));
         verify(accountService).addToBalance(voter4, validatorId1, new Operation(300, 300, "ABSENT_VOTER_AUTO_REVOCATION", 79));
         verify(ledgerService).add(new LedgerRecord(300, -8, "ABSENT_VOTER_FINE", validatorId1, voter2, 300));
+        verify(ledgerService).add(new LedgerRecord(300, -1, "ABSENT_VOTER_FINE", validatorId1, voter4, 300));
         verify(ledgerService).add(new LedgerRecord(300, -12, "ABSENT_VOTER_FINE", validatorId1, voter1, 300));
         verify(ledgerService).add(new LedgerRecord(300, -18, "ABSENT_VOTER_FINE", validatorId1, voter3, 300));
         verify(repository).save(vote1);
@@ -92,7 +94,8 @@ class StakeholderServiceImplTest {
 
         StakeholderPunishmentData data = service.punishByzantineStakeholders(validatorId1, 300);
         assertEquals(4, data.getRemoved());
-        assertEquals(611, data.getPunishmentAmount());
+        assertEquals(35, data.getBurned());
+        assertEquals(576, data.getRevoked());
         verifyRemovedVote(vote1, 236, 14, 300);
         verifyRemovedVote(vote2, 141, 9, 300);
         verifyRemovedVote(vote3, 114, 7, 300);

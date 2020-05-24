@@ -11,8 +11,6 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.core.repository.block.BlockRepository;
-import com.boyarsky.dapos.core.service.account.AccountService;
-import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.service.validator.ValidatorService;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
 import com.boyarsky.dapos.core.tx.TransactionProcessor;
@@ -23,15 +21,10 @@ import types.Evidence;
 import types.VoteInfo;
 
 import javax.annotation.PostConstruct;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -42,21 +35,17 @@ public class Blockchain {
     private final Genesis genesis;
     private final TransactionProcessor processor;
     private final TransactionManager manager;
-    //    private final AccountService accountService;
-//    private final LedgerService ledgerService;
     private final ValidatorService validatorService;
 
     private final AtomicLong rewardAmount = new AtomicLong();
 
     @Autowired
-    public Blockchain(BlockRepository blockRepository, BlockchainConfig config, Genesis genesis, TransactionProcessor processor, TransactionManager manager, AccountService accountService, LedgerService ledgerService, ValidatorService validatorService) {
+    public Blockchain(BlockRepository blockRepository, BlockchainConfig config, Genesis genesis, TransactionProcessor processor, TransactionManager manager, ValidatorService validatorService) {
         this.blockRepository = blockRepository;
         this.config = config;
         this.genesis = genesis;
         this.processor = processor;
         this.manager = manager;
-//        this.accountService = accountService;
-//        this.ledgerService = ledgerService;
         this.validatorService = validatorService;
     }
 
@@ -73,46 +62,31 @@ public class Blockchain {
 
     public void beginBlock(long height, List<VoteInfo> votesList, List<Evidence> byzantineValidatorsList) {
         manager.begin();
+        this.currentHeight = height;
 
         Set<AccountId> byzantineValidators = new HashSet<>();
         for (Evidence evidence : byzantineValidatorsList) {
             byzantineValidators.add(new AccountId(CryptoUtils.encodeValidatorAddress(evidence.getValidator().getAddress().toByteArray())));
         }
-        Map<AccountId, Boolean> validatorStatuses = new HashMap<>();
+        Set<AccountId> conscientiousValidators = new HashSet<>();
+        Set<AccountId> absentValidators = new HashSet<>();
         for (VoteInfo voteInfo : votesList) {
             byte[] addressBytes = voteInfo.getValidator().getAddress().toByteArray();
             AccountId validatorId = new AccountId(CryptoUtils.encodeValidatorAddress(addressBytes));
-            validatorStatuses.put(validatorId, voteInfo.getSignedLastBlock());
+            if (byzantineValidators.contains(validatorId)) {
+                continue; // avoid double punishment
+            }
+            if (voteInfo.getSignedLastBlock()) {
+                conscientiousValidators.add(validatorId);
+            } else {
+                absentValidators.add(validatorId);
+            }
         }
-        byzantineValidators.forEach(validatorStatuses::remove); // avoid double punishment
-        long totalPunishmentAmount = byzantineValidators
-                .stream()
-                .mapToLong(id -> validatorService.punishByzantine(id, currentHeight))
-                .sum();
-        totalPunishmentAmount += validatorStatuses.entrySet()
-                .stream()
-                .filter(e -> !e.getValue())
-                .map(Map.Entry::getKey)
-                .mapToLong(id -> validatorService.punishAbsent(id, currentHeight))
-                .sum();
-        long maxValidators = config.getMaxValidators();
-        List<ValidatorEntity> fairValidators = validatorStatuses.entrySet()
-                .stream()
-                .filter(Map.Entry::getValue)
-                .map(Map.Entry::getKey)
-                .map(id -> {
-                    ValidatorEntity validator = validatorService.get(id);
-                    return Objects.requireNonNullElseGet(validator, ValidatorEntity::new);
-                })
-                .filter(ValidatorEntity::isEnabled)
-                .sorted(Comparator.comparing(ValidatorEntity::getVotePower).reversed())
-                .limit(maxValidators)
-                .collect(Collectors.toList());
+        long totalPunishmentAmount = validatorService.punishByzantines(byzantineValidators, currentHeight);
+        totalPunishmentAmount += validatorService.punishAbsents(absentValidators, currentHeight);
         rewardAmount.addAndGet(totalPunishmentAmount);
-        validatorService.distributeReward(fairValidators, rewardAmount.get(), currentHeight);
+        validatorService.distributeReward(conscientiousValidators, rewardAmount.get(), currentHeight);
 
-
-        this.currentHeight = height;
         rewardAmount.set(0);
         rewardAmount.addAndGet(config.getBlockReward());
     }
@@ -156,12 +130,12 @@ public class Blockchain {
         return hash;
     }
 
-    public EndBlockEnvelope endBlock() {
+    public EndBlockResponse endBlock() {
         HeightConfig newConfig = config.tryUpdateForHeight(getCurrentBlockHeight() + 1);
         if (newConfig != null) {
             log.info("Update config to: " + newConfig);
         }
-        EndBlockEnvelope response = new EndBlockEnvelope();
+        EndBlockResponse response = new EndBlockResponse();
         response.setNewConfig(newConfig);
         if (currentHeight - 1 > 0) {
             List<ValidatorEntity> allUpdated = validatorService.getAllUpdated(currentHeight - 1);

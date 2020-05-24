@@ -199,7 +199,6 @@ public class CryptoUtils {
             throw new RuntimeException(e);
         }
     }
-
     public static byte[] compressSignature(byte[] signature) {
         if (signature.length <= 64) {
             return signature;

@@ -15,7 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ValidatorServiceImpl implements ValidatorService {
@@ -78,11 +81,20 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
         byId.setHeight(height);
         byId.setEnabled(false);
-        long punishmentAmount = stakeholderService.punishByzantineStakeholders(validatorId, height).getPunishmentAmount();
+        long punishmentAmount = stakeholderService.punishByzantineStakeholders(validatorId, height).getBurned();
         ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.VALIDATOR_BYZANTINE_FINE.toString(), null, validatorId, height));
         byId.setVotePower(0);
         byId.setVotes(0);
         repository.save(byId);
+        return punishmentAmount;
+    }
+
+    @Override
+    public long punishByzantines(Set<AccountId> validators, long height) {
+        long punishmentAmount = 0;
+        for (AccountId validator : validators) {
+            punishmentAmount += punishByzantine(validator, height);
+        }
         return punishmentAmount;
     }
 
@@ -111,7 +123,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         if (byId.getAbsentFor() >= config.getAbsentPeriod()) {
             byId.setEnabled(false);
             StakeholderPunishmentData punishmentData = stakeholderService.punishStakeholders(validatorId, height);
-            punishmentAmount = punishmentData.getPunishmentAmount();
+            punishmentAmount = punishmentData.getBurned();
             ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.ABSENT_VALIDATOR_FINE.toString(), null, validatorId, height));
             byId.setVotePower(byId.getVotePower() - punishmentAmount);
             byId.setVotes(byId.getVotes() - punishmentData.getRemoved());
@@ -123,19 +135,35 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public void distributeReward(List<ValidatorEntity> fairValidators, long rewardAmount, long height) {
-        long totalVotePower = fairValidators.stream().mapToLong(ValidatorEntity::getVotePower).sum();
-        for (ValidatorEntity fairValidator : fairValidators) {
-            BigDecimal validatorPercent = BigDecimal.valueOf(fairValidator.getVotePower()).divide(BigDecimal.valueOf(totalVotePower), 8, RoundingMode.DOWN);
+    public long punishAbsents(Set<AccountId> validators, long height) {
+        long punishmentAmount = 0;
+        for (AccountId validator : validators) {
+            punishmentAmount += punishAbsent(validator, height);
+        }
+        return punishmentAmount;
+    }
+
+    @Override
+    public void distributeReward(Set<AccountId> validators, long rewardAmount, long height) {
+        List<ValidatorEntity> validatorEntities = validators
+                .stream()
+                .map(repository::getById)
+                .filter(ValidatorEntity::isEnabled)
+                .sorted(Comparator.comparing(ValidatorEntity::getVotePower).reversed())
+                .limit(config.getMaxValidators())
+                .collect(Collectors.toList());
+        long totalVotePower = validatorEntities.stream().mapToLong(ValidatorEntity::getVotePower).sum();
+        for (ValidatorEntity v : validatorEntities) {
+            BigDecimal validatorPercent = BigDecimal.valueOf(v.getVotePower()).divide(BigDecimal.valueOf(totalVotePower), 8, RoundingMode.DOWN);
             BigDecimal validatorReward = validatorPercent.multiply(BigDecimal.valueOf(rewardAmount));
-            BigDecimal validatorFee = validatorReward.multiply(BigDecimal.valueOf(fairValidator.getFee())).divide(BigDecimal.valueOf(10000), RoundingMode.DOWN);
-            fairValidator.setHeight(height);
-            fairValidator.setAbsentFor(0);
+            BigDecimal validatorFee = validatorReward.multiply(BigDecimal.valueOf(v.getFee())).divide(BigDecimal.valueOf(10000), RoundingMode.DOWN);
+            v.setHeight(height);
+            v.setAbsentFor(0);
             long validatorFeeRounded = validatorFee.toBigInteger().longValueExact();
-            accountService.addToBalance(fairValidator.getRewardId(), fairValidator.getId(), new Operation(height, height, "VALIDATOR REWARD", validatorFeeRounded));
+            accountService.addToBalance(v.getRewardId(), v.getId(), new Operation(height, height, "VALIDATOR REWARD", validatorFeeRounded));
             long stakeholdersReward = validatorReward.subtract(validatorFee).toBigInteger().longValueExact();
-            stakeholderService.distributeRewardForValidator(fairValidator.getId(), stakeholdersReward, height);
-            repository.save(fairValidator);
+            stakeholderService.distributeRewardForValidator(v.getId(), stakeholdersReward, height);
+            repository.save(v);
         }
     }
 

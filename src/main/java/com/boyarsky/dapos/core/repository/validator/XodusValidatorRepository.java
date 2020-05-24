@@ -53,7 +53,6 @@ public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorE
     @Override
     public List<ValidatorEntity> getAll(long height) {
         return CollectionUtils.toList(getTx().find("validator", "height", height, Long.MAX_VALUE), this::map);
-
     }
 
     @Override
