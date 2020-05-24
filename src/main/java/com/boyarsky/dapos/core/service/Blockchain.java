@@ -39,6 +39,10 @@ public class Blockchain {
 
     private final AtomicLong rewardAmount = new AtomicLong();
 
+    AtomicLong getRewardAmount() {
+        return rewardAmount;
+    }
+
     @Autowired
     public Blockchain(BlockRepository blockRepository, BlockchainConfig config, Genesis genesis, TransactionProcessor processor, TransactionManager manager, ValidatorService validatorService) {
         this.blockRepository = blockRepository;
