@@ -37,7 +37,7 @@ public class GenesisImpl implements Genesis {
     }
 
     @Override
-    public GenesisInitResponse initialize() {
+    public GenesisInitResult initialize() {
         ClassPathResource resource = new ClassPathResource(genesisPath);
         GenesisData genesisData;
         try {
@@ -58,7 +58,7 @@ public class GenesisImpl implements Genesis {
             validatorEntity.setVotePower(validator.getPower());
             entities.add(validatorEntity);
         }
-        GenesisInitResponse response = new GenesisInitResponse();
+        GenesisInitResult response = new GenesisInitResult();
         response.setNumberOfAccount(accounts.size());
         response.setValidatorEntities(entities);
         return response;

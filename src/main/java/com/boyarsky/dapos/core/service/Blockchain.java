@@ -5,7 +5,7 @@ import com.boyarsky.dapos.core.config.BlockchainConfig;
 import com.boyarsky.dapos.core.config.HeightConfig;
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.genesis.Genesis;
-import com.boyarsky.dapos.core.genesis.GenesisInitResponse;
+import com.boyarsky.dapos.core.genesis.GenesisInitResult;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
@@ -118,12 +118,12 @@ public class Blockchain {
     @Transactional(startNew = true)
     public InitChainResponse onInitChain() {
         log.info("Applying genesis");
-        GenesisInitResponse genesisInitResponse = genesis.initialize();
-        log.info("Genesis applied, accounts: {}, validators: {}", genesisInitResponse.getNumberOfAccount(), genesisInitResponse.getValidatorEntities().size());
+        GenesisInitResult genesisInitResult = genesis.initialize();
+        log.info("Genesis applied, accounts: {}, validators: {}", genesisInitResult.getNumberOfAccount(), genesisInitResult.getValidatorEntities().size());
         HeightConfig initConfig = config.init(1);
         InitChainResponse initChainResponse = new InitChainResponse();
         initChainResponse.setConfig(initConfig);
-        initChainResponse.setGenesisInitResponse(genesisInitResponse);
+        initChainResponse.setGenesisInitResult(genesisInitResult);
         return initChainResponse;
     }
 
@@ -135,16 +135,15 @@ public class Blockchain {
     }
 
     public EndBlockResponse endBlock() {
-        HeightConfig newConfig = config.tryUpdateForHeight(getCurrentBlockHeight() + 1);
+        HeightConfig newConfig = config.tryUpdateForHeight(currentHeight + 1);
         if (newConfig != null) {
             log.info("Update config to: " + newConfig);
         }
         EndBlockResponse response = new EndBlockResponse();
         response.setNewConfig(newConfig);
-        if (currentHeight - 1 > 0) {
-            List<ValidatorEntity> allUpdated = validatorService.getAllUpdated(currentHeight - 1);
-            response.setValidators(allUpdated);
-        }
+        List<ValidatorEntity> allUpdated = validatorService.getAllUpdated(currentHeight);
+        response.setValidators(allUpdated);
+
         return response;
     }
 }

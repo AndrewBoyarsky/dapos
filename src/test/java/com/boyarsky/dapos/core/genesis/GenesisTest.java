@@ -42,7 +42,7 @@ class GenesisTest {
         GenesisImpl genesis = new GenesisImpl(accountService, validatorService, mapper);
         doReturn(validator1).when(validatorService).registerValidator(pubKey1, validator1.getFee(), validator1.getRewardId(), true, 0);
         doReturn(validator2).when(validatorService).registerValidator(pubKey2, validator2.getFee(), validator2.getRewardId(), true, 0);
-        GenesisInitResponse initResponse = genesis.initialize();
+        GenesisInitResult initResponse = genesis.initialize();
         assertEquals(4, initResponse.getNumberOfAccount());
         assertEquals(List.of(validator1, validator2), initResponse.getValidatorEntities());
         verify(accountService).save(account1);

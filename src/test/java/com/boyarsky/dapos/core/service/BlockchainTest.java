@@ -3,13 +3,20 @@ package com.boyarsky.dapos.core.service;
 import com.boyarsky.dapos.TestUtil;
 import com.boyarsky.dapos.core.TransactionManager;
 import com.boyarsky.dapos.core.config.BlockchainConfig;
+import com.boyarsky.dapos.core.config.HeightConfig;
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.genesis.Genesis;
+import com.boyarsky.dapos.core.genesis.GenesisInitResult;
 import com.boyarsky.dapos.core.model.LastSuccessBlockData;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.repository.block.BlockRepository;
 import com.boyarsky.dapos.core.service.validator.ValidatorService;
+import com.boyarsky.dapos.core.tx.ErrorCode;
+import com.boyarsky.dapos.core.tx.ProcessingResult;
+import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.TransactionProcessor;
+import com.boyarsky.dapos.utils.Convert;
 import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +32,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -120,23 +128,74 @@ class BlockchainTest {
     }
 
     @Test
+    void deliverTx_unsuccessful() {
+        byte[] tx = new byte[0];
+        ProcessingResult result = new ProcessingResult("ERROR", new ErrorCode(-1), mock(Transaction.class), null);
+        doReturn(result).when(processor).tryDeliver(tx, 0);
+
+        ProcessingResult r = blockchain.deliverTx(tx);
+
+        assertEquals(r, result);
+        assertEquals(0, blockchain.getRewardAmount().get());
+    }
+
+    @Test
     void deliverTx() {
-        blockchain.deliverTx(new byte[120]);
+        byte[] txBytes = new byte[120];
+        Transaction tx = mock(Transaction.class);
+        doReturn(100L).when(tx).getFee();
+        ProcessingResult result = new ProcessingResult("OK", new ErrorCode(0), tx, null);
+        doReturn(result).when(processor).tryDeliver(txBytes, 0);
+
+        ProcessingResult r = blockchain.deliverTx(txBytes);
+
+        assertEquals(r, result);
+        assertEquals(100, blockchain.getRewardAmount().get());
     }
 
     @Test
     void checkTx() {
+        byte[] tx = new byte[0];
+        ProcessingResult result = new ProcessingResult("OK", new ErrorCode(0), mock(Transaction.class), null);
+        doReturn(result).when(processor).parseAndValidate(tx);
+
+        ProcessingResult r = blockchain.checkTx(tx);
+
+        assertEquals(result, r);
     }
 
     @Test
     void onInitChain() {
+        HeightConfig heightConfig = mock(HeightConfig.class);
+        doReturn(heightConfig).when(config).init(1);
+        GenesisInitResult genesisResult = new GenesisInitResult(List.of(mock(ValidatorEntity.class), mock(ValidatorEntity.class)), 5);
+
+        doReturn(genesisResult).when(genesis).initialize();
+
+        InitChainResponse response = blockchain.onInitChain();
+        assertEquals(heightConfig, response.getConfig());
+        assertEquals(genesisResult, response.getGenesisInitResult());
     }
 
     @Test
     void commitBlock() {
+        byte[] bytes = blockchain.commitBlock();
+
+        assertEquals(Convert.toHexString(new byte[8]), Convert.toHexString(bytes));
+        verify(manager).commit();
+        verify(blockRepository).insert(new LastSuccessBlockData(bytes, 0));
     }
 
     @Test
     void endBlock() {
+        HeightConfig heightConfig = mock(HeightConfig.class);
+        doReturn(heightConfig).when(config).tryUpdateForHeight(1);
+        List<ValidatorEntity> updatedValidators = List.of(mock(ValidatorEntity.class), mock(ValidatorEntity.class));
+        doReturn(updatedValidators).when(validatorService).getAllUpdated(0);
+
+        EndBlockResponse endBlockResponse = blockchain.endBlock();
+
+        assertEquals(heightConfig, endBlockResponse.getNewConfig());
+        assertEquals(updatedValidators, endBlockResponse.getValidators());
     }
 }

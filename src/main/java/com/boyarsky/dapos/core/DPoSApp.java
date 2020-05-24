@@ -124,7 +124,7 @@ public class DPoSApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         InitChainResponse response = blockchain.onInitChain();
 
         responseObserver.onNext(ResponseInitChain.newBuilder()
-                .addAllValidators(map(response.getGenesisInitResponse().getValidatorEntities()))
+                .addAllValidators(map(response.getGenesisInitResult().getValidatorEntities()))
                 .setConsensusParams(map(response.getConfig()))
                 .build());
         responseObserver.onCompleted();
