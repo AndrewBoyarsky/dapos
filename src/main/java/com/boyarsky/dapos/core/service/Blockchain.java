@@ -95,7 +95,7 @@ public class Blockchain {
                 .map(Map.Entry::getKey)
                 .mapToLong(id -> validatorService.punishAbsent(id, currentHeight))
                 .sum();
-        long maxValidators = config.maxValidatorsForHeight(this.currentHeight);
+        long maxValidators = config.getMaxValidators();
         List<ValidatorEntity> fairValidators = validatorStatuses.entrySet()
                 .stream()
                 .filter(Map.Entry::getValue)
