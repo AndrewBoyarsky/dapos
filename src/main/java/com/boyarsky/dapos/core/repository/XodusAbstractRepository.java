@@ -55,17 +55,15 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         return map(e);
     }
 
-    @SafeVarargs
     @Transactional(readonly = true)
-    public final <V extends DbParam> List<T> getAll(@NonNull V... params) {
+    public <V extends DbParam> List<T> getAll(@NonNull V... params) {
         EntityIterable allEntities = getAllEntities(params);
         return CollectionUtils.toList(allEntities, this::map);
     }
 
-    @SafeVarargs
-    protected final <V extends DbParam> EntityIterable getAllEntities(@NonNull V... params) {
+    protected <V extends DbParam> EntityIterable getAllEntities(@NonNull V... params) {
+        EntityIterable iterable = null;
         if (params.length != 0) {
-            EntityIterable iterable = null;
             for (V param : params) {
                 EntityIterable filtered = getTx().find(entityName, param.name(), param.value());
                 if (iterable != null) {
@@ -74,10 +72,10 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
                     iterable = filtered;
                 }
             }
-            return iterable;
         } else {
-            return getTx().getAll(entityName);
+            iterable = getTx().getAll(entityName);
         }
+        return getTx().sort(entityName, "height", iterable, false);
     }
 
     public Entity getByDbParams(@NonNull List<DbParam> id) {

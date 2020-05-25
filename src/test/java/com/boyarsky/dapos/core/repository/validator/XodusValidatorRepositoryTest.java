@@ -51,6 +51,17 @@ public class XodusValidatorRepositoryTest extends RepoTest {
         ValidatorEntity entity = repository.getById(v4.getId());
         manager.commit();
         assertEquals(entity, v4);
+        assertEquals(4, repository.getAll().size());
+    }
+
+    @Test
+    void testUpdate() {
+        v1.setAbsentFor(Integer.MAX_VALUE);
+        manager.begin();
+        repository.save(v1);
+        manager.commit();
+        assertEquals(3, repository.getAll().size());
+        assertEquals(v1, repository.getById(v1.getId()));
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.boyarsky.dapos.core.repository.DbParam;
 import com.boyarsky.dapos.core.repository.DbParamImpl;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
+import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.utils.CollectionUtils;
 import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
@@ -42,27 +43,32 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
     }
 
     @Override
+    @Transactional(requiredExisting = true)
     public void remove(AccountId validator, AccountId voter) {
         Entity entity = getByDbParams(List.of(new DbParamImpl("id", Convert.toHexString(voter.getAddressBytes())), new DbParamImpl("validatorId", Convert.toHexString(validator.getAddressBytes()))));
         entity.delete();
     }
 
     @Override
+    @Transactional(readonly = true)
     public VoteEntity getBy(AccountId validatorId, AccountId voterId) {
         return CollectionUtils.requireAtMostOne(getAll(new DbParamImpl("id", Convert.toHexString(voterId.getAddressBytes())), new DbParamImpl("validatorId", Convert.toHexString(validatorId.getAddressBytes()))));
     }
 
     @Override
+    @Transactional(readonly = true)
     public List<VoteEntity> getAllVotesForValidator(AccountId validatorId) {
         return getAll(new DbParamImpl("validatorId", Convert.toHexString(validatorId.getAddressBytes())));
     }
 
     @Override
+    @Transactional(readonly = true)
     public long countAllVotesForValidator(AccountId validatorId) {
         return getAllEntities(new DbParamImpl("validatorId", Convert.toHexString(validatorId.getAddressBytes()))).size();
     }
 
     @Override
+    @Transactional(readonly = true)
     public VoteEntity minVoteForValidator(AccountId validatorId) {
         return map(CollectionUtils.requireAtMostOne(getTx()
                 .sort(ENTITY_NAME, "totalStake",
@@ -78,6 +84,7 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
     }
 
     @Override
+    @Transactional(readonly = true)
     public List<VoteEntity> getAllVotesForVoter(AccountId voterId) {
         return getAll(new DbParamImpl("id", Convert.toHexString(voterId.getAddressBytes())));
     }
