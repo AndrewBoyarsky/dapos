@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.genesis;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -18,7 +19,7 @@ class GenesisData {
 
     @Data
     static class ValidatorDefinition {
-        private int fee;
+        private BigDecimal fee;
         private long power;
         private String publicKey;
         private String rewardId;

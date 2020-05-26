@@ -59,4 +59,26 @@ class GenesisTest {
     void initialize_wrong_balance_format() {
         assertThrows(RuntimeException.class, () -> new GenesisImpl(accountService, validatorService, mapper, "incorrect-genesis-accounts.json").initialize());
     }
+
+    @Test
+    void initialize_fee_scale_is_too_big() {
+        GenesisImpl genesis = new GenesisImpl(accountService, validatorService, mapper, "incorrect-validators-genesis-fee-big-scale.json");
+
+        assertThrows(IllegalArgumentException.class, genesis::initialize);
+    }
+
+
+    @Test
+    void initialize_fee_is_negative() {
+        GenesisImpl genesis = new GenesisImpl(accountService, validatorService, mapper, "incorrect-validators-genesis-fee-negative.json");
+
+        assertThrows(IllegalArgumentException.class, genesis::initialize);
+    }
+
+    @Test
+    void initialize_fee_is_too_big() {
+        GenesisImpl genesis = new GenesisImpl(accountService, validatorService, mapper, "incorrect-validators-genesis-fee-too-big.json");
+
+        assertThrows(IllegalArgumentException.class, genesis::initialize);
+    }
 }

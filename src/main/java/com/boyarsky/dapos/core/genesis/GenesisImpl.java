@@ -13,6 +13,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +53,10 @@ public class GenesisImpl implements Genesis {
         List<GenesisData.ValidatorDefinition> validators = genesisData.getValidators();
         List<ValidatorEntity> entities = new ArrayList<>();
         for (GenesisData.ValidatorDefinition validator : validators) {
-            ValidatorEntity validatorEntity = validatorService.registerValidator(Convert.parseHexString(validator.getPublicKey()), validator.getFee(), new AccountId(validator.getRewardId()), true, 0);
+            if (validator.getFee().compareTo(BigDecimal.ZERO) < 0 || validator.getFee().compareTo(BigDecimal.valueOf(100)) > 0 || validator.getFee().scale() > 2) {
+                throw new IllegalArgumentException("Validator fee should be in range: [0.00..100] with at most 2 decimals");
+            }
+            ValidatorEntity validatorEntity = validatorService.registerValidator(Convert.parseHexString(validator.getPublicKey()), validator.getFee().multiply(BigDecimal.valueOf(100)).toBigInteger().shortValueExact(), new AccountId(validator.getRewardId()), true, 0);
             accountService.addToBalance(validatorEntity.getRewardId(), null, new Operation(0, 0, "Init Validator Balance", validator.getPower()));
             validatorService.addVote(validatorEntity.getId(), validatorEntity.getRewardId(), validator.getPower(), 0);
             validatorEntity.setVotePower(validator.getPower());
