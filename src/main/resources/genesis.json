@@ -26,7 +26,13 @@
       "publicKey": "6b245bcebd96847989a780b62f15a2b1b973e1dd866b4d2ea3dae836a628da73",
       "rewardId": "254d52eaf1114b8c68df983b0b272e4e2f",
       "power": 500000000000,
-      "fee": 2000
+      "fee": "20"
+    },
+    {
+      "publicKey": "dd66eb860be5927914a35e7e5913801e1d2b9d6f06e57efbe5295793f7497888",
+      "rewardId": "0xf1ff0edb0326e6a224c07fed1bdad3cebad5758d",
+      "power": 300000000000,
+      "fee": "5.55"
     }
   ]
 }
