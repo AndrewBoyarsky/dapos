@@ -72,7 +72,7 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
     public VoteEntity minVoteForValidator(AccountId validatorId) {
         return map(CollectionUtils.requireAtMostOne(getTx()
                 .sort(ENTITY_NAME, "totalStake",
-                        getAllEntities(new DbParamImpl("validatorId", Convert.toHexString(validatorId.getAddressBytes()))), false)
+                        getAllEntities(new DbParamImpl("validatorId", Convert.toHexString(validatorId.getAddressBytes()))), true)
                 .take(1)));
     }
 

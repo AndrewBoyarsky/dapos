@@ -10,7 +10,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ContextConfiguration(classes = {RepoTest.Config.class, XodusVoteRepositoryTest.class})
 @ComponentScan("com.boyarsky.dapos.core.repository.validator")
@@ -55,26 +58,47 @@ class XodusVoteRepositoryTest extends RepoTest {
     @Test
     void remove() {
         manager.begin();
-        v5.setTotalPower();
+        voteRepository.remove(v3.getValidatorId(), v3.getAccountId());
+        manager.commit();
+
+        VoteEntity entity = voteRepository.getBy(v3.getValidatorId(), v3.getAccountId());
+        assertNull(entity);
+        List<VoteEntity> all = voteRepository.getAll();
+        assertEquals(4, all.size());
     }
 
     @Test
     void getBy() {
+        VoteEntity entity = voteRepository.getBy(v3.getValidatorId(), v3.getAccountId());
+        assertEquals(v3, entity);
     }
 
     @Test
     void getAllVotesForValidator() {
+        List<VoteEntity> votes = voteRepository.getAllVotesForValidator(validator2);
+        assertEquals(List.of(v5, v4), votes);
     }
 
     @Test
     void countAllVotesForValidator() {
+        long votes1 = voteRepository.countAllVotesForValidator(validator1);
+        long votes2 = voteRepository.countAllVotesForValidator(validator2);
+
+        assertEquals(3, votes1);
+        assertEquals(2, votes2);
     }
 
     @Test
     void minVoteForValidator() {
+        VoteEntity minVote = voteRepository.minVoteForValidator(validator1);
+
+        assertEquals(v3, minVote);
     }
 
     @Test
     void getAllVotesForVoter() {
+        List<VoteEntity> votes = voteRepository.getAllVotesForVoter(voter2);
+
+        assertEquals(List.of(v2, v4), votes);
     }
 }
