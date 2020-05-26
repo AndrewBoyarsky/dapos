@@ -1,0 +1,41 @@
+{
+  "chainName": "Dapos unit test config",
+  "chainId": 0,
+  "maxSupply": 50,
+  "oneCoinFractions": 100,
+  "heightConfigs": [
+    {
+      "height": 1,
+      "maxSize": 100,
+      "maxGas": 25,
+      "maxEvidenceAge": 90,
+      "maxValidators": 10,
+      "blockReward": 1900,
+      "absentPeriod": 10,
+      "maxValidatorVotes": 15,
+      "minVoteStake": 900,
+      "byzantinePunishment": "5.23",
+      "absentPunishment": "2.33"
+    },
+    {
+      "height": 2,
+      "blockReward": 1200
+    },
+    {
+      "height": 2,
+      "blockReward": 1300
+    },
+    {
+      "height": 10,
+      "minVoteStake": 300,
+      "maxGas": 15000,
+      "absentPunishment": "3.22"
+    },
+    {
+      "height": 15,
+      "byzantinePunishment": "2.22",
+      "absentPeriod": 90,
+      "maxValidatorVotes": 100
+    }
+  ]
+}
