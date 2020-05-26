@@ -158,12 +158,14 @@ public class ValidatorServiceImpl implements ValidatorService {
             BigDecimal validatorReward = validatorPercent.multiply(BigDecimal.valueOf(rewardAmount));
             BigDecimal validatorFee = validatorReward.multiply(BigDecimal.valueOf(v.getFee())).divide(BigDecimal.valueOf(10000), RoundingMode.DOWN);
             v.setHeight(height);
-            v.setAbsentFor(0);
+            if (v.getAbsentFor() != 0) {
+                v.setAbsentFor(0);
+                repository.save(v);
+            }
             long validatorFeeRounded = validatorFee.toBigInteger().longValueExact();
             accountService.addToBalance(v.getRewardId(), v.getId(), new Operation(height, height, "VALIDATOR REWARD", validatorFeeRounded));
             long stakeholdersReward = validatorReward.subtract(validatorFee).toBigInteger().longValueExact();
             stakeholderService.distributeRewardForValidator(v.getId(), stakeholdersReward, height);
-            repository.save(v);
         }
     }
 

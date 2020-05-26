@@ -268,7 +268,9 @@ class ValidatorServiceTest {
 
         List<ValidatorEntity> filtered = List.of(v2, v3, v4, v6);
         filtered.forEach(e -> {
-            verify(vRepository).save(e);
+            if (e.getAbsentFor() != 0) {
+                verify(vRepository).save(e);
+            }
             assertEquals(0, e.getAbsentFor());
         });
         verify(aService).addToBalance(rewardAddress2, validatorAcc2.getCryptoId(), new Operation(100, 100, "VALIDATOR REWARD", 18));
