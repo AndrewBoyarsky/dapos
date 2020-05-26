@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.core.genesis;
 
-import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.service.account.AccountService;
@@ -48,7 +47,9 @@ public class GenesisImpl implements Genesis {
         }
         List<GenesisData.GenesisAccount> accounts = genesisData.getAccounts();
         for (GenesisData.GenesisAccount account : accounts) {
-            accountService.save(new Account(new AccountId(account.getAccountId()), Convert.parseHexString(account.getPublicKey()), account.getBalance(), Account.Type.ORDINARY));
+            AccountId accountId = new AccountId(account.getAccountId());
+            accountService.addToBalance(accountId, new Operation(0, 0, "GENESIS_BALANCE", account.getBalance()));
+            accountService.assignPublicKey(accountId, Convert.parseHexString(account.getPublicKey()));
         }
         List<GenesisData.ValidatorDefinition> validators = genesisData.getValidators();
         List<ValidatorEntity> entities = new ArrayList<>();

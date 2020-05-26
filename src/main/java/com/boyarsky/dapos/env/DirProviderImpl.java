@@ -1,5 +1,6 @@
 package com.boyarsky.dapos.env;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -17,13 +18,9 @@ public class DirProviderImpl implements DirProvider {
     public static final String appKeystore = "app-keystore";
     private Path homeDir;
 
-    public DirProviderImpl(String home) throws IOException {
+    public DirProviderImpl(@Value("${user.home}") String home) throws IOException {
         this.homeDir = Paths.get(home).resolve(appDir);
         Files.createDirectories(homeDir);
-    }
-
-    public DirProviderImpl() throws IOException {
-        this(System.getProperty("user.home"));
     }
 
     @PostConstruct

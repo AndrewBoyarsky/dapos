@@ -117,10 +117,10 @@ public class Blockchain {
 
     @Transactional(startNew = true)
     public InitChainResponse onInitChain() {
+        HeightConfig initConfig = config.init(1);
         log.info("Applying genesis");
         GenesisInitResult genesisInitResult = genesis.initialize();
         log.info("Genesis applied, accounts: {}, validators: {}", genesisInitResult.getNumberOfAccount(), genesisInitResult.getValidatorEntities().size());
-        HeightConfig initConfig = config.init(1);
         InitChainResponse initChainResponse = new InitChainResponse();
         initChainResponse.setConfig(initConfig);
         initChainResponse.setGenesisInitResult(genesisInitResult);

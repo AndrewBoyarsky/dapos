@@ -23,7 +23,7 @@ public class NodeProxyClient {
     private HttpClient client;
     private int nodePort;
 
-    private NodeProxyClient(@Value("${tendermint.node.port}") int nodePort) {
+    private NodeProxyClient(@Value("${tendermint.rpc.port}") int nodePort) {
         this.nodePort = nodePort;
     }
 

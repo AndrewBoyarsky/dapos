@@ -18,7 +18,7 @@ public class GrpcServer {
     private Server server;
 
     @Autowired
-    public GrpcServer(BindableService service, @Value("${grpc.server.port}") int port) {
+    public GrpcServer(BindableService service, @Value("${tendermint.abci.port}") int port) {
         this.server = ServerBuilder.forPort(port)
                 .addService(service)
                 .executor(Executors.newSingleThreadExecutor()) // replace by multi threaded without transaction manager
