@@ -8,6 +8,8 @@ import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
 import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.repository.feeprov.AccountFeeRepository;
 import com.boyarsky.dapos.core.repository.feeprov.FeeProviderRepository;
+import com.boyarsky.dapos.core.service.account.AccountService;
+import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
@@ -21,18 +23,21 @@ public class FeeProviderServiceImpl implements FeeProviderService {
     private final AccountFeeRepository accountFeeRepository;
     private FeeProviderRepository repository;
     private LedgerService ledgerService;
+    private AccountService accountService;
 
     @Autowired
-    public FeeProviderServiceImpl(AccountFeeRepository accountFeeRepository, FeeProviderRepository repository, LedgerService ledgerService) {
+    public FeeProviderServiceImpl(AccountFeeRepository accountFeeRepository, FeeProviderRepository repository, LedgerService ledgerService, AccountService accountService) {
         this.accountFeeRepository = accountFeeRepository;
         this.repository = repository;
         this.ledgerService = ledgerService;
+        this.accountService = accountService;
     }
 
     @Override
     public void handle(FeeProviderAttachment attachment, Transaction tx) {
         FeeProvider feeProvider = new FeeProvider(tx.getTxId(), tx.getSender(), tx.getAmount(), attachment.getState(), attachment.getFromFeeConfig(), attachment.getToFeeConfig());
         feeProvider.setHeight(tx.getHeight());
+        accountService.addToBalance(tx.getSender(), new Operation(tx.getTxId(), tx.getHeight(), tx.getType().toString(), -tx.getAmount()));
         repository.save(feeProvider);
     }
 

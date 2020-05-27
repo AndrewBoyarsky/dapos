@@ -16,4 +16,12 @@ public class AccountFeeAllowance extends BlockchainEntity {
     private long provId;
     private int operations;
     private long feeRemaining;
+
+    public AccountFeeAllowance(long height, AccountId account, long provId, int operations, long feeRemaining) {
+        super(height);
+        this.account = account;
+        this.provId = provId;
+        this.operations = operations;
+        this.feeRemaining = feeRemaining;
+    }
 }
