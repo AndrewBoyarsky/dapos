@@ -81,6 +81,11 @@ class TransactionTest {
         assertArrayEquals(tx.getSignature(), recreatedTx.getSignature());
     }
 
+    @Test
+    void testCreate_noFeeAttachment() {
+
+    }
+
 
     @Test
     void testCreate_senderAccountEth_no_data() throws SignatureException, InvalidKeyException {
