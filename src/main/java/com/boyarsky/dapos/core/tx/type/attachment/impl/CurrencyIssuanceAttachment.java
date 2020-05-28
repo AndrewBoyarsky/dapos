@@ -57,7 +57,6 @@ public class CurrencyIssuanceAttachment extends AbstractAttachment {
                 + 1 + nameBytes.length
                 + 2 + descriptionBytes.length
                 + 8
-                + 4
                 + 1;
     }
 
