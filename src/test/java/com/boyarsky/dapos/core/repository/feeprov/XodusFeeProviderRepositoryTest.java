@@ -42,6 +42,11 @@ public class XodusFeeProviderRepositoryTest extends RepoTest {
 
     @BeforeEach
     void setUp() {
+        feeProvider1.setHeight(1);
+        feeProvider2.setHeight(2);
+        feeProvider3.setHeight(3);
+        feeProvider4.setHeight(4);
+        feeProvider5.setHeight(5);
         manager.begin();
         repo.save(feeProvider1);
         repo.save(feeProvider2);
@@ -68,6 +73,6 @@ public class XodusFeeProviderRepositoryTest extends RepoTest {
     @Test
     void getByAccount() {
         List<FeeProvider> byAccount = repo.getByAccount(alice);
-        assertEquals(List.of(feeProvider1, feeProvider3, feeProvider4), byAccount);
+        assertEquals(List.of(feeProvider4, feeProvider3, feeProvider1), byAccount);
     }
 }
