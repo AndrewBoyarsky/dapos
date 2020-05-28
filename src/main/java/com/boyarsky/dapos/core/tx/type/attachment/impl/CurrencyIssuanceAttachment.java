@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.core.tx.type.attachment.impl;
 
-import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.tx.type.attachment.AbstractAttachment;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -16,19 +15,15 @@ public class CurrencyIssuanceAttachment extends AbstractAttachment {
     private String code;
     private String name;
     private String description;
-    private AccountId issuer;
     private long supply;
-    private int reservePerUnit;
     private byte decimals;
 
-    public CurrencyIssuanceAttachment(byte version, String code, String name, String description, AccountId issuer, long supply, int reservePerUnit, byte decimals) {
+    public CurrencyIssuanceAttachment(byte version, String code, String name, String description, long supply, byte decimals) {
         super(version);
         this.code = code;
         this.name = name;
         this.description = description;
-        this.issuer = issuer;
         this.supply = supply;
-        this.reservePerUnit = reservePerUnit;
         this.decimals = decimals;
     }
 
@@ -49,9 +44,7 @@ public class CurrencyIssuanceAttachment extends AbstractAttachment {
         buffer.get(descBytes);
         this.description = new String(descBytes, StandardCharsets.UTF_8);
 
-        this.issuer = AccountId.fromBytes(buffer);
         this.supply = buffer.getLong();
-        this.reservePerUnit = buffer.getInt();
         this.decimals = buffer.get();
     }
 
@@ -63,7 +56,6 @@ public class CurrencyIssuanceAttachment extends AbstractAttachment {
         return 1 + codeBytes.length
                 + 1 + nameBytes.length
                 + 2 + descriptionBytes.length
-                + issuer.size()
                 + 8
                 + 4
                 + 1;
@@ -80,9 +72,7 @@ public class CurrencyIssuanceAttachment extends AbstractAttachment {
         byte[] descriptionBytes = description.getBytes(StandardCharsets.UTF_8);
         buffer.putShort((short) descriptionBytes.length);
         buffer.put(descriptionBytes);
-        issuer.putBytes(buffer);
         buffer.putLong(supply);
-        buffer.putInt(reservePerUnit);
         buffer.put(decimals);
 
     }

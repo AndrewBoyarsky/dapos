@@ -7,13 +7,13 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class CurrencyAccount extends BlockchainEntity {
+public class CurrencyHolder extends BlockchainEntity {
     private AccountId holder;
     private long currencyId;
     private long amount;
 
 
-    public CurrencyAccount(long height, AccountId holder, long currencyId, long amount) {
+    public CurrencyHolder(long height, AccountId holder, long currencyId, long amount) {
         super(height);
         this.holder = holder;
         this.currencyId = currencyId;

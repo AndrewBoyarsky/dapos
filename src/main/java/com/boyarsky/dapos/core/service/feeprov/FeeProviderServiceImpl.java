@@ -46,7 +46,7 @@ public class FeeProviderServiceImpl implements FeeProviderService {
         FeeProvider feeProvider = get(id);
         feeProvider.setBalance(feeProvider.getBalance() - amount);
         feeProvider.setHeight(height);
-        ledgerService.add(new LedgerRecord(id, amount, "Charge Fee Provider", sender, recipient, height));
+        ledgerService.add(new LedgerRecord(id, -amount, "Charge Fee Provider", sender, recipient, height));
         repository.save(feeProvider);
         chargeAllowance(id, feeProvider.getFromFeeConfig(), height, sender, amount);
         if (recipient != null) {
