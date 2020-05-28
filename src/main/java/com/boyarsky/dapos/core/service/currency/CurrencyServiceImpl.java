@@ -10,11 +10,13 @@ import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIdAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIssuanceAttachment;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyTransferAttachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -42,7 +44,7 @@ public class CurrencyServiceImpl implements CurrencyService {
     }
 
     @Override
-    public void transfer(Transaction tx, CurrencyTransferAttachment attachment) {
+    public void transfer(Transaction tx, CurrencyIdAttachment attachment) {
         CurrencyHolder holder = currencyHolderRepository.get(tx.getSender(), attachment.getCurrencyId());
         holder.setAmount(holder.getAmount() - tx.getAmount());
         holder.setHeight(tx.getHeight());
@@ -92,4 +94,50 @@ public class CurrencyServiceImpl implements CurrencyService {
         return currencyRepository.getByCode(code) != null;
     }
 
+    public void claimReserve(Currency currency, Transaction tx) {
+        CurrencyHolder holder = currencyHolderRepository.get(tx.getSender(), currency.getCurrencyId());
+        BigDecimal sendersPercent = BigDecimal.valueOf(tx.getAmount()).divide(BigDecimal.valueOf(currency.getSupply()), 4, RoundingMode.DOWN);
+        long claimedReserve = sendersPercent.multiply(BigDecimal.valueOf(currency.getReserve())).toBigInteger().longValueExact();
+        ledgerService.add(new LedgerRecord(tx.getTxId(), -tx.getAmount(), "CLAIM_CURRENCY_RESERVE", tx.getSender(), currency.getIssuer(), tx.getHeight()));
+        accountService.addToBalance(tx.getSender(), currency.getIssuer(), new Operation(tx.getTxId(), tx.getHeight(), "RESERVE_RETURN", claimedReserve));
+        holder.setAmount(holder.getAmount() - tx.getAmount());
+        holder.setHeight(tx.getHeight());
+        save(holder);
+        currency.setHeight(tx.getHeight());
+        currency.setSupply(currency.getSupply() - tx.getAmount());
+        currency.setReserve(currency.getReserve() - claimedReserve);
+        currencyRepository.save(currency);
+    }
+
+    @Override
+    public void claimReserve(Transaction tx, CurrencyIdAttachment idAttachment) {
+        Currency currency = getById(idAttachment.getCurrencyId());
+        if (tx.getAmount() == currency.getSupply()) {
+            liquidate(currency, tx);
+        } else {
+            claimReserve(currency, tx);
+        }
+    }
+
+    public void liquidate(Currency currency, Transaction tx) {
+        AccountId sender = tx.getSender();
+        CurrencyHolder holder = currencyHolderRepository.get(sender, currency.getCurrencyId());
+        holder.setHeight(tx.getHeight());
+        holder.setAmount(0);
+        save(holder);
+        accountService.addToBalance(sender, currency.getIssuer(), new Operation(tx.getTxId(), tx.getHeight(), "LIQUIDATION_RESERVE_RETURN", currency.getReserve()));
+        ledgerService.add(new LedgerRecord(tx.getTxId(), -currency.getSupply(), "CURRENCY_LIQUIDATE", sender, currency.getIssuer(), tx.getHeight()));
+        currency.setSupply(0);
+        currency.setHeight(tx.getHeight());
+        currency.setReserve(0);
+        currencyRepository.remove(currency);
+    }
+
+    private void save(CurrencyHolder holder) {
+        if (holder.getAmount() == 0) {
+            currencyHolderRepository.remove(holder);
+        } else {
+            currencyHolderRepository.save(holder);
+        }
+    }
 }

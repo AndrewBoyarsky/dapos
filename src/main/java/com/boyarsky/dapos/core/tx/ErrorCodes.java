@@ -69,6 +69,10 @@ public class ErrorCodes {
     public static final ErrorCode CURRENCY_ISSUANCE_CODE_ALREADY_RESERVED = new ErrorCode(CURRENCY_VALIDATION, 122);
     public static final ErrorCode CURRENCY_TRANSFER_NO_CURRENCY = new ErrorCode(CURRENCY_VALIDATION, 131);
     public static final ErrorCode CURRENCY_TRANSFER_NOT_ENOUGH_CURRENCY = new ErrorCode(CURRENCY_VALIDATION, 132);
+    public static final ErrorCode CURRENCY_CLAIM_RECIPIENT_NOT_ALLOWED = new ErrorCode(CURRENCY_VALIDATION, 141);
+    public static final ErrorCode CURRENCY_CLAIM_NO_CURRENCY = new ErrorCode(CURRENCY_VALIDATION, 142);
+    public static final ErrorCode CURRENCY_CLAIM_NOT_ENOUGH_CURRENCY = new ErrorCode(CURRENCY_VALIDATION, 143);
+    public static final ErrorCode CURRENCY_CLAIM_ZERO_RESERVE = new ErrorCode(CURRENCY_VALIDATION, 144);
 
     public static final String TX_HANDLING = "Transaction Handling";
     public static final ErrorCode HANDLING_ERROR = new ErrorCode(TX_HANDLING, 127);

@@ -67,8 +67,8 @@ class StakeholderServiceImplTest {
         assertEquals(2, data.getRemoved());
         assertEquals(39, data.getBurned());
         assertEquals(737, data.getRevoked());
-        verify(repository).remove(validatorId1, voter2);
-        verify(repository).remove(validatorId1, voter4);
+        verify(repository).remove(vote2);
+        verify(repository).remove(vote4);
         verify(accountService).addToBalance(voter2, validatorId1, new Operation(300, 300, "ABSENT_VOTER_AUTO_REVOCATION", 658));
         verify(accountService).addToBalance(voter4, validatorId1, new Operation(300, 300, "ABSENT_VOTER_AUTO_REVOCATION", 79));
         verify(ledgerService).add(new LedgerRecord(300, -8, "ABSENT_VOTER_FINE", validatorId1, voter2, 300));
@@ -103,7 +103,7 @@ class StakeholderServiceImplTest {
     }
 
     void verifyRemovedVote(VoteEntity voteEntity, long resultStake, long punishment, int height) {
-        verify(repository).remove(voteEntity.getValidatorId(), voteEntity.getAccountId());
+        verify(repository).remove(voteEntity);
         verify(ledgerService).add(new LedgerRecord(height, -punishment, "VOTER_BYZANTINE_FINE", voteEntity.getValidatorId(), voteEntity.getAccountId(), height));
         // such action implied by accountService
         //        verify(ledgerService).add(new LedgerRecord(height, punishment, "VOTER_BYZANTINE_AUTO_REVOCATION", voteEntity.getValidatorId(), voteEntity.getAccountId(), height));
@@ -159,7 +159,7 @@ class StakeholderServiceImplTest {
         long stake = service.revokeVote(validatorId1, voter1, 200);
 
         assertEquals(500, stake);
-        verify(repository).remove(validatorId1, voter1);
+        verify(repository).remove(vote1);
         verify(accountService).addToBalance(voter1, validatorId1, new Operation(200, 200, "VOTE_REVOKED", 500));
     }
 

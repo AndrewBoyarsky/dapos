@@ -12,8 +12,8 @@ import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIdAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIssuanceAttachment;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyTransferAttachment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +67,7 @@ class CurrencyServiceImplTest {
     @Test
     void transfer_burn_currency() {
         Transaction tx = mock(Transaction.class);
-        CurrencyTransferAttachment attachment = new CurrencyTransferAttachment((byte) 1, 222);
+        CurrencyIdAttachment attachment = new CurrencyIdAttachment((byte) 1, 222);
         doReturn(sender).when(tx).getSender();
         doReturn(10000L).when(tx).getAmount();
 //        doReturn(TxType.CURRENCY_TRANSFER).when(tx).getType();
@@ -85,7 +85,7 @@ class CurrencyServiceImplTest {
     @Test
     void transfer_toAccount() {
         Transaction tx = mock(Transaction.class);
-        CurrencyTransferAttachment attachment = new CurrencyTransferAttachment((byte) 1, 333);
+        CurrencyIdAttachment attachment = new CurrencyIdAttachment((byte) 1, 333);
         doReturn(sender).when(tx).getSender();
         doReturn(89L).when(tx).getAmount();
         doReturn(TxType.CURRENCY_TRANSFER).when(tx).getType();
@@ -160,5 +160,72 @@ class CurrencyServiceImplTest {
         CurrencyHolder holder = service.getCurrencyHolder(recipient, 2);
 
         assertEquals(curHolder, holder);
+    }
+
+    @Test
+    void testClaimReserve() {
+        Transaction tx = mock(Transaction.class);
+        CurrencyIdAttachment attachment = new CurrencyIdAttachment((byte) 1, -2);
+        doReturn(sender).when(tx).getSender();
+        doReturn(222L).when(tx).getAmount();
+        doReturn(-11L).when(tx).getTxId();
+        doReturn(10L).when(tx).getHeight();
+        doReturn(new CurrencyHolder(2, sender, -2, 222)).when(currencyHolderRepository).get(sender, -2);
+        Currency cur = new Currency(1, -2, "", "", "", recipient, 567, 120, (byte) 2);
+        doReturn(cur).when(currencyRepository).get(-2);
+
+        service.claimReserve(tx, attachment);
+
+        verify(currencyHolderRepository).remove(new CurrencyHolder(10, sender, -2, 0));
+        verify(currencyRepository).save(cur);
+        assertEquals(74, cur.getReserve());
+        assertEquals(345, cur.getSupply());
+        verify(ledgerService).add(new LedgerRecord(-11, -222L, "CLAIM_CURRENCY_RESERVE", sender, recipient, 10));
+        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "RESERVE_RETURN", 46));
+    }
+
+
+    @Test
+    void testClaimReserve_partial() {
+        Transaction tx = mock(Transaction.class);
+        CurrencyIdAttachment attachment = new CurrencyIdAttachment((byte) 1, -2);
+        doReturn(sender).when(tx).getSender();
+        doReturn(222L).when(tx).getAmount();
+        doReturn(-11L).when(tx).getTxId();
+        doReturn(10L).when(tx).getHeight();
+        doReturn(new CurrencyHolder(2, sender, -2, 223)).when(currencyHolderRepository).get(sender, -2);
+        Currency cur = new Currency(1, -2, "", "", "", recipient, 567, 120, (byte) 2);
+        doReturn(cur).when(currencyRepository).get(-2);
+
+        service.claimReserve(tx, attachment);
+
+        verify(currencyHolderRepository).save(new CurrencyHolder(10, sender, -2, 1));
+        verify(currencyRepository).save(cur);
+        assertEquals(74, cur.getReserve());
+        assertEquals(345, cur.getSupply());
+        verify(ledgerService).add(new LedgerRecord(-11, -222L, "CLAIM_CURRENCY_RESERVE", sender, recipient, 10));
+        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "RESERVE_RETURN", 46));
+    }
+
+    @Test
+    void liquidate() {
+        Transaction tx = mock(Transaction.class);
+        CurrencyIdAttachment attachment = new CurrencyIdAttachment((byte) 1, -2);
+        doReturn(sender).when(tx).getSender();
+        doReturn(-11L).when(tx).getTxId();
+        doReturn(567L).when(tx).getAmount();
+        doReturn(10L).when(tx).getHeight();
+        doReturn(new CurrencyHolder(2, sender, -2, 567)).when(currencyHolderRepository).get(sender, -2);
+        Currency cur = new Currency(1, -2, "", "", "", recipient, 567, 120, (byte) 2);
+        doReturn(cur).when(currencyRepository).get(-2);
+
+        service.claimReserve(tx, attachment);
+
+        verify(currencyHolderRepository).remove(new CurrencyHolder(10, sender, -2, 0));
+        verify(currencyRepository).remove(cur);
+        assertEquals(0, cur.getReserve());
+        assertEquals(0, cur.getSupply());
+        verify(ledgerService).add(new LedgerRecord(-11, -567L, "CURRENCY_LIQUIDATE", sender, recipient, 10));
+        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "LIQUIDATION_RESERVE_RETURN", 120));
     }
 }

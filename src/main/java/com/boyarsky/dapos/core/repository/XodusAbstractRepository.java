@@ -12,6 +12,7 @@ import java.util.List;
 
 public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
     private final String entityName;
+    // TODO when update is enabled, one atomic Transaction required per block. To support 'non @Transactional' approach we need to implement prev copy storage
     private final boolean supportUpdate;
     private final XodusRepoContext context;
 
@@ -42,6 +43,19 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         }
         toSave.setProperty("height", t.getHeight());
         storeToDbEntity(toSave, t);
+    }
+
+    @Transactional(requiredExisting = true)
+    public void remove(T t) {
+        if (t.getDbId() != null) {
+            getTx().getEntity(t.getDbId()).delete();
+        }
+        List<DbParam> dbParams = idParams(t);
+        if (supportUpdate && dbParams != null) {
+            getByDbParams(dbParams).delete();
+        } else {
+            throw new UnsupportedOperationException("Removal is not supported for " + entityName);
+        }
     }
 
     protected abstract void storeToDbEntity(Entity e, T t);

@@ -8,10 +8,10 @@ import org.springframework.stereotype.Component;
 import java.nio.ByteBuffer;
 
 @Component
-public class CurrencyTransferAttachmentParser implements AttachmentTxTypeParser<CurrencyIdAttachment> {
+public class CurrencyReserveClaimAttachmentParser implements AttachmentTxTypeParser<CurrencyIdAttachment> {
     @Override
     public TxType type() {
-        return TxType.CURRENCY_TRANSFER;
+        return TxType.CURRENCY_CLAIM_RESERVE;
     }
 
     @Override

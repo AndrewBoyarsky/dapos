@@ -63,7 +63,7 @@ public class StakeholderServiceImpl implements StakeholderService {
     }
 
     long remove(VoteEntity vote, LedgerRecord.Type event) {
-        repository.remove(vote.getValidatorId(), vote.getAccountId());
+        repository.remove(vote);
         Operation operation = new Operation(vote.getHeight(), vote.getHeight(), event.toString(), vote.getTotalPower());
         accountService.addToBalance(vote.getAccountId(), vote.getValidatorId(), operation);
         return vote.getTotalPower();

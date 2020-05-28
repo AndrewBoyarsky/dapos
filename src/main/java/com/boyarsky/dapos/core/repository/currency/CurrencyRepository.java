@@ -7,6 +7,8 @@ import java.util.List;
 public interface CurrencyRepository {
     void save(Currency newCurrency);
 
+    void remove(Currency newCurrency);
+
     Currency get(long currencyId);
 
     Currency getByCode(String code);

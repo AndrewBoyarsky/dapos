@@ -10,15 +10,15 @@ import java.nio.ByteBuffer;
 @Getter
 @ToString
 @EqualsAndHashCode(callSuper = true)
-public class CurrencyTransferAttachment extends AbstractAttachment {
+public class CurrencyIdAttachment extends AbstractAttachment {
     private long currencyId;
 
-    public CurrencyTransferAttachment(byte version, long currencyId) {
+    public CurrencyIdAttachment(byte version, long currencyId) {
         super(version);
         this.currencyId = currencyId;
     }
 
-    public CurrencyTransferAttachment(ByteBuffer buffer) {
+    public CurrencyIdAttachment(ByteBuffer buffer) {
         super(buffer);
         this.currencyId = buffer.getLong();
     }

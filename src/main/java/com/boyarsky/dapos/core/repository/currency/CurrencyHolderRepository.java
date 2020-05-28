@@ -10,6 +10,8 @@ public interface CurrencyHolderRepository {
 
     CurrencyHolder get(AccountId account, long currencyId);
 
+    void remove(CurrencyHolder holder);
+
     List<CurrencyHolder> getAllForCurrency(long currencyId);
 
     List<CurrencyHolder> getAllByAccount(AccountId accountId);

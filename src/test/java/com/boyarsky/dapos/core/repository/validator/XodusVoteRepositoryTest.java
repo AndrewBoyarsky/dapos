@@ -58,7 +58,7 @@ class XodusVoteRepositoryTest extends RepoTest {
     @Test
     void remove() {
         manager.begin();
-        voteRepository.remove(v3.getValidatorId(), v3.getAccountId());
+        voteRepository.remove(v3);
         manager.commit();
 
         VoteEntity entity = voteRepository.getBy(v3.getValidatorId(), v3.getAccountId());

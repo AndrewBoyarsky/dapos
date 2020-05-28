@@ -5,7 +5,7 @@ import com.boyarsky.dapos.core.service.currency.CurrencyService;
 import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyTransferAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIdAttachment;
 import com.boyarsky.dapos.core.tx.type.validator.TransactionTypeValidator;
 import com.boyarsky.dapos.core.tx.type.validator.TxNotValidException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CurrencyTransferTransactionValidator implements TransactionTypeValidator {
-    @Autowired
     private CurrencyService service;
 
     @Autowired
@@ -23,7 +22,7 @@ public class CurrencyTransferTransactionValidator implements TransactionTypeVali
 
     @Override
     public void validate(Transaction tx) throws TxNotValidException {
-        CurrencyTransferAttachment attachment = tx.getAttachment(CurrencyTransferAttachment.class);
+        CurrencyIdAttachment attachment = tx.getAttachment(CurrencyIdAttachment.class);
         CurrencyHolder holder = service.getCurrencyHolder(tx.getSender(), attachment.getCurrencyId());
         if (holder == null) {
             throw new TxNotValidException("Account '" + tx.getSender().getAppSpecificAccount() + "' has no currency " + attachment.getCurrencyId(), null, tx, ErrorCodes.CURRENCY_TRANSFER_NO_CURRENCY);

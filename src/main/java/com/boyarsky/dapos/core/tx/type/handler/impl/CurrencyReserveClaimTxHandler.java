@@ -10,21 +10,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CurrencyTransferTxHandler implements TransactionTypeHandler {
+public class CurrencyReserveClaimTxHandler implements TransactionTypeHandler {
     private CurrencyService currencyService;
 
     @Autowired
-    public CurrencyTransferTxHandler(CurrencyService currencyService) {
+    public CurrencyReserveClaimTxHandler(CurrencyService currencyService) {
         this.currencyService = currencyService;
     }
 
     @Override
     public void handle(Transaction tx) throws TxHandlingException {
-        currencyService.transfer(tx, tx.getAttachment(CurrencyIdAttachment.class));
+        currencyService.claimReserve(tx, tx.getAttachment(CurrencyIdAttachment.class));
     }
 
     @Override
     public TxType type() {
-        return TxType.CURRENCY_TRANSFER;
+        return TxType.CURRENCY_CLAIM_RESERVE;
     }
 }

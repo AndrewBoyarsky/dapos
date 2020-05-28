@@ -43,13 +43,6 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
     }
 
     @Override
-    @Transactional(requiredExisting = true)
-    public void remove(AccountId validator, AccountId voter) {
-        Entity entity = getByDbParams(List.of(new DbParamImpl("id", Convert.toHexString(voter.getAddressBytes())), new DbParamImpl("validatorId", Convert.toHexString(validator.getAddressBytes()))));
-        entity.delete();
-    }
-
-    @Override
     @Transactional(readonly = true)
     public VoteEntity getBy(AccountId validatorId, AccountId voterId) {
         return CollectionUtils.requireAtMostOne(getAll(new DbParamImpl("id", Convert.toHexString(voterId.getAddressBytes())), new DbParamImpl("validatorId", Convert.toHexString(validatorId.getAddressBytes()))));
