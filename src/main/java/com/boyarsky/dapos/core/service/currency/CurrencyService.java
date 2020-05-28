@@ -23,4 +23,6 @@ public interface CurrencyService {
     List<CurrencyHolder> accountCurrencies(AccountId accountId);
 
     CurrencyHolder getCurrencyHolder(AccountId accountId, long currencyId);
+
+    boolean reserved(String code);
 }

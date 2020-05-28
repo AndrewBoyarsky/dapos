@@ -57,6 +57,11 @@ public class XodusCurrencyRepository extends XodusAbstractRepository<Currency> i
     }
 
     @Override
+    public Currency getByCode(String code) {
+        return CollectionUtils.requireAtMostOne(getAll(new DbParamImpl("code", code)));
+    }
+
+    @Override
     @Transactional(readonly = true)
     public List<Currency> getAll() {
         return super.getAll();

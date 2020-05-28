@@ -87,4 +87,9 @@ public class CurrencyServiceImpl implements CurrencyService {
         return currencyHolderRepository.get(accountId, currencyId);
     }
 
+    @Override
+    public boolean reserved(String code) {
+        return currencyRepository.getByCode(code) != null;
+    }
+
 }

@@ -9,5 +9,7 @@ public interface CurrencyRepository {
 
     Currency get(long currencyId);
 
+    Currency getByCode(String code);
+
     List<Currency> getAll();
 }

@@ -66,4 +66,10 @@ class XodusCurrencyRepositoryTest extends RepoTest {
 
         assertEquals(List.of(cur4, cur3, cur2, cur1), all);
     }
+
+    @Test
+    void getByCode() {
+        Currency byCode = repo.getByCode(cur2.getCode());
+        assertEquals(cur2, byCode);
+    }
 }

@@ -64,6 +64,12 @@ public class ErrorCodes {
     public static final ErrorCode REVOKE_UNKNOWN_VALIDATOR = new ErrorCode(VOTE_VALIDATION, 77);
     public static final ErrorCode REVOKE_VOTE_FOR_VALIDATOR_NOT_EXIST = new ErrorCode(VOTE_VALIDATION, 78);
 
+    public static final String CURRENCY_VALIDATION = "Currency Validation";
+    public static final ErrorCode CURRENCY_ISSUANCE_HAS_RECIPIENT = new ErrorCode(CURRENCY_VALIDATION, 121);
+    public static final ErrorCode CURRENCY_ISSUANCE_CODE_ALREADY_RESERVED = new ErrorCode(CURRENCY_VALIDATION, 122);
+    public static final ErrorCode CURRENCY_TRANSFER_NO_CURRENCY = new ErrorCode(CURRENCY_VALIDATION, 131);
+    public static final ErrorCode CURRENCY_TRANSFER_NOT_ENOUGH_CURRENCY = new ErrorCode(CURRENCY_VALIDATION, 132);
+
     public static final String TX_HANDLING = "Transaction Handling";
     public static final ErrorCode HANDLING_ERROR = new ErrorCode(TX_HANDLING, 127);
     public static final ErrorCode UNKNOWN_HANDLING_ERROR = new ErrorCode(TX_HANDLING, 128);
