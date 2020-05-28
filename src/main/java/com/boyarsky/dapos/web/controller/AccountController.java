@@ -9,7 +9,7 @@ import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.web.API;
 import com.boyarsky.dapos.web.controller.request.CreateAccRequest;
-import com.boyarsky.dapos.web.controller.validation.ValidAccount;
+import com.boyarsky.dapos.web.validation.ValidAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -1,4 +1,4 @@
-package com.boyarsky.dapos.web.controller.validation;
+package com.boyarsky.dapos.web.validation;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;
@@ -8,7 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.PARAMETER, ElementType.FIELD})
+@Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.TYPE_USE})
 @Constraint(validatedBy = AccountIdValidator.class)
 public @interface ValidAccount {
     String message() default "Invalid account";

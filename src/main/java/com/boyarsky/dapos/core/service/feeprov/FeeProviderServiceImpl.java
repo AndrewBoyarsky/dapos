@@ -16,6 +16,7 @@ import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -77,5 +78,10 @@ public class FeeProviderServiceImpl implements FeeProviderService {
     @Override
     public FeeProvider get(long id) {
         return repository.get(id);
+    }
+
+    @Override
+    public List<FeeProvider> getAll() {
+        return repository.getAll();
     }
 }

@@ -6,6 +6,8 @@ import com.boyarsky.dapos.core.model.fee.FeeProvider;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
 
+import java.util.List;
+
 public interface FeeProviderService {
     void handle(FeeProviderAttachment attachment, Transaction tx);
 
@@ -14,4 +16,6 @@ public interface FeeProviderService {
     AccountFeeAllowance allowance(long id, AccountId accountId);
 
     FeeProvider get(long id);
+
+    List<FeeProvider> getAll();
 }

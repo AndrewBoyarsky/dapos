@@ -7,12 +7,16 @@ import com.boyarsky.dapos.core.model.keystore.Status;
 import com.boyarsky.dapos.core.model.keystore.VerifiedWallet;
 import com.boyarsky.dapos.core.model.keystore.Wallet;
 import com.boyarsky.dapos.core.model.message.MessageEntity;
+import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.keystore.KeyStoreService;
 import com.boyarsky.dapos.core.service.message.MessageService;
+import com.boyarsky.dapos.core.tx.type.TxType;
+import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
 import com.boyarsky.dapos.web.API;
-import com.boyarsky.dapos.web.controller.exception.RestError;
-import com.boyarsky.dapos.web.controller.validation.ValidAccount;
+import com.boyarsky.dapos.web.controller.request.DefaultSendingRequest;
+import com.boyarsky.dapos.web.exception.RestError;
+import com.boyarsky.dapos.web.validation.ValidAccount;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -20,12 +24,16 @@ import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -37,12 +45,25 @@ public class MessageController {
     MessageService messageService;
     KeyStoreService keyStoreService;
     AccountService accountService;
+    TransactionToolchain txToolchain;
 
     @Autowired
-    public MessageController(MessageService messageService, KeyStoreService keyStoreService, AccountService accountService) {
+    public MessageController(MessageService messageService, KeyStoreService keyStoreService, AccountService accountService, TransactionToolchain txToolchain) {
         this.messageService = messageService;
         this.keyStoreService = keyStoreService;
         this.accountService = accountService;
+        this.txToolchain = txToolchain;
+    }
+
+    @PostMapping
+    @Transactional(readonly = true, startNew = true)
+    public ResponseEntity<?> sendMessage(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
+        TransactionToolchain.AccountWithWallet accountWithWallet = txToolchain.parseAccount(request);
+        TransactionToolchain.MessageWithResponse messageWithError = txToolchain.createMessageAttachment(request, accountWithWallet.getWallet());
+        if (messageWithError.getErrorResponse() != null) {
+            return messageWithError.getErrorResponse();
+        }
+        return txToolchain.sendTransaction(new TransactionToolchain.TxSendRequest(request, accountWithWallet, TxType.MESSAGE, messageWithError.getAttachment(), 1));
     }
 
     @GetMapping

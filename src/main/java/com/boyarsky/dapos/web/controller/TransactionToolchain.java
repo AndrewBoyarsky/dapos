@@ -7,7 +7,6 @@ import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.keystore.Status;
 import com.boyarsky.dapos.core.model.keystore.VerifiedWallet;
 import com.boyarsky.dapos.core.model.keystore.Wallet;
-import com.boyarsky.dapos.core.repository.aop.Transactional;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.keystore.Keystore;
 import com.boyarsky.dapos.core.tx.ProcessingResult;
@@ -18,25 +17,18 @@ import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.attachment.Attachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.MessageAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.NoFeeAttachment;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.PaymentAttachment;
 import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
 import com.boyarsky.dapos.utils.Convert;
-import com.boyarsky.dapos.web.API;
 import com.boyarsky.dapos.web.NodeProxyClient;
 import com.boyarsky.dapos.web.ValidationUtil;
-import com.boyarsky.dapos.web.controller.exception.RestError;
 import com.boyarsky.dapos.web.controller.request.DefaultSendingRequest;
+import com.boyarsky.dapos.web.exception.RestError;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
-import javax.validation.Valid;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
@@ -44,40 +36,24 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Map;
 
-@RestController
-@RequestMapping(API.REST_ROOT_URL + "/txs")
-@Slf4j
-public class TransactionController {
-    @Autowired
-    TxGasCalculator gasCalculator;
-    @Autowired
-    AccountService accountService;
-    @Autowired
-    TransactionProcessor processor;
-    @Autowired
-    Keystore keystore;
-    @Autowired
-    NodeProxyClient proxyClient;
+@Service
+public class TransactionToolchain {
+    private TxGasCalculator gasCalculator;
+    private AccountService accountService;
+    private TransactionProcessor processor;
+    private Keystore keystore;
+    private NodeProxyClient proxyClient;
 
-    @PostMapping("/payments")
-    @Transactional(readonly = true, startNew = true)
-    public ResponseEntity<?> sendMoney(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
-        AccountWithWallet accountWithWallet = parseAccount(request);
-        return sendTransaction(new TxSendRequest(request, accountWithWallet, TxType.PAYMENT, new PaymentAttachment(), 1));
+    @Autowired
+    public TransactionToolchain(TxGasCalculator gasCalculator, AccountService accountService, TransactionProcessor processor, Keystore keystore, NodeProxyClient proxyClient) {
+        this.gasCalculator = gasCalculator;
+        this.accountService = accountService;
+        this.processor = processor;
+        this.keystore = keystore;
+        this.proxyClient = proxyClient;
     }
 
-    @PostMapping("/messages")
-    @Transactional(readonly = true, startNew = true)
-    public ResponseEntity<?> sendMessage(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
-        AccountWithWallet accountWithWallet = parseAccount(request);
-        MessageWithResponse messageWithError = createMessageAttachment(request, accountWithWallet.wallet);
-        if (messageWithError.errorResponse != null) {
-            return messageWithError.errorResponse;
-        }
-        return sendTransaction(new TxSendRequest(request, accountWithWallet, TxType.MESSAGE, messageWithError.attachment, 1));
-    }
-
-    private MessageWithResponse createMessageAttachment(DefaultSendingRequest request, Wallet wallet) throws InvalidKeyException, IOException {
+    public MessageWithResponse createMessageAttachment(DefaultSendingRequest request, Wallet wallet) throws InvalidKeyException, IOException {
         PublicKey recipientPublicKey;
         if (!request.isToSelf()) {
             if (request.getRecipient() == null) {
@@ -120,7 +96,7 @@ public class TransactionController {
     }
 
 
-    private AccountWithWallet parseAccount(DefaultSendingRequest request) {
+    public AccountWithWallet parseAccount(DefaultSendingRequest request) {
         VerifiedWallet wallet = keystore.getWallet(request.getAccount().getAppSpecificAccount(), request.getPass());
         if (wallet.getExtractStatus() != Status.OK) {
             throw new TransactionSendingException("Incorrect password or account");
@@ -132,7 +108,7 @@ public class TransactionController {
         return new AccountWithWallet(senderAcc, wallet.getWallet());
     }
 
-    private ResponseEntity<?> sendTransaction(TxSendRequest request) throws IOException, URISyntaxException, InterruptedException, InvalidKeyException, GasCalculationException {
+    public ResponseEntity<?> sendTransaction(TxSendRequest request) throws IOException, URISyntaxException, InterruptedException, InvalidKeyException, GasCalculationException {
         Account sender = request.accountWithWallet.account;
         Wallet wallet = request.accountWithWallet.wallet;
 
@@ -167,13 +143,13 @@ public class TransactionController {
 
     @Data
     @AllArgsConstructor
-    private static class AccountWithWallet {
+    public static class AccountWithWallet {
         private Account account;
         private Wallet wallet;
     }
 
     @Data
-    private static class MessageWithResponse {
+    public static class MessageWithResponse {
         private ResponseEntity<?> errorResponse;
         private MessageAttachment attachment;
 
@@ -188,7 +164,7 @@ public class TransactionController {
 
     @Data
     @AllArgsConstructor
-    private static class TxSendRequest {
+    public static class TxSendRequest {
         private DefaultSendingRequest request;
         private AccountWithWallet accountWithWallet;
         private TxType type;

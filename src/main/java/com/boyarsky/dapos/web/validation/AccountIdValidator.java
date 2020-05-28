@@ -1,4 +1,4 @@
-package com.boyarsky.dapos.web.controller.validation;
+package com.boyarsky.dapos.web.validation;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 import org.springframework.stereotype.Component;

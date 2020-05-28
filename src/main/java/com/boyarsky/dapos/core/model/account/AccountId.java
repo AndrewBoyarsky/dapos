@@ -3,12 +3,14 @@ package com.boyarsky.dapos.core.model.account;
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.utils.Convert;
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.nio.ByteBuffer;
 @Data
 @NoArgsConstructor
+@Schema(implementation = String.class)
 public class AccountId {
     private String origAccount;
 

@@ -10,5 +10,7 @@ public interface FeeProviderRepository {
 
     FeeProvider get(long id);
 
+    List<FeeProvider> getAll();
+
     List<FeeProvider> getByAccount(AccountId id);
 }

@@ -1,4 +1,4 @@
-package com.boyarsky.dapos.web.controller.exception;
+package com.boyarsky.dapos.web.exception;
 
 import com.boyarsky.dapos.core.service.account.NotFoundException;
 import com.boyarsky.dapos.web.ValidationUtil;
@@ -23,6 +23,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         String bodyOfResponse = e.getMessage();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new RestError(bodyOfResponse, ValidationUtil.dumpException(e)));
     }
+
+    @SneakyThrows
+    @ExceptionHandler(value
+            = {RestValidationException.class})
+    protected ResponseEntity<Object> handle(
+            RestValidationException e, WebRequest request) {
+        String bodyOfResponse = e.getMessage();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new RestError(bodyOfResponse, ValidationUtil.dumpException(e)));
+    }
+
 
     @SneakyThrows
     @ExceptionHandler(value = {TransactionSendingException.class})
