@@ -75,7 +75,7 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         return CollectionUtils.toList(allEntities, this::map);
     }
 
-    protected <V extends DbParam> EntityIterable getAllEntities(@NonNull V... params) {
+    protected <V extends DbParam> EntityIterable getAllEntities(Sort sort, Pagination pagination, @NonNull V... params) {
         EntityIterable iterable = null;
         if (params.length != 0) {
             for (V param : params) {
@@ -89,7 +89,28 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         } else {
             iterable = getTx().getAll(entityName);
         }
+        if (sort == null) {
+            sort = Sort.defaultSort();
+        }
+        for (Sort.SortColumn column : sort.columns) {
+            iterable = getTx().sort(entityName, column.getColumn(), iterable, column.isAsc());
+        }
+        if (pagination != null) {
+            iterable = iterable.skip(pagination.getPage() * pagination.getLimit()).take(pagination.getLimit());
+        }
         return getTx().sort(entityName, "height", iterable, false);
+    }
+
+    protected <V extends DbParam> EntityIterable getAllEntities(@NonNull V... params) {
+        return getAllEntities(null, null, params);
+    }
+
+    protected <V extends DbParam> EntityIterable getAllEntities(Sort sort, @NonNull V... params) {
+        return getAllEntities(sort, null, params);
+    }
+
+    protected <V extends DbParam> EntityIterable getAllEntities(Pagination pagination, @NonNull V... params) {
+        return getAllEntities(null, pagination, params);
     }
 
     public Entity getByDbParams(@NonNull List<DbParam> id) {
