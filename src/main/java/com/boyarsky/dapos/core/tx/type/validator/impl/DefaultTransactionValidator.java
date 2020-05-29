@@ -99,11 +99,11 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
                 throw new TxNotValidException("Expected fee " + tx.getMaxFee() + ", but can be payed only " + feeProvider.getBalance() + " for provider " + feeProvider.getId(), null, tx, ErrorCodes.FEE_PROVIDER_NOT_ENOUGH_FUNDS);
             }
             PartyFeeConfig fromFeeConfig = feeProvider.getFromFeeConfig();
-            validateForParty(tx, fromFeeConfig, tx.getSender(), feeProvider);
+            validateForParty(true, tx, fromFeeConfig, tx.getSender(), feeProvider);
             PartyFeeConfig toFeeConfig = feeProvider.getToFeeConfig();
 
             if (tx.getRecipient() != null) {
-                validateForParty(tx, toFeeConfig, tx.getRecipient(), feeProvider);
+                validateForParty(false, tx, toFeeConfig, tx.getRecipient(), feeProvider);
             }
         } else {
             totalChargeAmount += tx.getMaxFee();
@@ -119,11 +119,11 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
 
     }
 
-    private void validateForParty(Transaction tx, PartyFeeConfig partyFeeConfig, AccountId accountId, FeeProvider feeProvider) throws TxNotValidException {
+    private void validateForParty(boolean isSender, Transaction tx, PartyFeeConfig partyFeeConfig, AccountId accountId, FeeProvider feeProvider) throws TxNotValidException {
         if (partyFeeConfig.isWhitelistAll()) {
             FeeConfig rootConfig = partyFeeConfig.getRootConfig();
             if (rootConfig != null) {
-                validateForConfig(tx, rootConfig, feeProvider, accountId);
+                validateForConfig(isSender, tx, rootConfig, feeProvider, accountId);
             }
         } else {
             Map<FeeConfig, List<AccountId>> configs = partyFeeConfig.getConfigs();
@@ -132,11 +132,11 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
                 throw new TxNotValidException("Account " + accountId + " is not whitelisted for fee provider " + feeProvider.getId(), null, tx, ErrorCodes.FEE_PROVIDER_NOT_WHITELISTED_SENDER);
             }
             FeeConfig feeConfig = feeConfigOpt.get();
-            validateForConfig(tx, feeConfig, feeProvider, accountId);
+            validateForConfig(isSender, tx, feeConfig, feeProvider, accountId);
         }
     }
 
-    private void validateForConfig(Transaction tx, FeeConfig config, FeeProvider feeProvider, AccountId accountId) throws TxNotValidException {
+    private void validateForConfig(boolean isSender, Transaction tx, FeeConfig config, FeeProvider feeProvider, AccountId accountId) throws TxNotValidException {
         if (!config.allowed(tx.getType())) {
             throw new TxNotValidException("Transaction of type " + tx.getType() + " is not allowed for provider " + feeProvider.getId() + ", expected - " + config.getAllowedTxs(), null, tx, ErrorCodes.FEE_PROVIDER_NOT_SUPPORTED_TX_TYPE);
         }
@@ -146,7 +146,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
         if (config.getMaxAllowedTotalFee() != -1 && config.getMaxAllowedTotalFee() < tx.getMaxFee()) {
             throw new TxNotValidException("Transaction exceed max total fee limit. Require " + tx.getMaxFee() + ", total available for account " + config.getMaxAllowedTotalFee(), null, tx, ErrorCodes.FEE_PROVIDER_EXCEED_TOTAL_LIMIT);
         }
-        AccountFeeAllowance allowance = feeProviderService.allowance(feeProvider.getId(), accountId);
+        AccountFeeAllowance allowance = feeProviderService.allowance(feeProvider.getId(), accountId, isSender);
         if (allowance != null) {
             if (allowance.getOperations() == 0) {
                 throw new TxNotValidException("No operations available for account " + accountId + " on fee provider " + feeProvider.getId(), null, tx, ErrorCodes.FEE_PROVIDER_NOT_ENOUGH_AVAILABLE_OPS);

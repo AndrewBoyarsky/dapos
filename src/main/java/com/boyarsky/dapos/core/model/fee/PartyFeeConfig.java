@@ -32,7 +32,10 @@ public class PartyFeeConfig implements ByteSerializable {
             return Optional.ofNullable(rootConfig);
         }
         return this.configs.entrySet().stream().filter(e -> e.getValue().contains(accountId)).map(Map.Entry::getKey).findAny();
+    }
 
+    public boolean allowed(AccountId id) {
+        return whitelistAll || forAccount(id).isPresent();
     }
 
     public PartyFeeConfig(ByteBuffer buffer) {

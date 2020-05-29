@@ -13,6 +13,8 @@ public interface FeeProviderRepository {
 
     List<FeeProvider> getAll();
 
+    List<FeeProvider> getAll(State state, long balance);
+
     List<FeeProvider> getAll(State state);
 
     List<FeeProvider> getByAccount(AccountId id);

@@ -175,11 +175,11 @@ class DefaultTransactionValidatorTest {
 
         assertEquals(ErrorCodes.FEE_PROVIDER_NOT_ENOUGH_FUNDS, eNotEnoughBalance.getCode());
 
-        verifyForParty(tx, feeProv, feeProv.getFromFeeConfig(), tx.getSender());
-        verifyForParty(tx, feeProv, feeProv.getToFeeConfig(), tx.getRecipient());
+        verifyForParty(true, tx, feeProv, feeProv.getFromFeeConfig(), tx.getSender());
+        verifyForParty(false, tx, feeProv, feeProv.getToFeeConfig(), tx.getRecipient());
     }
 
-    private void verifyForParty(Transaction tx, FeeProvider feeProv, PartyFeeConfig config, AccountId accountId) {
+    private void verifyForParty(boolean sender, Transaction tx, FeeProvider feeProv, PartyFeeConfig config, AccountId accountId) {
 //        tx type not allowed
         feeProv.setBalance(1200);
         FeeConfig rootConfig = new FeeConfig(-1, -1, -1, Set.of());
@@ -208,8 +208,8 @@ class DefaultTransactionValidatorTest {
 
 //      zero ops left for account
         rootConfig.setMaxAllowedTotalFee(-1);
-        AccountFeeAllowance allowance = new AccountFeeAllowance(accountId, 3993, 0, Long.MAX_VALUE);
-        doReturn(allowance).when(feeProviderService).allowance(3993L, accountId);
+        AccountFeeAllowance allowance = new AccountFeeAllowance(accountId, 3993, sender, 0, Long.MAX_VALUE);
+        doReturn(allowance).when(feeProviderService).allowance(3993L, accountId, sender);
 
         TxNotValidException noOpsEx = assertThrows(TxNotValidException.class, () -> validator.validate(tx));
 

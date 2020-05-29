@@ -75,4 +75,18 @@ public class XodusFeeProviderRepositoryTest extends RepoTest {
         List<FeeProvider> byAccount = repo.getByAccount(alice);
         assertEquals(List.of(feeProvider4, feeProvider3, feeProvider1), byAccount);
     }
+
+    @Test
+    void getByState() {
+        List<FeeProvider> all = repo.getAll(State.ACTIVE);
+
+        assertEquals(List.of(feeProvider4, feeProvider1), all);
+    }
+
+    @Test
+    void getByStateAndBalance() {
+        List<FeeProvider> all = repo.getAll(State.ACTIVE, 500);
+
+        assertEquals(List.of(feeProvider4), all);
+    }
 }

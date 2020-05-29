@@ -6,7 +6,7 @@ import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
 import java.util.List;
 
 public interface AccountFeeRepository {
-    AccountFeeAllowance getBy(long feeProvId, AccountId accountId);
+    AccountFeeAllowance getBy(long feeProvId, AccountId accountId, boolean isSender);
 
     List<AccountFeeAllowance> getAll();
 

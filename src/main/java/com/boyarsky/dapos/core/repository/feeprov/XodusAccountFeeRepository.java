@@ -2,85 +2,68 @@ package com.boyarsky.dapos.core.repository.feeprov;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
+import com.boyarsky.dapos.core.repository.DbParam;
+import com.boyarsky.dapos.core.repository.DbParamImpl;
+import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
-import com.boyarsky.dapos.utils.CollectionUtils;
 import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
-import jetbrains.exodus.entitystore.EntityIterable;
-import jetbrains.exodus.entitystore.StoreTransaction;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class XodusAccountFeeRepository implements AccountFeeRepository {
-    private String name = "accountFee";
-    private XodusRepoContext context;
+public class XodusAccountFeeRepository extends XodusAbstractRepository<AccountFeeAllowance> implements AccountFeeRepository {
+    private static final String name = "account-fee-provider-allowance";
 
     @Autowired
     public XodusAccountFeeRepository(XodusRepoContext context) {
-        this.context = context;
+        super(name, true, context);
     }
 
     @Override
     @Transactional(readonly = true)
-    public AccountFeeAllowance getBy(long feeProvId, AccountId accountId) {
-        Entity entity = find(feeProvId, accountId, context.getTx());
-        if (entity == null) {
-            return null;
-        }
-        return map(entity);
+    public AccountFeeAllowance getBy(long feeProvId, AccountId accountId, boolean isSender) {
+        return map(getByDbParams(List.of(
+                new DbParamImpl("account", Convert.toHexString(accountId.getAddressBytes())),
+                new DbParamImpl("feeProvider", feeProvId),
+                new DbParamImpl("sender", isSender)
+        )));
     }
 
     @Override
     @Transactional(readonly = true)
     public List<AccountFeeAllowance> getAll() {
-        EntityIterable all = context.getTx().getAll(name);
-        List<AccountFeeAllowance> list = new ArrayList<>();
-        for (Entity entity : all) {
-            list.add(map(entity));
-        }
-        return list;
+        return super.getAll();
     }
 
-    private Entity find(long feeProvId, AccountId accountId, StoreTransaction tx) {
-        EntityIterable found = tx.find(name, "account", Convert.toHexString(accountId.getAddressBytes()));
-        EntityIterable feeProvider = tx.find(name, "feeProvider", feeProvId);
-        return CollectionUtils.requireAtMostOne(found
-                .intersect(feeProvider));
-    }
-
-    private AccountFeeAllowance map(Entity entity) {
+    @Override
+    protected AccountFeeAllowance doMap(Entity entity) {
         AccountFeeAllowance allowance = new AccountFeeAllowance();
         allowance.setAccount(AccountId.fromBytes(Convert.parseHexString((String) entity.getProperty("account"))));
         allowance.setProvId((Long) entity.getProperty("feeProvider"));
         allowance.setFeeRemaining((Long) entity.getProperty("feeRemaining"));
         allowance.setOperations((Integer) entity.getProperty("operations"));
-        allowance.setHeight((Long) entity.getProperty("height"));
+        allowance.setSender((Boolean) entity.getProperty("sender"));
         return allowance;
     }
 
+
     @Override
-    @Transactional(requiredExisting = true)
-    public void save(AccountFeeAllowance fee) {
-        Entity toSave = null;
-        StoreTransaction tx = context.getTx();
-        if (fee.getDbId() != null) {
-            toSave = tx.getEntity(fee.getDbId());
-        }
-        if (toSave == null) {
-            toSave = find(fee.getProvId(), fee.getAccount(), tx);
-        }
-        if (toSave == null) {
-            toSave = tx.newEntity(name);
-            toSave.setProperty("account", Convert.toHexString(fee.getAccount().getAddressBytes()));
-            toSave.setProperty("feeProvider", fee.getProvId());
-        }
-        toSave.setProperty("operations", fee.getOperations());
-        toSave.setProperty("feeRemaining", fee.getFeeRemaining());
-        toSave.setProperty("height", fee.getHeight());
+    protected void storeToDbEntity(Entity e, AccountFeeAllowance accountFeeAllowance) {
+        e.setProperty("account", Convert.toHexString(accountFeeAllowance.getAccount().getAddressBytes()));
+        e.setProperty("feeProvider", accountFeeAllowance.getProvId());
+        e.setProperty("operations", accountFeeAllowance.getOperations());
+        e.setProperty("sender", accountFeeAllowance.isSender());
+        e.setProperty("feeRemaining", accountFeeAllowance.getFeeRemaining());
+    }
+
+    @Override
+    protected List<DbParam> idParams(AccountFeeAllowance value) {
+        return List.of(new DbParamImpl("account", Convert.toHexString(value.getAccount().getAddressBytes())),
+                new DbParamImpl("feeProvider", value.getProvId()),
+                new DbParamImpl("sender", value.isSender()));
     }
 }

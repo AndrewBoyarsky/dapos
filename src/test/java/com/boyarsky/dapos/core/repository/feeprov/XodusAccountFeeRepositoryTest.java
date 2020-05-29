@@ -11,6 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.ContextConfiguration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ContextConfiguration(classes = {RepoTest.Config.class, XodusAccountFeeRepositoryTest.class})
 @ComponentScan("com.boyarsky.dapos.core.repository.feeprov")
@@ -18,11 +19,11 @@ class XodusAccountFeeRepositoryTest extends RepoTest {
     @Autowired
     AccountFeeRepository repository;
     private AccountId alice = TestUtil.generateEd25Acc().getCryptoId();
-    AccountFeeAllowance allowance1 = new AccountFeeAllowance(alice, 1, 10, 20);
-    AccountFeeAllowance allowance4 = new AccountFeeAllowance(alice, 3, 0, 0);
+    AccountFeeAllowance allowance1 = new AccountFeeAllowance(alice, 1, false, 10, 20);
+    AccountFeeAllowance allowance4 = new AccountFeeAllowance(alice, 1, true, 0, 0);
     private AccountId bob = TestUtil.generateEd25Acc().getCryptoId();
-    AccountFeeAllowance allowance2 = new AccountFeeAllowance(bob, 1, 2, 3);
-    AccountFeeAllowance allowance3 = new AccountFeeAllowance(bob, 2, 1, 5);
+    AccountFeeAllowance allowance2 = new AccountFeeAllowance(bob, 1, true, 2, 3);
+    AccountFeeAllowance allowance3 = new AccountFeeAllowance(bob, 2, false, 1, 5);
 
     @BeforeEach
     void setUp() {
@@ -35,17 +36,20 @@ class XodusAccountFeeRepositoryTest extends RepoTest {
 
     @Test
     void getBy() {
-        AccountFeeAllowance allowance = repository.getBy(allowance2.getProvId(), allowance2.getAccount());
+        AccountFeeAllowance allowance = repository.getBy(allowance2.getProvId(), allowance2.getAccount(), true);
         assertEquals(allowance2, allowance);
+
+        AccountFeeAllowance recipientAllowance = repository.getBy(allowance2.getProvId(), allowance2.getAccount(), false);
+        assertNull(recipientAllowance);
     }
 
     @Test
     void save() throws InterruptedException {
         manager.begin();
         repository.save(allowance4);
-        assertEquals(allowance4, repository.getBy(allowance4.getProvId(), allowance4.getAccount()));
+        assertEquals(allowance4, repository.getBy(allowance4.getProvId(), allowance4.getAccount(), true));
         manager.commit();
-        AccountFeeAllowance by = repository.getBy(allowance4.getProvId(), allowance4.getAccount());
+        AccountFeeAllowance by = repository.getBy(allowance4.getProvId(), allowance4.getAccount(), true);
         assertEquals(allowance4, by);
     }
 }

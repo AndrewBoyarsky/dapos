@@ -44,6 +44,10 @@ public class FeeConfig implements ByteSerializable {
         return allTxsAllowed() || allowedTxs.contains(txType);
     }
 
+    public boolean allowed(TxType txType, long amount) {
+        return allowed(txType) && maxAllowedFee >= amount;
+    }
+
     @Override
     public void putBytes(ByteBuffer buffer) {
         ByteSerializable.putDefaultLong(buffer, maxAllowedFee, defaultValue);

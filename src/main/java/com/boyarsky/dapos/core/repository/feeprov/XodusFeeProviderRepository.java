@@ -8,6 +8,7 @@ import com.boyarsky.dapos.core.repository.DbParamImpl;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
+import com.boyarsky.dapos.utils.CollectionUtils;
 import com.boyarsky.dapos.utils.Convert;
 import jetbrains.exodus.entitystore.Entity;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,6 +60,13 @@ public class XodusFeeProviderRepository extends XodusAbstractRepository<FeeProvi
     }
 
     @Override
+    @Transactional(readonly = true)
+    public List<FeeProvider> getAll(State state, long balance) {
+        return CollectionUtils.toList(getTx().find(storeName, "balance", balance, Long.MAX_VALUE).intersect(getAllEntities(new DbParamImpl("state", state.getCode()))), this::map);
+    }
+
+    @Override
+    @Transactional(readonly = true)
     public List<FeeProvider> getAll(State state) {
         return super.getAll(new DbParamImpl("state", state.getCode()));
     }

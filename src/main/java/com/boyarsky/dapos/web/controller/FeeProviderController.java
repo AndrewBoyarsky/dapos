@@ -20,9 +20,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
@@ -56,8 +58,11 @@ public class FeeProviderController {
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<?> getFeeProvidersForParams() {
-        return ResponseEntity.ok().body(null);
+    public ResponseEntity<?> getFeeProvidersForParams(@RequestParam(value = "account") @ValidAccount AccountId accountId,
+                                                      @RequestParam(value = "amount") @Positive long amount,
+                                                      @RequestParam(value = "tx") TxType type,
+                                                      @RequestParam(value = "recipient", required = false) @ValidAccount AccountId recipient) {
+        return ResponseEntity.ok().body(feeProviderService.availableForTx(accountId, recipient, type, amount));
     }
 
     @GetMapping
