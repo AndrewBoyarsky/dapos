@@ -58,6 +58,11 @@ public class XodusFeeProviderRepository extends XodusAbstractRepository<FeeProvi
         return super.getAll();
     }
 
+    @Override
+    public List<FeeProvider> getAll(State state) {
+        return super.getAll(new DbParamImpl("state", state.getCode()));
+    }
+
 
     @Override
     @Transactional(readonly = true)

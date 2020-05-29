@@ -21,6 +21,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +46,8 @@ class FeeProviderServiceImplTest {
     FeeProviderService service;
     AccountId acc1 = TestUtil.generateEd25Acc().getCryptoId();
     AccountId acc2 = TestUtil.generateEd25Acc().getCryptoId();
+    AccountId acc3 = TestUtil.generateEd25Acc().getCryptoId();
+    AccountId acc4 = TestUtil.generateEd25Acc().getCryptoId();
 
     @BeforeEach
     void setUp() {
@@ -99,10 +103,30 @@ class FeeProviderServiceImplTest {
     }
 
     @Test
-    void allowance() {
-    }
+    void availableForAcc() {
+        FeeProvider feeProv1 = new FeeProvider(323, acc1, 15000, State.ACTIVE,
+                new PartyFeeConfig(true, null, null),
+                new PartyFeeConfig(true, null, null));
+        FeeProvider feeProv2 = new FeeProvider(324, acc1, 3000, State.ACTIVE,
+                new PartyFeeConfig(false, null, Map.of(new FeeConfig(1, 2, 3, Set.of()), List.of(acc2, acc1),
+                        new FeeConfig(90, 2, 3, Set.of()), List.of(acc3, acc4))),
+                new PartyFeeConfig(true, null, null));
+        FeeProvider feeProv3 = new FeeProvider(325, acc1, 3000, State.ACTIVE,
+                new PartyFeeConfig(false, null, Map.of(new FeeConfig(1, 2, 3, Set.of()), List.of(acc2, acc1, acc4))),
+                new PartyFeeConfig(true, null, null));
 
-    @Test
-    void get() {
+        FeeProvider feeProv4 = new FeeProvider(326, acc1, 9999, State.ACTIVE,
+                new PartyFeeConfig(false, null, Map.of(mock(FeeConfig.class), List.of(acc2), mock(FeeConfig.class), List.of(acc1), mock(FeeConfig.class), List.of(acc4),
+                        new FeeConfig(1, 2, 3, Set.of()), List.of(acc3))),
+                new PartyFeeConfig(true, null, null));
+
+        doReturn(List.of(feeProv1, feeProv2, feeProv3, feeProv4)).when(repository).getAll(State.ACTIVE);
+        doReturn(null).when(accountFeeRepository).getBy(324, acc3);
+        doReturn(new AccountFeeAllowance(22, acc3, 323, 0, 0)).when(accountFeeRepository).getBy(323, acc3);
+        doReturn(new AccountFeeAllowance(25, acc3, 326, 2, 3)).when(accountFeeRepository).getBy(326, acc3);
+
+        List<FeeProvider> feeProviders = service.availableForAccount(acc3);
+
+        assertEquals(List.of(feeProv2, feeProv4), feeProviders);
     }
 }

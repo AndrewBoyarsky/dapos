@@ -12,9 +12,11 @@ import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
 import com.boyarsky.dapos.web.API;
 import com.boyarsky.dapos.web.controller.request.FeeProviderRequest;
 import com.boyarsky.dapos.web.exception.RestValidationException;
+import com.boyarsky.dapos.web.validation.ValidAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,6 +48,16 @@ public class FeeProviderController {
         validateFeeProvConfig(fromConfig, "From");
         validateFeeProvConfig(toFeeConfig, "To");
         return toolchain.sendTransaction(new TransactionToolchain.TxSendRequest(request, wallet, TxType.SET_FEE_PROVIDER, new FeeProviderAttachment((byte) 1, State.ACTIVE, fromJson(fromConfig), fromJson(toFeeConfig)), 1));
+    }
+
+    @GetMapping("/account/{id}")
+    public ResponseEntity<?> getFeeProvidersForAcc(@PathVariable("id") @ValidAccount AccountId accountId) {
+        return ResponseEntity.ok().body(feeProviderService.availableForAccount(accountId));
+    }
+
+    @GetMapping("/filter")
+    public ResponseEntity<?> getFeeProvidersForParams() {
+        return ResponseEntity.ok().body(null);
     }
 
     @GetMapping

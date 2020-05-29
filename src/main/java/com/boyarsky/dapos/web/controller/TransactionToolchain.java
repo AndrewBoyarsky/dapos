@@ -1,6 +1,5 @@
 package com.boyarsky.dapos.web.controller;
 
-import com.apollocurrency.aplwallet.apl.util.StringUtils;
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.crypto.EncryptedData;
 import com.boyarsky.dapos.core.model.account.Account;
@@ -55,7 +54,8 @@ public class TransactionToolchain {
 
     public MessageWithResponse createMessageAttachment(DefaultSendingRequest request, Wallet wallet) throws InvalidKeyException, IOException {
         PublicKey recipientPublicKey;
-        if (!request.getIsToSelf()) {
+        DefaultSendingRequest.MessageData messageData = request.getMessageData();
+        if (messageData.getIsToSelf()) {
             if (request.getRecipient() == null) {
                 return new MessageWithResponse(ResponseEntity.unprocessableEntity().body(new RestError("Recipient required for chat message sending", null)));
             }
@@ -73,7 +73,7 @@ public class TransactionToolchain {
         } else {
             recipientPublicKey = wallet.getKeyPair().getPublic();
         }
-        String data = request.getMessage();
+        String data = messageData.getMessage();
         boolean isCompressed = false;
         byte[] bytesToEncrypt = data.getBytes();
         byte[] zippedData = CryptoUtils.compress(bytesToEncrypt);
@@ -88,7 +88,7 @@ public class TransactionToolchain {
         } else {
             encryptedData = CryptoUtils.encryptECDH(privateKey, recipientPublicKey, bytesToEncrypt);
         }
-        MessageAttachment messageAttachment = new MessageAttachment((byte) 1, encryptedData, isCompressed, request.getIsToSelf());
+        MessageAttachment messageAttachment = new MessageAttachment((byte) 1, encryptedData, isCompressed, messageData.getIsToSelf());
         return new MessageWithResponse(messageAttachment);
     }
 
@@ -120,7 +120,7 @@ public class TransactionToolchain {
         if (request.request.getFeeProvider() != null) {
             builder.noFee(new NoFeeAttachment((byte) 1, request.request.getFeeProvider()));
         }
-        if (TxType.MESSAGE != request.getType() && StringUtils.isNotBlank(request.request.getMessage())) {
+        if (TxType.MESSAGE != request.getType() && request.request.getMessageData() != null) {
             MessageWithResponse messageWithResponse = createMessageAttachment(request.request, wallet);
             if (messageWithResponse.errorResponse != null) {
                 return messageWithResponse.errorResponse;

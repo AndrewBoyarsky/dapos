@@ -5,7 +5,7 @@ import javax.validation.constraints.PositiveOrZero;
 
 public class PaymentRequest extends DefaultSendingRequest {
     @Override
-    public void setAmount(@NotNull @PositiveOrZero Long amount) {
-        super.setAmount(amount);
+    public @NotNull @PositiveOrZero Long getAmount() {
+        return super.getAmount();
     }
 }

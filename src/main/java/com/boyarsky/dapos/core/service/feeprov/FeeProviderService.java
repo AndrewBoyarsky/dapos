@@ -13,6 +13,8 @@ public interface FeeProviderService {
 
     void charge(long id, long amount, long height, AccountId sender, AccountId recipient, long eventId);
 
+    List<FeeProvider> availableForAccount(AccountId id);
+
     AccountFeeAllowance allowance(long id, AccountId accountId);
 
     FeeProvider get(long id);

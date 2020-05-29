@@ -5,6 +5,7 @@ import com.boyarsky.dapos.core.model.fee.AccountFeeAllowance;
 import com.boyarsky.dapos.core.model.fee.FeeConfig;
 import com.boyarsky.dapos.core.model.fee.FeeProvider;
 import com.boyarsky.dapos.core.model.fee.PartyFeeConfig;
+import com.boyarsky.dapos.core.model.fee.State;
 import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.repository.feeprov.AccountFeeRepository;
 import com.boyarsky.dapos.core.repository.feeprov.FeeProviderRepository;
@@ -16,6 +17,7 @@ import com.boyarsky.dapos.core.tx.type.attachment.impl.FeeProviderAttachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -68,6 +70,21 @@ public class FeeProviderServiceImpl implements FeeProviderService {
             allowance.setHeight(height);
             accountFeeRepository.save(allowance);
         }
+    }
+
+    @Override
+    public List<FeeProvider> availableForAccount(AccountId id) {
+        List<FeeProvider> all = repository.getAll(State.ACTIVE);
+        List<FeeProvider> needed = new ArrayList<>();
+        for (FeeProvider feeProvider : all) {
+            if (feeProvider.getFromFeeConfig().isWhitelistAll() || feeProvider.getFromFeeConfig().getConfigs().values().stream().flatMap(List::stream).anyMatch(id::equals)) {
+                AccountFeeAllowance allowance = accountFeeRepository.getBy(feeProvider.getId(), id);
+                if (allowance == null || allowance.getOperations() > 0) {
+                    needed.add(feeProvider);
+                }
+            }
+        }
+        return needed;
     }
 
     @Override

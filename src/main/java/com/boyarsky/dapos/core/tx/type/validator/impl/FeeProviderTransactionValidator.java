@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Component
 public class FeeProviderTransactionValidator implements TransactionTypeValidator {
@@ -27,24 +26,24 @@ public class FeeProviderTransactionValidator implements TransactionTypeValidator
             throw new TxNotValidException("Fee provider require non-zero tx amount", null, tx, ErrorCodes.ZERO_BALANCE);
         }
         FeeProviderAttachment attachment = tx.getAttachment(FeeProviderAttachment.class);
-        Set<AccountId> allAccounts = new HashSet<>();
         Map<FeeConfig, List<AccountId>> fromConfigs = attachment.getFromFeeConfig().getConfigs();
         Map<FeeConfig, List<AccountId>> toConfigs = attachment.getToFeeConfig().getConfigs();
-        validateFeeConfig(tx, fromConfigs, allAccounts);
-        validateFeeConfig(tx, toConfigs, allAccounts);
+        validateFeeConfig(tx, fromConfigs);
+        validateFeeConfig(tx, toConfigs);
     }
 
-    private void validateFeeConfig(Transaction tx, Map<FeeConfig, List<AccountId>> configs, Set<AccountId> allAccounts) throws TxNotValidException {
+    private void validateFeeConfig(Transaction tx, Map<FeeConfig, List<AccountId>> configs) throws TxNotValidException {
+        HashSet<AccountId> ids = new HashSet<>();
         for (Map.Entry<FeeConfig, List<AccountId>> entry : configs.entrySet()) {
             FeeConfig feeConfig = entry.getKey();
             if (feeConfig.getMaxAllowedFee() != -1 && feeConfig.getMaxAllowedTotalFee() != -1 && feeConfig.getMaxAllowedTotalFee() < feeConfig.getMaxAllowedFee()) {
                 throw new TxNotValidException("Total fee is less than max fee for one operation", null, tx, ErrorCodes.TOTAL_FEE_LESS_OP_FEE);
             }
             for (AccountId id : entry.getValue()) {
-                if (allAccounts.contains(id)) {
+                if (ids.contains(id)) {
                     throw new TxNotValidException("Duplicate account found in fee config: " + id, null, tx, ErrorCodes.VALIDATOR_ALREADY_UP);
                 }
-                allAccounts.add(id);
+                ids.add(id);
             }
         }
     }
