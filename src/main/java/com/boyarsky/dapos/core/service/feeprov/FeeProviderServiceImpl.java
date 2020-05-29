@@ -38,7 +38,7 @@ public class FeeProviderServiceImpl implements FeeProviderService {
     public void handle(FeeProviderAttachment attachment, Transaction tx) {
         FeeProvider feeProvider = new FeeProvider(tx.getTxId(), tx.getSender(), tx.getAmount(), attachment.getState(), attachment.getFromFeeConfig(), attachment.getToFeeConfig());
         feeProvider.setHeight(tx.getHeight());
-        accountService.addToBalance(tx.getSender(), new Operation(tx.getTxId(), tx.getHeight(), tx.getType().toString(), -tx.getAmount()));
+        accountService.addToBalance(tx.getSender(), null, new Operation(tx.getTxId(), tx.getHeight(), tx.getType().toString(), -tx.getAmount()));
         repository.save(feeProvider);
     }
 

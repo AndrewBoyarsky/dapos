@@ -40,7 +40,7 @@ public class CurrencyServiceImpl implements CurrencyService {
         currencyRepository.save(newCurrency);
         CurrencyHolder account = new CurrencyHolder(tx.getHeight(), tx.getSender(), tx.getTxId(), attachment.getSupply());
         currencyHolderRepository.save(account);
-        accountService.addToBalance(tx.getSender(), new Operation(tx.getTxId(), tx.getHeight(), tx.getType().toString(), -tx.getAmount()));
+        accountService.addToBalance(tx.getSender(), null, new Operation(tx.getTxId(), tx.getHeight(), tx.getType().toString(), -tx.getAmount()));
     }
 
     @Override

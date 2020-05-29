@@ -55,7 +55,7 @@ public class TransactionToolchain {
 
     public MessageWithResponse createMessageAttachment(DefaultSendingRequest request, Wallet wallet) throws InvalidKeyException, IOException {
         PublicKey recipientPublicKey;
-        if (!request.isToSelf()) {
+        if (!request.getIsToSelf()) {
             if (request.getRecipient() == null) {
                 return new MessageWithResponse(ResponseEntity.unprocessableEntity().body(new RestError("Recipient required for chat message sending", null)));
             }
@@ -73,10 +73,7 @@ public class TransactionToolchain {
         } else {
             recipientPublicKey = wallet.getKeyPair().getPublic();
         }
-        String data = request.getData();
-        if (StringUtils.isBlank(data)) {
-            return new MessageWithResponse(ResponseEntity.unprocessableEntity().body(new RestError("Message is empty, nothing to send", null)));
-        }
+        String data = request.getMessage();
         boolean isCompressed = false;
         byte[] bytesToEncrypt = data.getBytes();
         byte[] zippedData = CryptoUtils.compress(bytesToEncrypt);
@@ -91,7 +88,7 @@ public class TransactionToolchain {
         } else {
             encryptedData = CryptoUtils.encryptECDH(privateKey, recipientPublicKey, bytesToEncrypt);
         }
-        MessageAttachment messageAttachment = new MessageAttachment((byte) 1, encryptedData, isCompressed, request.isToSelf());
+        MessageAttachment messageAttachment = new MessageAttachment((byte) 1, encryptedData, isCompressed, request.getIsToSelf());
         return new MessageWithResponse(messageAttachment);
     }
 
@@ -112,16 +109,18 @@ public class TransactionToolchain {
         Account sender = request.accountWithWallet.account;
         Wallet wallet = request.accountWithWallet.wallet;
 
-        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(request.getType(), request.getAttachment(), sender.getCryptoId(), wallet.getKeyPair(), 1, 2000)
-                .amount(request.request.getAmount());
+        Transaction.TransactionBuilder builder = new Transaction.TransactionBuilder(request.getType(), request.getAttachment(), sender.getCryptoId(), wallet.getKeyPair(), 1, 2000);
+        if (request.request.getAmount() != null) {
+            builder.amount(request.request.getAmount());
+        }
 
         if (request.request.getRecipient() != null) {
             builder.recipient(request.request.getRecipient());
         }
-        if (request.request.getFeeProvider() != 0) {
+        if (request.request.getFeeProvider() != null) {
             builder.noFee(new NoFeeAttachment((byte) 1, request.request.getFeeProvider()));
         }
-        if (TxType.MESSAGE != request.getType() && StringUtils.isNotBlank(request.request.getData())) {
+        if (TxType.MESSAGE != request.getType() && StringUtils.isNotBlank(request.request.getMessage())) {
             MessageWithResponse messageWithResponse = createMessageAttachment(request.request, wallet);
             if (messageWithResponse.errorResponse != null) {
                 return messageWithResponse.errorResponse;

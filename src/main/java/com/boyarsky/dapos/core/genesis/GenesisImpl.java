@@ -48,7 +48,7 @@ public class GenesisImpl implements Genesis {
         List<GenesisData.GenesisAccount> accounts = genesisData.getAccounts();
         for (GenesisData.GenesisAccount account : accounts) {
             AccountId accountId = new AccountId(account.getAccountId());
-            accountService.addToBalance(accountId, new Operation(0, 0, "GENESIS_BALANCE", account.getBalance()));
+            accountService.addToBalance(accountId, null, new Operation(0, 0, "GENESIS_BALANCE", account.getBalance()));
             accountService.assignPublicKey(accountId, Convert.parseHexString(account.getPublicKey()));
         }
         List<GenesisData.ValidatorDefinition> validators = genesisData.getValidators();

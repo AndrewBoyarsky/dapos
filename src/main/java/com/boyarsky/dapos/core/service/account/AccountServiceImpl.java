@@ -59,7 +59,6 @@ public class AccountServiceImpl implements AccountService {
         ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), sender, recipient, op.getHeight()));
     }
 
-    @Override
     public void addToBalance(AccountId accountId, Operation op) {
         if (op.getAmount() == 0) {
             return;

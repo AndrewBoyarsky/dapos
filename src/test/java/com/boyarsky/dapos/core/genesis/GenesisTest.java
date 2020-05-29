@@ -46,7 +46,7 @@ class GenesisTest {
         assertEquals(4, initResponse.getNumberOfAccount());
         assertEquals(List.of(validator1, validator2), initResponse.getValidatorEntities());
         for (Account account : List.of(account1, account2, account3, account4)) {
-            verify(accountService).addToBalance(account.getCryptoId(), new Operation(0, 0, "GENESIS_BALANCE", account.getBalance()));
+            verify(accountService).addToBalance(account.getCryptoId(), null, new Operation(0, 0, "GENESIS_BALANCE", account.getBalance()));
             verify(accountService).assignPublicKey(account.getCryptoId(), account.getPublicKey());
         }
         verify(accountService).addToBalance(validator1.getRewardId(), null, new Operation(0, 0, "Init Validator Balance", 100));

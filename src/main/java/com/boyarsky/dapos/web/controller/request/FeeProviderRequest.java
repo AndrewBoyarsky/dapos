@@ -24,8 +24,8 @@ public class FeeProviderRequest extends DefaultSendingRequest {
     private PartyFeeConfigJson toFeeConfig;
 
     @Override
-    public void setAmount(@Positive long amount) {
-        super.setAmount(amount);
+    public @Positive @NotNull Long getAmount() {
+        return super.getAmount();
     }
 
     @Data

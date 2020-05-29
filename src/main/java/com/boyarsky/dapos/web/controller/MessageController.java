@@ -14,7 +14,7 @@ import com.boyarsky.dapos.core.service.message.MessageService;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
 import com.boyarsky.dapos.web.API;
-import com.boyarsky.dapos.web.controller.request.DefaultSendingRequest;
+import com.boyarsky.dapos.web.controller.request.MessageRequest;
 import com.boyarsky.dapos.web.exception.RestError;
 import com.boyarsky.dapos.web.validation.ValidAccount;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -57,7 +57,7 @@ public class MessageController {
 
     @PostMapping
     @Transactional(readonly = true, startNew = true)
-    public ResponseEntity<?> sendMessage(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
+    public ResponseEntity<?> sendMessage(@RequestBody @Valid MessageRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
         TransactionToolchain.AccountWithWallet accountWithWallet = txToolchain.parseAccount(request);
         TransactionToolchain.MessageWithResponse messageWithError = txToolchain.createMessageAttachment(request, accountWithWallet.getWallet());
         if (messageWithError.getErrorResponse() != null) {

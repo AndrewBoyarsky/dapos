@@ -6,8 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.PositiveOrZero;
-
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class DefaultSendingRequest extends Credentials {
@@ -15,11 +13,9 @@ public class DefaultSendingRequest extends Credentials {
     @ValidAccount
     @Schema(implementation = String.class)
     private AccountId recipient;
-    @PositiveOrZero
-    private long amount = 0;
 
-    private long feeProvider = 0;
-
-    String data;
-    boolean isToSelf;
+    String message;
+    Boolean isToSelf;
+    private Long amount;
+    private Long feeProvider;
 }

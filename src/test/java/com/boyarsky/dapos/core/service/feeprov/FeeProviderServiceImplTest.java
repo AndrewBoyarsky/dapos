@@ -65,7 +65,7 @@ class FeeProviderServiceImplTest {
         FeeProvider expected = new FeeProvider(1001, acc1, 555, State.ACTIVE, attachment.getFromFeeConfig(), attachment.getToFeeConfig());
         expected.setHeight(100);
         verify(repository).save(expected);
-        verify(accountService).addToBalance(acc1, new Operation(1001, 100, "SET_FEE_PROVIDER", -555));
+        verify(accountService).addToBalance(acc1, null, new Operation(1001, 100, "SET_FEE_PROVIDER", -555));
     }
 
     @Test

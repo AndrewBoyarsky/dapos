@@ -61,7 +61,7 @@ class CurrencyServiceImplTest {
 
         verify(currencyRepository).save(new Currency(33, 222, "CODE", "Some named currency", "Useless unit test currency description", sender, 1000, 10000, (byte) 2));
         verify(currencyHolderRepository).save(new CurrencyHolder(33, sender, 222, 1000));
-        verify(accountService).addToBalance(sender, new Operation(222, 33, "CURRENCY_ISSUANCE", -10000));
+        verify(accountService).addToBalance(sender, null, new Operation(222, 33, "CURRENCY_ISSUANCE", -10000));
     }
 
     @Test

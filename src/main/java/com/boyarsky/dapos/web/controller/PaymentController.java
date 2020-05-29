@@ -5,7 +5,7 @@ import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.PaymentAttachment;
 import com.boyarsky.dapos.core.tx.type.fee.GasCalculationException;
 import com.boyarsky.dapos.web.API;
-import com.boyarsky.dapos.web.controller.request.DefaultSendingRequest;
+import com.boyarsky.dapos.web.controller.request.PaymentRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +27,7 @@ public class PaymentController {
 
     @PostMapping
     @Transactional(readonly = true, startNew = true)
-    public ResponseEntity<?> sendMoney(@RequestBody @Valid DefaultSendingRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
+    public ResponseEntity<?> sendMoney(@RequestBody @Valid PaymentRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
         TransactionToolchain.AccountWithWallet accountWithWallet = txToolchain.parseAccount(request);
         return txToolchain.sendTransaction(new TransactionToolchain.TxSendRequest(request, accountWithWallet, TxType.PAYMENT, new PaymentAttachment(), 1));
     }

@@ -53,6 +53,7 @@ public class XodusFeeProviderRepository extends XodusAbstractRepository<FeeProvi
     }
 
     @Override
+    @Transactional(readonly = true)
     public List<FeeProvider> getAll() {
         return super.getAll();
     }

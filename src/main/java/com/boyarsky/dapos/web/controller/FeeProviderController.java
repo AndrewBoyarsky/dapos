@@ -74,7 +74,8 @@ public class FeeProviderController {
 
     private PartyFeeConfig fromJson(FeeProviderRequest.PartyFeeConfigJson c) {
         List<FeeProviderRequest.FeeConfigGroup> configGroups = c.getConfigGroups();
-        Map<FeeConfig, List<AccountId>> feeConfigListMap = configGroups.stream().collect(Collectors.toMap(e -> fromJson(e.getGroupConfig()), FeeProviderRequest.FeeConfigGroup::getAccounts));
+
+        Map<FeeConfig, List<AccountId>> feeConfigListMap = configGroups == null ? null : configGroups.stream().collect(Collectors.toMap(e -> fromJson(e.getGroupConfig()), FeeProviderRequest.FeeConfigGroup::getAccounts));
         return new PartyFeeConfig(c.whitelistAll(), fromJson(c.getRootConfig()), feeConfigListMap);
     }
 
