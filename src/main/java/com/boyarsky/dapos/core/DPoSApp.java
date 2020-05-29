@@ -134,7 +134,7 @@ public class DPoSApp extends ABCIApplicationGrpc.ABCIApplicationImplBase {
         ArrayList<types.ValidatorUpdate> updates = new ArrayList<>();
         for (ValidatorEntity entity : validatorEntities) {
             updates.add(types.ValidatorUpdate.newBuilder()
-                    .setPower(entity.getVotePower())
+                    .setPower(entity.isEnabled() ? entity.getVotePower() : 0)
                     .setPubKey(PubKey.newBuilder()
                             .setType(PUBLIC_KEY_TYPE)
                             .setData(ByteString.copyFrom(entity.getPublicKey()))

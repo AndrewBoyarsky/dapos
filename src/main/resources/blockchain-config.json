@@ -6,8 +6,8 @@
   "heightConfigs": [
     {
       "height": 1,
-      "maxSize": 10000,
-      "maxGas": 10000,
+      "maxSize": 100000,
+      "maxGas": 100000,
       "maxEvidenceAge": 10000,
       "absentPeriod": 30,
       "maxValidators": 2,

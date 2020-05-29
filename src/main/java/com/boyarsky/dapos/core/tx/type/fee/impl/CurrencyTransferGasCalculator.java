@@ -15,6 +15,6 @@ public class CurrencyTransferGasCalculator implements GasCalculator {
 
     @Override
     public TxType type() {
-        return TxType.CURRENCY_ISSUANCE;
+        return TxType.CURRENCY_TRANSFER;
     }
 }
