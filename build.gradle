@@ -33,6 +33,7 @@ sonarqube {
         property "sonar.projectKey", "AndrewBoyarsky_dapos"
         property "sonar.organization", "andrewboyarsky"
         property "sonar.host.url", "https://sonarcloud.io"
+        property 'sonar.jacoco.reportPath', "${buildDir}/jacoco/test.exec"
     }
 }
 
