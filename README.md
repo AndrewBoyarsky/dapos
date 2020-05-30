@@ -1,5 +1,10 @@
 # Dapos [![CircleCI](https://circleci.com/gh/AndrewBoyarsky/dapos.svg?style=svg)](https://circleci.com/gh/AndrewBoyarsky/dapos) 
-[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=AndrewBoyarsky_dapos)](https://sonarcloud.io/dashboard?id=AndrewBoyarsky_dapos)  
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=AndrewBoyarsky_dapos&metric=security_rating)](https://sonarcloud.io/dashboard?id=AndrewBoyarsky_dapos)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=AndrewBoyarsky_dapos&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=AndrewBoyarsky_dapos)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=AndrewBoyarsky_dapos&metric=coverage)](https://sonarcloud.io/dashboard?id=AndrewBoyarsky_dapos) 
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=AndrewBoyarsky_dapos&metric=ncloc)](https://sonarcloud.io/dashboard?id=AndrewBoyarsky_dapos)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=AndrewBoyarsky_dapos&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=AndrewBoyarsky_dapos)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=AndrewBoyarsky_dapos&metric=bugs)](https://sonarcloud.io/dashboard?id=AndrewBoyarsky_dapos)
 
 Welcome! This repository store DPoS blockchain system running on Tendermint Core written in Java utilizing grpc interface.
 
