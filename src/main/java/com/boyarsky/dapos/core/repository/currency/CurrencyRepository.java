@@ -1,6 +1,7 @@
 package com.boyarsky.dapos.core.repository.currency;
 
 import com.boyarsky.dapos.core.model.currency.Currency;
+import com.boyarsky.dapos.core.repository.Pagination;
 
 import java.util.List;
 
@@ -13,5 +14,5 @@ public interface CurrencyRepository {
 
     Currency getByCode(String code);
 
-    List<Currency> getAll();
+    List<Currency> getAll(Pagination pagination);
 }

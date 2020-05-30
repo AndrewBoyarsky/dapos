@@ -5,6 +5,7 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.currency.Currency;
 import com.boyarsky.dapos.core.model.currency.CurrencyHolder;
 import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.repository.currency.CurrencyHolderRepository;
 import com.boyarsky.dapos.core.repository.currency.CurrencyRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
@@ -115,9 +116,9 @@ class CurrencyServiceImplTest {
     @Test
     void holders() {
         List<CurrencyHolder> holders = List.of(new CurrencyHolder(1, sender, 1, 399), new CurrencyHolder(2, recipient, 1, 500));
-        doReturn(holders).when(currencyHolderRepository).getAllForCurrency(1);
+        doReturn(holders).when(currencyHolderRepository).getAllForCurrency(1, pagination);
 
-        List<CurrencyHolder> currencyHolders = service.holders(1);
+        List<CurrencyHolder> currencyHolders = service.holders(1, pagination);
 
         assertEquals(holders, currencyHolders);
     }
@@ -125,9 +126,10 @@ class CurrencyServiceImplTest {
     @Test
     void getAllCurrencies() {
         List<Currency> expected = List.of(mock(Currency.class), mock(Currency.class));
-        doReturn(expected).when(currencyRepository).getAll();
+        Pagination pagination = new Pagination();
+        doReturn(expected).when(currencyRepository).getAll(pagination);
 
-        List<Currency> allCurrencies = service.getAllCurrencies();
+        List<Currency> allCurrencies = service.getAllCurrencies(pagination);
 
         assertEquals(expected, allCurrencies);
 
@@ -148,7 +150,7 @@ class CurrencyServiceImplTest {
         List<CurrencyHolder> expected = List.of(new CurrencyHolder(1, sender, 2, 900), new CurrencyHolder(2, sender, 3, 1000));
         doReturn(expected).when(currencyHolderRepository).getAllByAccount(sender);
 
-        List<CurrencyHolder> currencyHolders = service.accountCurrencies(sender);
+        List<CurrencyHolder> currencyHolders = service.accountCurrencies(sender, pagination);
         assertEquals(expected, currencyHolders);
     }
 

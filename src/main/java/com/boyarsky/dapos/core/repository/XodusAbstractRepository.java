@@ -69,9 +69,28 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         return map(e);
     }
 
+    protected EntityIterable sort(EntityIterable iterable, Sort sort) {
+        if (sort == null) {
+            sort = Sort.defaultSort();
+        }
+        for (Sort.SortColumn column : sort.columns) {
+            iterable = getTx().sort(entityName, column.getColumn(), iterable, column.isAsc());
+        }
+        return iterable;
+    }
+
+    protected EntityIterable sort(EntityIterable iterable) {
+        return sort(iterable, null);
+    }
+
     @Transactional(readonly = true)
     public <V extends DbParam> List<T> getAll(@NonNull V... params) {
         EntityIterable allEntities = getAllEntities(params);
+        return CollectionUtils.toList(allEntities, this::map);
+    }
+
+    public <V extends DbParam> List<T> getAll(Pagination pagination, @NonNull V... params) {
+        EntityIterable allEntities = getAllEntities(pagination, params);
         return CollectionUtils.toList(allEntities, this::map);
     }
 
@@ -89,16 +108,16 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         } else {
             iterable = getTx().getAll(entityName);
         }
-        if (sort == null) {
-            sort = Sort.defaultSort();
-        }
-        for (Sort.SortColumn column : sort.columns) {
-            iterable = getTx().sort(entityName, column.getColumn(), iterable, column.isAsc());
-        }
-        if (pagination != null) {
-            iterable = iterable.skip(pagination.getPage() * pagination.getLimit()).take(pagination.getLimit());
-        }
+        iterable = sort(iterable, sort);
+        iterable = paginate(iterable, pagination);
         return getTx().sort(entityName, "height", iterable, false);
+    }
+
+    protected EntityIterable paginate(EntityIterable iterable, Pagination pagination) {
+        if (pagination != null) {
+            return iterable.skip(pagination.getPage() * pagination.getLimit()).take(pagination.getLimit());
+        }
+        return iterable;
     }
 
     protected <V extends DbParam> EntityIterable getAllEntities(@NonNull V... params) {

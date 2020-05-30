@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.currency.CurrencyHolder;
 import com.boyarsky.dapos.core.repository.DbParam;
 import com.boyarsky.dapos.core.repository.DbParamImpl;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
@@ -46,8 +47,8 @@ public class XodusCurrencyHolderRepository extends XodusAbstractRepository<Curre
 
     @Override
     @Transactional(readonly = true)
-    public List<CurrencyHolder> getAllForCurrency(long currencyId) {
-        return getAll(new DbParamImpl("currency", currencyId));
+    public List<CurrencyHolder> getAllForCurrency(long currencyId, Pagination pagination) {
+        return getAll(pagination, new DbParamImpl("currency", currencyId));
     }
 
     @Override
@@ -60,7 +61,7 @@ public class XodusCurrencyHolderRepository extends XodusAbstractRepository<Curre
 
     @Override
     @Transactional(readonly = true)
-    public List<CurrencyHolder> getAllByAccount(AccountId accountId) {
-        return getAll(new DbParamImpl("account", Convert.toHexString(accountId.getAddressBytes())));
+    public List<CurrencyHolder> getAllByAccount(AccountId accountId, Pagination pagination) {
+        return getAll(pagination, new DbParamImpl("account", Convert.toHexString(accountId.getAddressBytes())));
     }
 }

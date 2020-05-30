@@ -1,6 +1,7 @@
 package com.boyarsky.dapos.core.genesis;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.Operation;
@@ -48,7 +49,7 @@ public class GenesisImpl implements Genesis {
         List<GenesisData.GenesisAccount> accounts = genesisData.getAccounts();
         for (GenesisData.GenesisAccount account : accounts) {
             AccountId accountId = new AccountId(account.getAccountId());
-            accountService.addToBalance(accountId, null, new Operation(0, 0, "GENESIS_BALANCE", account.getBalance()));
+            accountService.addToBalance(accountId, null, new Operation(0, 0, LedgerRecord.Type.INIT_ACCOUNT_GENESIS_BALANCE.toString(), account.getBalance()));
             accountService.assignPublicKey(accountId, Convert.parseHexString(account.getPublicKey()));
         }
         List<GenesisData.ValidatorDefinition> validators = genesisData.getValidators();
@@ -58,7 +59,7 @@ public class GenesisImpl implements Genesis {
                 throw new IllegalArgumentException("Validator fee should be in range: [0.00..100] with at most 2 decimals");
             }
             ValidatorEntity validatorEntity = validatorService.registerValidator(Convert.parseHexString(validator.getPublicKey()), validator.getFee().multiply(BigDecimal.valueOf(100)).toBigInteger().shortValueExact(), new AccountId(validator.getRewardId()), true, 0);
-            accountService.addToBalance(validatorEntity.getRewardId(), null, new Operation(0, 0, "Init Validator Balance", validator.getPower()));
+            accountService.addToBalance(validatorEntity.getRewardId(), null, new Operation(0, 0, LedgerRecord.Type.INIT_VALIDATOR_GENESIS_BALANCE.toString(), validator.getPower()));
             validatorService.addVote(validatorEntity.getId(), validatorEntity.getRewardId(), validator.getPower(), 0);
             validatorEntity.setVotePower(validator.getPower());
             entities.add(validatorEntity);

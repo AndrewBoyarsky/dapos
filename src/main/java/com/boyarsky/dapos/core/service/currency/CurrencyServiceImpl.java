@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.currency.Currency;
 import com.boyarsky.dapos.core.model.currency.CurrencyHolder;
 import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.repository.currency.CurrencyHolderRepository;
 import com.boyarsky.dapos.core.repository.currency.CurrencyRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
@@ -60,18 +61,18 @@ public class CurrencyServiceImpl implements CurrencyService {
             currencyHolderRepository.save(recipient);
             ledgerService.add(new LedgerRecord(tx.getTxId(), -tx.getAmount(), tx.getType().toString(), tx.getSender(), tx.getRecipient(), tx.getHeight()));
         } else {
-            ledgerService.add(new LedgerRecord(tx.getTxId(), -tx.getAmount(), "CURRENCY_BURN", tx.getSender(), null, tx.getHeight()));
+            ledgerService.add(new LedgerRecord(tx.getTxId(), -tx.getAmount(), LedgerRecord.Type.CURRENCY_BURN.toString(), tx.getSender(), null, tx.getHeight()));
         }
     }
 
     @Override
-    public List<CurrencyHolder> holders(long currencyId) {
-        return currencyHolderRepository.getAllForCurrency(currencyId);
+    public List<CurrencyHolder> holders(long currencyId, Pagination pagination) {
+        return currencyHolderRepository.getAllForCurrency(currencyId, pagination);
     }
 
     @Override
-    public List<Currency> getAllCurrencies() {
-        return currencyRepository.getAll();
+    public List<Currency> getAllCurrencies(Pagination pagination) {
+        return currencyRepository.getAll(pagination);
     }
 
     @Override
@@ -80,13 +81,18 @@ public class CurrencyServiceImpl implements CurrencyService {
     }
 
     @Override
-    public List<CurrencyHolder> accountCurrencies(AccountId accountId) {
-        return currencyHolderRepository.getAllByAccount(accountId);
+    public List<CurrencyHolder> accountCurrencies(AccountId accountId, Pagination pagination) {
+        return currencyHolderRepository.getAllByAccount(accountId, pagination);
     }
 
     @Override
     public CurrencyHolder getCurrencyHolder(AccountId accountId, long currencyId) {
         return currencyHolderRepository.get(accountId, currencyId);
+    }
+
+    @Override
+    public Currency getByCode(String code) {
+        return currencyRepository.getByCode(code);
     }
 
     @Override
@@ -98,8 +104,8 @@ public class CurrencyServiceImpl implements CurrencyService {
         CurrencyHolder holder = currencyHolderRepository.get(tx.getSender(), currency.getCurrencyId());
         BigDecimal sendersPercent = BigDecimal.valueOf(tx.getAmount()).divide(BigDecimal.valueOf(currency.getSupply()), 4, RoundingMode.DOWN);
         long claimedReserve = sendersPercent.multiply(BigDecimal.valueOf(currency.getReserve())).toBigInteger().longValueExact();
-        ledgerService.add(new LedgerRecord(tx.getTxId(), -tx.getAmount(), "CLAIM_CURRENCY_RESERVE", tx.getSender(), currency.getIssuer(), tx.getHeight()));
-        accountService.addToBalance(tx.getSender(), currency.getIssuer(), new Operation(tx.getTxId(), tx.getHeight(), "RESERVE_RETURN", claimedReserve));
+        ledgerService.add(new LedgerRecord(tx.getTxId(), -tx.getAmount(), LedgerRecord.Type.CLAIM_CURRENCY_RESERVE.toString(), tx.getSender(), currency.getIssuer(), tx.getHeight()));
+        accountService.addToBalance(tx.getSender(), currency.getIssuer(), new Operation(tx.getTxId(), tx.getHeight(), LedgerRecord.Type.CURRENCY_RESERVE_RETURN.toString(), claimedReserve));
         holder.setAmount(holder.getAmount() - tx.getAmount());
         holder.setHeight(tx.getHeight());
         save(holder);
@@ -125,8 +131,8 @@ public class CurrencyServiceImpl implements CurrencyService {
         holder.setHeight(tx.getHeight());
         holder.setAmount(0);
         save(holder);
-        accountService.addToBalance(sender, currency.getIssuer(), new Operation(tx.getTxId(), tx.getHeight(), "LIQUIDATION_RESERVE_RETURN", currency.getReserve()));
-        ledgerService.add(new LedgerRecord(tx.getTxId(), -currency.getSupply(), "CURRENCY_LIQUIDATE", sender, currency.getIssuer(), tx.getHeight()));
+        accountService.addToBalance(sender, currency.getIssuer(), new Operation(tx.getTxId(), tx.getHeight(), LedgerRecord.Type.CURRENCY_LIQUIDATION_RESERVE_RETURN.toString(), currency.getReserve()));
+        ledgerService.add(new LedgerRecord(tx.getTxId(), -currency.getSupply(), LedgerRecord.Type.CURRENCY_LIQUIDATE.toString(), sender, currency.getIssuer(), tx.getHeight()));
         currency.setSupply(0);
         currency.setHeight(tx.getHeight());
         currency.setReserve(0);

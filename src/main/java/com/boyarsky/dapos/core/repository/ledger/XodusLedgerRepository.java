@@ -18,7 +18,6 @@ import java.util.List;
 @Service
 public class XodusLedgerRepository extends XodusAbstractRepository<LedgerRecord> implements LedgerRepository {
     private static final String entityType = "ledger";
-    private XodusRepoContext context;
 
     public XodusLedgerRepository(XodusRepoContext context) {
         super(entityType, false, context);
@@ -27,12 +26,12 @@ public class XodusLedgerRepository extends XodusAbstractRepository<LedgerRecord>
     @Override
     @Transactional(readonly = true)
     public List<LedgerRecord> getRecords(AccountId id, String type, Pagination pagination) {
-        StoreTransaction tx = context.getTx();
         String account = Convert.toHexString(id.getAddressBytes());
 
-        EntityIterable all = tx.sort() tx.find(entityType, "sender", account).union(
+        StoreTransaction tx = getTx();
+        EntityIterable all = paginate(sort(tx.find(entityType, "sender", account).union(
                 tx.find(entityType, "recipient", account)
-        ).intersect(tx.find(entityType, "type", type));
+        ).intersect(tx.find(entityType, "type", type))), pagination);
         return CollectionUtils.toList(all, this::map);
     }
 
@@ -56,11 +55,11 @@ public class XodusLedgerRepository extends XodusAbstractRepository<LedgerRecord>
 
     @Override
     @Transactional(readonly = true)
-    public List<LedgerRecord> getRecords(AccountId id) {
-        StoreTransaction tx = context.getTx();
+    public List<LedgerRecord> getRecords(AccountId id, Pagination pagination) {
+        StoreTransaction tx = getTx();
         String account = Convert.toHexString(id.getAddressBytes());
-        EntityIterable all = tx.find(entityType, "sender", account).union(
-                tx.find(entityType, "recipient", account));
+        EntityIterable all = paginate(sort(tx.find(entityType, "sender", account).union(
+                tx.find(entityType, "recipient", account))), pagination);
         return CollectionUtils.toList(all, this::map);
     }
 

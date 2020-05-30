@@ -3,6 +3,7 @@ package com.boyarsky.dapos.core.service.currency;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.currency.Currency;
 import com.boyarsky.dapos.core.model.currency.CurrencyHolder;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIdAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIssuanceAttachment;
@@ -14,15 +15,17 @@ public interface CurrencyService {
 
     void transfer(Transaction tx, CurrencyIdAttachment attachment);
 
-    List<CurrencyHolder> holders(long currencyId);
+    List<CurrencyHolder> holders(long currencyId, Pagination pagination);
 
-    List<Currency> getAllCurrencies();
+    List<Currency> getAllCurrencies(Pagination pagination);
 
     Currency getById(long currencyId);
 
-    List<CurrencyHolder> accountCurrencies(AccountId accountId);
+    List<CurrencyHolder> accountCurrencies(AccountId accountId, Pagination pagination);
 
     CurrencyHolder getCurrencyHolder(AccountId accountId, long currencyId);
+
+    Currency getByCode(String code);
 
     boolean reserved(String code);
 

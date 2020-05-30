@@ -1,6 +1,7 @@
 package com.boyarsky.dapos.core.tx.type.handler.impl;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.feeprov.FeeProviderService;
@@ -39,7 +40,7 @@ public class DefaultTransactionHandler implements TransactionTypeHandler {
         if (nofee != null) {
             feeProviderService.charge(nofee.getPayer(), tx.getFee(), tx.getHeight(), tx.getSender(), tx.getRecipient(), tx.getTxId());
         } else {
-            Operation op = new Operation(tx.getTxId(), tx.getHeight(), "Tx Fee", tx.getFee());
+            Operation op = new Operation(tx.getTxId(), tx.getHeight(), LedgerRecord.Type.TX_FEE.toString(), tx.getFee());
             accountService.transferMoney(sender, null, op);
         }
         MessageAttachment messageAttachment = tx.getAttachment(MessageAttachment.class);

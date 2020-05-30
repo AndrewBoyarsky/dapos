@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.TransactionManager;
 import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.currency.Currency;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.repository.RepoTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,9 +63,14 @@ class XodusCurrencyRepositoryTest extends RepoTest {
 
     @Test
     void getAll() {
-        List<Currency> all = repo.getAll();
+        List<Currency> all = repo.getAll(null);
 
         assertEquals(List.of(cur4, cur3, cur2, cur1), all);
+
+        all = repo.getAll(new Pagination(2, 1));
+
+        assertEquals(List.of(cur2), all);
+
     }
 
     @Test

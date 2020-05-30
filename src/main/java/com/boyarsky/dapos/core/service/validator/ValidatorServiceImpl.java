@@ -163,7 +163,7 @@ public class ValidatorServiceImpl implements ValidatorService {
                 repository.save(v);
             }
             long validatorFeeRounded = validatorFee.toBigInteger().longValueExact();
-            accountService.addToBalance(v.getRewardId(), v.getId(), new Operation(height, height, "VALIDATOR REWARD", validatorFeeRounded));
+            accountService.addToBalance(v.getRewardId(), v.getId(), new Operation(height, height, LedgerRecord.Type.VALIDATOR_BLOCK_REWARD_FEE.toString(), validatorFeeRounded));
             long stakeholdersReward = validatorReward.subtract(validatorFee).toBigInteger().longValueExact();
             stakeholderService.distributeRewardForValidator(v.getId(), stakeholdersReward, height);
         }

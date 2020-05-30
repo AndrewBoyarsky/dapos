@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.currency.Currency;
 import com.boyarsky.dapos.core.repository.DbParam;
 import com.boyarsky.dapos.core.repository.DbParamImpl;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
@@ -64,8 +65,8 @@ public class XodusCurrencyRepository extends XodusAbstractRepository<Currency> i
 
     @Override
     @Transactional(readonly = true)
-    public List<Currency> getAll() {
-        return super.getAll();
+    public List<Currency> getAll(Pagination pagination) {
+        return super.getAll(pagination);
     }
 
     @Override

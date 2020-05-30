@@ -2,6 +2,8 @@ package com.boyarsky.dapos.web.controller;
 
 import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.keystore.KeyStoreService;
 import com.boyarsky.dapos.core.service.keystore.PassphraseProtectedWallet;
@@ -10,6 +12,8 @@ import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.web.API;
 import com.boyarsky.dapos.web.controller.request.CreateAccRequest;
 import com.boyarsky.dapos.web.validation.ValidAccount;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,6 +25,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
@@ -64,11 +71,14 @@ public class AccountController {
 
     @GetMapping("/{id}/ledger")
     public ResponseEntity<?> getLedger(@ValidAccount @PathVariable("id") AccountId accountId,
-                                       @RequestParam(required = false) TxType type) {
+                                       @RequestParam(required = false) @Parameter(schema = @Schema(allOf = {TxType.class, LedgerRecord.Type.class})) String type,
+                                       @RequestParam(value = "page", required = false, defaultValue = "0") @PositiveOrZero Integer page,
+                                       @RequestParam(value = "limit", required = false, defaultValue = "15") @Positive @Max(100) Integer limit) {
+        Pagination pagination = new Pagination(page, limit);
         if (type == null) {
-            return ResponseEntity.ok(ledgerService.records(accountId));
+            return ResponseEntity.ok(ledgerService.records(accountId, pagination));
         } else {
-            return ResponseEntity.ok(ledgerService.records(accountId, type));
+            return ResponseEntity.ok(ledgerService.records(accountId, type, pagination));
         }
     }
 }
