@@ -273,10 +273,10 @@ class ValidatorServiceTest {
             }
             assertEquals(0, e.getAbsentFor());
         });
-        verify(aService).addToBalance(rewardAddress2, validatorAcc2.getCryptoId(), new Operation(100, 100, "VALIDATOR REWARD", 18));
-        verify(aService).addToBalance(rewardAddress3, validatorAcc3.getCryptoId(), new Operation(100, 100, "VALIDATOR REWARD", 0));
-        verify(aService).addToBalance(rewardAddress4, validatorAcc4.getCryptoId(), new Operation(100, 100, "VALIDATOR REWARD", 82));
-        verify(aService).addToBalance(rewardAddress6, validatorAcc6.getCryptoId(), new Operation(100, 100, "VALIDATOR REWARD", 3));
+        verify(aService).addToBalance(rewardAddress2, validatorAcc2.getCryptoId(), new Operation(100, 100, "VALIDATOR_BLOCK_REWARD_FEE", 18));
+        verify(aService).addToBalance(rewardAddress3, validatorAcc3.getCryptoId(), new Operation(100, 100, "VALIDATOR_BLOCK_REWARD_FEE", 0));
+        verify(aService).addToBalance(rewardAddress4, validatorAcc4.getCryptoId(), new Operation(100, 100, "VALIDATOR_BLOCK_REWARD_FEE", 82));
+        verify(aService).addToBalance(rewardAddress6, validatorAcc6.getCryptoId(), new Operation(100, 100, "VALIDATOR_BLOCK_REWARD_FEE", 3));
         verify(sService).distributeRewardForValidator(validatorAcc2.getCryptoId(), 146, 100);
         verify(sService).distributeRewardForValidator(validatorAcc3.getCryptoId(), 19, 100);
         verify(sService).distributeRewardForValidator(validatorAcc4.getCryptoId(), 0, 100);

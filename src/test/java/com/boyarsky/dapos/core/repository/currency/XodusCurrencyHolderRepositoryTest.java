@@ -64,7 +64,7 @@ class XodusCurrencyHolderRepositoryTest extends RepoTest {
 
     @Test
     void getAllForCurrency() {
-        List<CurrencyHolder> allHolders = repository.getAllForCurrency(holder2.getCurrencyId(), pagination);
+        List<CurrencyHolder> allHolders = repository.getAllForCurrency(holder2.getCurrencyId(), new Pagination());
 
         assertEquals(List.of(holder2, holder1, holder3), allHolders);
     }

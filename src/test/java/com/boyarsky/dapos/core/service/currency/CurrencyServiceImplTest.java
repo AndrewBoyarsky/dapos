@@ -116,9 +116,9 @@ class CurrencyServiceImplTest {
     @Test
     void holders() {
         List<CurrencyHolder> holders = List.of(new CurrencyHolder(1, sender, 1, 399), new CurrencyHolder(2, recipient, 1, 500));
-        doReturn(holders).when(currencyHolderRepository).getAllForCurrency(1, pagination);
+        doReturn(holders).when(currencyHolderRepository).getAllForCurrency(1, new Pagination());
 
-        List<CurrencyHolder> currencyHolders = service.holders(1, pagination);
+        List<CurrencyHolder> currencyHolders = service.holders(1, new Pagination());
 
         assertEquals(holders, currencyHolders);
     }
@@ -148,9 +148,9 @@ class CurrencyServiceImplTest {
     @Test
     void accountCurrencies() {
         List<CurrencyHolder> expected = List.of(new CurrencyHolder(1, sender, 2, 900), new CurrencyHolder(2, sender, 3, 1000));
-        doReturn(expected).when(currencyHolderRepository).getAllByAccount(sender);
+        doReturn(expected).when(currencyHolderRepository).getAllByAccount(sender, new Pagination());
 
-        List<CurrencyHolder> currencyHolders = service.accountCurrencies(sender, pagination);
+        List<CurrencyHolder> currencyHolders = service.accountCurrencies(sender, new Pagination());
         assertEquals(expected, currencyHolders);
     }
 
@@ -183,7 +183,7 @@ class CurrencyServiceImplTest {
         assertEquals(74, cur.getReserve());
         assertEquals(345, cur.getSupply());
         verify(ledgerService).add(new LedgerRecord(-11, -222L, "CLAIM_CURRENCY_RESERVE", sender, recipient, 10));
-        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "RESERVE_RETURN", 46));
+        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "CURRENCY_RESERVE_RETURN", 46));
     }
 
 
@@ -206,7 +206,7 @@ class CurrencyServiceImplTest {
         assertEquals(74, cur.getReserve());
         assertEquals(345, cur.getSupply());
         verify(ledgerService).add(new LedgerRecord(-11, -222L, "CLAIM_CURRENCY_RESERVE", sender, recipient, 10));
-        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "RESERVE_RETURN", 46));
+        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "CURRENCY_RESERVE_RETURN", 46));
     }
 
     @Test
@@ -228,6 +228,6 @@ class CurrencyServiceImplTest {
         assertEquals(0, cur.getReserve());
         assertEquals(0, cur.getSupply());
         verify(ledgerService).add(new LedgerRecord(-11, -567L, "CURRENCY_LIQUIDATE", sender, recipient, 10));
-        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "LIQUIDATION_RESERVE_RETURN", 120));
+        verify(accountService).addToBalance(sender, recipient, new Operation(-11, 10, "CURRENCY_LIQUIDATION_RESERVE_RETURN", 120));
     }
 }
