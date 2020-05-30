@@ -177,11 +177,11 @@ public class Transaction {
     }
 
     public long getFee() {
-        return gasUsed * gasPrice;
+        return (long) gasUsed * gasPrice;
     }
 
     public long getMaxFee() {
-        return maxGas * gasPrice;
+        return (long) maxGas * gasPrice;
     }
 
     public boolean isEd() {

@@ -7,10 +7,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.SecureRandom;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+
 @Component
 public class PassphraseGeneratorImpl implements PassphraseGenerator {
     private static final String DEFAULT_DICTIONARY_PATH = "dictionary.txt";
@@ -19,8 +21,10 @@ public class PassphraseGeneratorImpl implements PassphraseGenerator {
 
     private int minNumberOfWords;
     private int maxNumberOfWords;
-    private volatile List<String> dictionary;
+    private final Random random;
     private URL dictionaryURL;
+    //nosonar
+    private volatile List<String> dictionary;
 
     public PassphraseGeneratorImpl(int minNumberOfWords, int maxNumberOfWords, List<String> dictionary) {
         this(minNumberOfWords, maxNumberOfWords);
@@ -63,6 +67,7 @@ public class PassphraseGeneratorImpl implements PassphraseGenerator {
         this.minNumberOfWords = minNumberOfWords;
         this.maxNumberOfWords = maxNumberOfWords;
         this.dictionaryURL = getClass().getClassLoader().getResource(DEFAULT_DICTIONARY_PATH);
+        this.random = new SecureRandom();
     }
 
     public PassphraseGeneratorImpl() {
@@ -84,7 +89,6 @@ public class PassphraseGeneratorImpl implements PassphraseGenerator {
             if (dictionary.size() < maxNumberOfWords) {
                 throw new RuntimeException("Lack of words in dictionary: required - " + maxNumberOfWords + " but present - " + dictionary.size());
             }
-            Random random = new Random();
             int numberOfWords = random.nextInt(maxNumberOfWords - minNumberOfWords) + minNumberOfWords;
             Set<String> passphraseWords = new LinkedHashSet<>();
             while (passphraseWords.size() != numberOfWords) {

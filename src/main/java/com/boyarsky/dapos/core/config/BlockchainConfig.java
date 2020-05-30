@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class BlockchainConfig {
+    //nosonar
     private volatile HeightConfig currentConfig;
 
     private Map<Long, HeightConfig> allConfigs = new HashMap<>();
