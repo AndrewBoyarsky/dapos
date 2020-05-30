@@ -1,4 +1,6 @@
-# Dapos [![CircleCI](https://circleci.com/gh/AndrewBoyarsky/dapos.svg?style=svg)](https://circleci.com/gh/AndrewBoyarsky/dapos)
+# Dapos [![CircleCI](https://circleci.com/gh/AndrewBoyarsky/dapos.svg?style=svg)](https://circleci.com/gh/AndrewBoyarsky/dapos) 
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=AndrewBoyarsky_dapos)](https://sonarcloud.io/dashboard?id=AndrewBoyarsky_dapos)  
+
 Welcome! This repository store DPoS blockchain system running on Tendermint Core written in Java utilizing grpc interface.
 
 Software Specs:
