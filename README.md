@@ -1,4 +1,4 @@
-# Dapos [![CircleCI](https://circleci.com/gh/circleci/circleci-docs.svg?style=svg)](https://circleci.com/gh/AndrewBoyarsky/dapos)
+# Dapos [![CircleCI](https://circleci.com/gh/AndrewBoyarsky/dapos.svg?style=svg)](https://circleci.com/gh/AndrewBoyarsky/dapos)
 Welcome! This repository store DPoS blockchain system running on Tendermint Core written in Java utilizing grpc interface.
 
 Software Specs:
