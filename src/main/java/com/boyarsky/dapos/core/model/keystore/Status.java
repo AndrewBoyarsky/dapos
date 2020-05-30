@@ -14,7 +14,7 @@ public enum Status {
     Status(String message) {
             this.message = message;
         }
-        public String message;
+        private final String message;
 
         public boolean isOK(){
             return this.message.equals(Status.OK.message);

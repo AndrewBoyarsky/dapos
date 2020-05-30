@@ -39,7 +39,7 @@ class KeyStoreServiceTest {
     PassphraseGenerator passphraseGenerator;
     @Mock
     TimeSource timeSource;
-    String bitcoinWalletFile = "v1_2020-03-30_22-58-35---dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4";
+    String bitcoinWalletFile = "v1_1970-01-01_03-00-00---dbt1BEWEbseVWnHPjuXVxCR1idnFtGkxa756X";
 
     @Test
     void testCreateBitcoin(@TempDir Path dir) throws IOException, InvalidKeySpecException {
@@ -97,24 +97,28 @@ class KeyStoreServiceTest {
     @Test
     void testGetWallet() throws URISyntaxException {
         KeyStoreService keystore = new KeyStoreService(Paths.get(getClass().getClassLoader().getResource(bitcoinWalletFile).toURI()).getParent(), timeSource, passphraseGenerator);
-        VerifiedWallet verified = keystore.getWallet("dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", "12345");
+        VerifiedWallet verified = keystore.getWallet("dbt1BEWEbseVWnHPjuXVxCR1idnFtGkxa756X", "12345");
         assertEquals(Status.OK, verified.getExtractStatus());
         assertEquals("EC", verified.getWallet().getKeyPair().getPrivate().getAlgorithm());
-        assertEquals("dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", verified.getWallet().getAppSpecificAccount());
+        assertEquals("dbt1BEWEbseVWnHPjuXVxCR1idnFtGkxa756X", verified.getWallet().getAppSpecificAccount());
     }
-
+//    @Test
+//    void testCreate(@TempDir Path dir) throws URISyntaxException {
+//        KeyStoreService keyStoreService = new KeyStoreService(dir, timeSource, passphraseGenerator);
+//        PassphraseProtectedWallet bitcoin = keyStoreService.createBitcoin("12345");
+//    }
 
     @Test
     void testGetWallet_incorrectPass() throws URISyntaxException {
         KeyStoreService keystore = new KeyStoreService(Paths.get(getClass().getClassLoader().getResource(bitcoinWalletFile).toURI()).getParent(), timeSource, passphraseGenerator);
-        VerifiedWallet verified = keystore.getWallet("dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALaa4", "1234");
+        VerifiedWallet verified = keystore.getWallet("dbt1BEWEbseVWnHPjuXVxCR1idnFtGkxa756X", "1234");
         assertEquals(Status.BAD_CREDENTIALS, verified.getExtractStatus());
     }
 
     @Test
     void testGetWallet_notFound() throws URISyntaxException {
         KeyStoreService keystore = new KeyStoreService(Paths.get(getClass().getClassLoader().getResource(bitcoinWalletFile).toURI()).getParent(), timeSource, passphraseGenerator);
-        VerifiedWallet verified = keystore.getWallet("dbt19SGWN7jeX7S6P3ay4hEyH6qDfkDzALab4", "1234");
+        VerifiedWallet verified = keystore.getWallet("dbt1BEWEbseVWnHPjuXVxCR1idnFtGkxa755X", "1234");
         assertEquals(Status.NOT_FOUND, verified.getExtractStatus());
     }
 

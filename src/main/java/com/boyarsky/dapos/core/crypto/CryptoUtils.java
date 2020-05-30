@@ -578,7 +578,7 @@ public class CryptoUtils {
     public static byte[] encryptAes(byte[] content, byte[] key) {
     byte[] iv = generateBytes(16);
         try {
-            Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher aes = Cipher.getInstance("AES/GCM/NoPadding");
             aes.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
             byte[] encrypted = aes.doFinal(content);
             byte[] result = new byte[encrypted.length + iv.length];
@@ -596,7 +596,7 @@ public class CryptoUtils {
             System.arraycopy(content, 0, iv, 0, 16);
             byte[] toDecrypt = new byte[content.length - 16];
             System.arraycopy(content, 16, toDecrypt, 0, toDecrypt.length);
-            Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher aes = Cipher.getInstance("AES/GCM/NoPadding");
             aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(iv));
             return aes.doFinal(toDecrypt);
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
