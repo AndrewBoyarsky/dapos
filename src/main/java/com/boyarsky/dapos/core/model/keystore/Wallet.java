@@ -29,7 +29,7 @@ public class Wallet {
     }
 
     public String getPublicKey() throws IOException {
-        return Convert.toHexString(CryptoUtils.compress(keyPair.getPublic().getEncoded()));
+        return Convert.toHexString(CryptoUtils.compress(keyPair.getPublic()));
     }
 
     @Override

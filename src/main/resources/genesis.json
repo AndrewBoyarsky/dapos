@@ -1,36 +1,36 @@
 {
   "accounts": [
     {
-      "accountId": "2515e1d552eb5cf63ea58aca4654f5b12f",
-      "publicKey": "061075ffb7fbeb1090169e462ab20df12f9356fc760be5e2e06bec1e00315208",
+      "accountId": "dbt1PQo75JgkzUhxbSmKaHrpEdKXfuev3ecZo",
+      "publicKey": "0236f4929d5138a60a3cadfe6133803609b8de0f8ec616509dcde29dc39d99fd35",
       "balance": 1000000000000000
     },
     {
-      "accountId": "254d52eaf1114b8c68df983b0b272e4e2f",
-      "publicKey": "817d49f067fefec39b8d62b01528d952f29e89626dcd1d29fef05594ec4e4462",
+      "accountId": "det0x8c09af0e77232e0ce6910ccf10b4037c0225eedd",
+      "publicKey": "036a1d945673615a0c2ecf195f100f9abbcb8945aecab556c816919110e5542c99",
       "balance": 1000000000000000
     },
     {
-      "accountId": "1L5pPdFqgkRhuYhpBCZZ877qNHVYKT4VWT",
-      "publicKey": "035b498eae1615d7edf5ceb542be0e39bbb6b44fcf65f4a74979edf5e95a3c455d",
+      "accountId": "dap25e7f6efded119203e1b1bf9a0a72f02ac",
+      "publicKey": "b38e70f7c1289bf3342bb481cbf76b0a8e78a9f8ca5419063f89eb4f97425149",
       "balance": 1000000000000000
     },
     {
-      "accountId": "0xf1ff0edb0326e6a224c07fed1bdad3cebad5758d",
-      "publicKey": "03163ae2f1682346f6e4d61649ade2250998eed15d0ef3f71b20118a3d64f58504",
+      "accountId": "dap2547fc3f49714b2db7acd5e18ae6a37110",
+      "publicKey": "7823161a4a2d82794638b304a184b77874726a9c2993ad201b5bbf25b8992661",
       "balance": 1000000000000000
     }
   ],
   "validators": [
     {
       "publicKey": "6b245bcebd96847989a780b62f15a2b1b973e1dd866b4d2ea3dae836a628da73",
-      "rewardId": "254d52eaf1114b8c68df983b0b272e4e2f",
+      "rewardId": "dap2547fc3f49714b2db7acd5e18ae6a37110",
       "power": 800000000000,
       "fee": "20"
     },
     {
       "publicKey": "dd66eb860be5927914a35e7e5913801e1d2b9d6f06e57efbe5295793f7497888",
-      "rewardId": "0xf1ff0edb0326e6a224c07fed1bdad3cebad5758d",
+      "rewardId": "det0x8c09af0e77232e0ce6910ccf10b4037c0225eedd",
       "power": 300000000000,
       "fee": "5.55"
     }
