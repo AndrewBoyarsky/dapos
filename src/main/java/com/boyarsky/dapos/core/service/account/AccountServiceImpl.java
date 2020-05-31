@@ -62,10 +62,16 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void multiTransferMoney(AccountId sender, Map<AccountId, Long> transfers, Operation op) {
-        transfers.forEach((recipient, amount) -> {
-            op.setAmount(amount);
-            transferMoney(sender, recipient, op);
-        });
+        long totalAmount = 0;
+        for (Map.Entry<AccountId, Long> entry : transfers.entrySet()) {
+            AccountId recipient = entry.getKey();
+            Long value = entry.getValue();
+            op.setAmount(value);
+            addToBalance(recipient, sender, op);
+            totalAmount += value;
+        }
+        op.setAmount(-totalAmount);
+        addToBalance(sender, op);
     }
 
     public void addToBalance(AccountId accountId, Operation op) {

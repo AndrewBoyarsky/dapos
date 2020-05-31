@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.account;
 
 import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
+import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.repository.account.AccountRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.AccountServiceImpl;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,9 +29,14 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 @ExtendWith(MockitoExtension.class)
 class AccountServiceImplTest {
     AccountId id1 = new AccountId("2500000000000000000000000000000000");
-    AccountId id2 = new AccountId("2500000000000000000000000000000001");
+    AccountId id2 = new AccountId("2500000000000000000000000000000002");
+    AccountId id3 = new AccountId("2500000000000000000000000000000003");
+    AccountId id4 = new AccountId("2500000000000000000000000000000004");
+    AccountId id5 = new AccountId("2500000000000000000000000000000005");
     Account expected1 = new Account(id1, new byte[32], 100, Account.Type.ORDINARY);
     Account expected2 = new Account(id2, new byte[32], 101, Account.Type.ORDINARY);
+    Account expected3 = new Account(id3, new byte[32], 200, Account.Type.ORDINARY);
+    Account expected4 = new Account(id4, new byte[32], 300, Account.Type.ORDINARY);
     @Mock
     AccountRepository repository;
     @Mock
@@ -88,6 +95,40 @@ class AccountServiceImplTest {
         verify(repository).save(expected1);
         assertEquals(50, expected1.getBalance());
         assertEquals(151, expected2.getBalance());
+    }
+
+    @Test
+    void multiTransferMoney() {
+        doReturn(expected1).when(repository).find(id1);
+        doReturn(expected2).when(repository).find(id2);
+        doReturn(expected3).when(repository).find(id3);
+        doReturn(expected4).when(repository).find(id4);
+        doReturn(null).when(repository).find(id5);
+
+
+        service.multiTransferMoney(id1, Map.of(
+                id2, 10L,
+                id3, 15L,
+                id4, 25L,
+                id5, 10L
+        ), new Operation(-1, 1, "MULTI_TRANSFER", 0));
+
+        verify(repository).save(expected2);
+        verify(repository).save(expected3);
+        verify(repository).save(expected4);
+        Account account = new Account(id5, null, 10, Account.Type.ORDINARY);
+        account.setHeight(1);
+        verify(repository).save(account);
+        verify(repository).save(expected1);
+        verify(ledgerService).add(new LedgerRecord(-1, 10, "MULTI_TRANSFER", id1, id2, 1));
+        verify(ledgerService).add(new LedgerRecord(-1, 15, "MULTI_TRANSFER", id1, id3, 1));
+        verify(ledgerService).add(new LedgerRecord(-1, 25, "MULTI_TRANSFER", id1, id4, 1));
+        verify(ledgerService).add(new LedgerRecord(-1, 10, "MULTI_TRANSFER", id1, id5, 1));
+        verifyNoMoreInteractions(ledgerService);
+        assertEquals(40, expected1.getBalance());
+        assertEquals(111, expected2.getBalance());
+        assertEquals(215, expected3.getBalance());
+        assertEquals(325, expected4.getBalance());
     }
 
     @Test

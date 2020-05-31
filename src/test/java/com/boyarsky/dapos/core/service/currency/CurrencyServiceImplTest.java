@@ -15,6 +15,7 @@ import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIdAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIssuanceAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyMultiAccountAttachment;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
@@ -110,6 +112,33 @@ class CurrencyServiceImplTest {
         verify(currencyHolderRepository).save(new CurrencyHolder(9, sender, 333, 9));
         verify(currencyHolderRepository).save(new CurrencyHolder(9, recipient, 333, 101));
         verify(ledgerService).add(new LedgerRecord(2, -91, "CURRENCY_TRANSFER", sender, recipient, 9));
+    }
+
+    @Test
+    void multiTransfer() {
+        Transaction tx = mock(Transaction.class);
+        AccountId recipient1 = CryptoUtils.generateBitcoinWallet().getAccount();
+        AccountId recipient2 = CryptoUtils.generateEthWallet().getAccount();
+        CurrencyMultiAccountAttachment attachment = new CurrencyMultiAccountAttachment((byte) 1, Map.of(
+                recipient1, 33L,
+                recipient2, 330L
+        ), 12L);
+        doReturn(sender).when(tx).getSender();
+        doReturn(TxType.MULTI_CURRENCY_TRANSFER).when(tx).getType();
+        doReturn(-2L).when(tx).getTxId();
+        doReturn(10L).when(tx).getHeight();
+        doReturn(new CurrencyHolder(1, sender, 12L, 400)).when(currencyHolderRepository).get(sender, 12L);
+        doReturn(new CurrencyHolder(2, recipient1, 12L, 10)).when(currencyHolderRepository).get(recipient1, 12L);
+        doReturn(null).when(currencyHolderRepository).get(recipient2, 12L);
+
+        service.multiTransfer(tx, attachment);
+
+        verify(currencyHolderRepository).save(new CurrencyHolder(10, recipient2, 12L, 330));
+        verify(currencyHolderRepository).save(new CurrencyHolder(10, recipient1, 12L, 43));
+        verify(currencyHolderRepository).save(new CurrencyHolder(10, sender, 12L, 37));
+        verify(ledgerService).add(new LedgerRecord(-2, -33, "MULTI_CURRENCY_TRANSFER", sender, recipient1, 10));
+        verify(ledgerService).add(new LedgerRecord(-2, -330, "MULTI_CURRENCY_TRANSFER", sender, recipient2, 10));
+
     }
 
 

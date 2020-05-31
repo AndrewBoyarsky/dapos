@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CurrencyServiceImpl implements CurrencyService {
@@ -52,29 +53,44 @@ public class CurrencyServiceImpl implements CurrencyService {
     }
 
     private void doTransfer(long eventId, long height, TxType type, AccountId sender, AccountId recipient, long amount, long currencyId) {
-        CurrencyHolder holder = currencyHolderRepository.get(sender, currencyId);
-        holder.setAmount(holder.getAmount() - amount);
-        holder.setHeight(height);
-        currencyHolderRepository.save(holder);
+        addCurrencyNoCheckNoLog(sender, -amount, height, currencyId);
         if (recipient != null) {
-            CurrencyHolder currencyHolder = currencyHolderRepository.get(recipient, currencyId);
-            if (currencyHolder == null) {
-                currencyHolder = new CurrencyHolder(height, recipient, currencyId, amount);
-            } else {
-                currencyHolder.setHeight(height);
-                currencyHolder.setAmount(currencyHolder.getAmount() + amount);
-            }
-            currencyHolderRepository.save(currencyHolder);
-            ledgerService.add(new LedgerRecord(eventId, -amount, type.toString(), sender, recipient, height));
+            addCurrencyTo(eventId, height, type, sender, recipient, amount, currencyId);
         } else {
             ledgerService.add(new LedgerRecord(eventId, -amount, LedgerRecord.Type.CURRENCY_BURN.toString(), sender, null, height));
         }
     }
 
+    private void addCurrencyTo(long eventId, long height, TxType type, AccountId sender, AccountId recipient, long amount, long currencyId) {
+        CurrencyHolder currencyHolder = currencyHolderRepository.get(recipient, currencyId);
+        if (currencyHolder == null) {
+            currencyHolder = new CurrencyHolder(height, recipient, currencyId, amount);
+        } else {
+            currencyHolder.setHeight(height);
+            currencyHolder.setAmount(currencyHolder.getAmount() + amount);
+        }
+        currencyHolderRepository.save(currencyHolder);
+        ledgerService.add(new LedgerRecord(eventId, -amount, type.toString(), sender, recipient, height));
+    }
+
+    private void addCurrencyNoCheckNoLog(AccountId id, long amount, long height, long currencyId) {
+        CurrencyHolder holder = currencyHolderRepository.get(id, currencyId);
+        holder.setAmount(holder.getAmount() + amount);
+        holder.setHeight(height);
+        currencyHolderRepository.save(holder);
+    }
+
     @Override
     public void multiTransfer(Transaction tx, CurrencyMultiAccountAttachment attachment) {
         long currencyId = attachment.getCurrencyId();
-        attachment.getTransfers().forEach((acc, amount) -> doTransfer(tx.getTxId(), tx.getHeight(), tx.getType(), tx.getSender(), acc, amount, currencyId));
+        long totalAmount = 0;
+        for (Map.Entry<AccountId, Long> entry : attachment.getTransfers().entrySet()) {
+            AccountId recipient = entry.getKey();
+            Long amount = entry.getValue();
+            addCurrencyTo(tx.getTxId(), tx.getHeight(), tx.getType(), tx.getSender(), recipient, amount, currencyId);
+            totalAmount += amount;
+        }
+        addCurrencyNoCheckNoLog(tx.getSender(), -totalAmount, tx.getHeight(), currencyId);
     }
 
     @Override
