@@ -55,7 +55,7 @@ public class TransactionToolchain {
     public MessageWithResponse createMessageAttachment(DefaultSendingRequest request, Wallet wallet) throws InvalidKeyException, IOException {
         PublicKey recipientPublicKey;
         DefaultSendingRequest.MessageData messageData = request.getMessageData();
-        if (messageData.getIsToSelf()) {
+        if (!messageData.getIsToSelf()) {
             if (request.getRecipient() == null) {
                 return new MessageWithResponse(ResponseEntity.unprocessableEntity().body(new RestError("Recipient required for chat message sending", null)));
             }

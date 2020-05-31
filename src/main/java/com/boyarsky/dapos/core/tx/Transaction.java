@@ -293,6 +293,12 @@ public class Transaction {
             buffer.put(data);
             byte[] dataArray = buffer.array();
             Transaction transaction = new Transaction(version, type, sender, CryptoUtils.compress(keyPair.getPublic()), recipient, dataArray, amount, gasPrice, maxGas, null);
+            if (noFeeAttachment != null) {
+                transaction.putAttachment(noFeeAttachment);
+            }
+            if (messageAttachment != null) {
+                transaction.putAttachment(messageAttachment);
+            }
             byte[] bytes = transaction.bytes(true);
             transaction.signature = CryptoUtils.compressSignature(CryptoUtils.sign(keyPair.getPrivate(), bytes));
             transaction.idFromSignature();

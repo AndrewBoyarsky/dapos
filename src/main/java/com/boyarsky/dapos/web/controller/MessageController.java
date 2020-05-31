@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,7 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping(API.REST_ROOT_URL + "/messages")
+@RequestMapping(value = API.REST_ROOT_URL + "/messages", produces = MediaType.APPLICATION_JSON_VALUE)
 public class MessageController {
     MessageService messageService;
     KeyStoreService keyStoreService;
@@ -55,7 +56,7 @@ public class MessageController {
         this.txToolchain = txToolchain;
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     @Transactional(readonly = true, startNew = true)
     public ResponseEntity<?> sendMessage(@RequestBody @Valid MessageRequest request) throws URISyntaxException, IOException, InterruptedException, InvalidKeyException, GasCalculationException {
         TransactionToolchain.AccountWithWallet accountWithWallet = txToolchain.parseAccount(request);

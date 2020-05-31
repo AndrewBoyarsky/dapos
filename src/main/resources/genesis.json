@@ -27,12 +27,6 @@
       "rewardId": "dap2547fc3f49714b2db7acd5e18ae6a37110",
       "power": 800000000000,
       "fee": "20"
-    },
-    {
-      "publicKey": "dd66eb860be5927914a35e7e5913801e1d2b9d6f06e57efbe5295793f7497888",
-      "rewardId": "det0x8c09af0e77232e0ce6910ccf10b4037c0225eedd",
-      "power": 300000000000,
-      "fee": "5.55"
     }
   ]
 }
