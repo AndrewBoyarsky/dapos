@@ -22,7 +22,7 @@ public class RevokeTransactionValidator implements TransactionTypeValidator {
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         if (tx.getRecipient() == null) {
             throw new TxNotValidException("Validator address should be specified as recipient, got 'null'", null, tx, ErrorCodes.REVOKE_VALIDATOR_NOT_SPECIFIED);
         }

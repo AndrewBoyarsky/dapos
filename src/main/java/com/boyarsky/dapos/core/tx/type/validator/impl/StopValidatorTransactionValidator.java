@@ -18,7 +18,7 @@ public class StopValidatorTransactionValidator implements TransactionTypeValidat
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
 //        ValidatorControlAttachment attachment = tx.getAttachment(ValidatorControlAttachment.class);
         ValidatorEntity entity = validatorService.get(tx.getSender());
         if (entity == null) {

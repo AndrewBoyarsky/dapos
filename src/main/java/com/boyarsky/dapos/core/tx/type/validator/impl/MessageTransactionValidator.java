@@ -21,7 +21,7 @@ public class MessageTransactionValidator implements TransactionTypeValidator {
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         MessageAttachment message = tx.getAttachment(MessageAttachment.class);
         if (!message.isToSelf()) {
             if (tx.getRecipient() == null) {

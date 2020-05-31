@@ -22,7 +22,7 @@ public class CurrencyClaimTransactionValidator implements TransactionTypeValidat
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         CurrencyIdAttachment attachment = tx.getAttachment(CurrencyIdAttachment.class);
         if (tx.getRecipient() != null) {
             throw new TxNotValidException("Claim currency reserve tx does not allow recipient", null, tx, ErrorCodes.CURRENCY_CLAIM_RECIPIENT_NOT_ALLOWED);

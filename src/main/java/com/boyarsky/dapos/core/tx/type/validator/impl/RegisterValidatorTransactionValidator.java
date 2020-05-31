@@ -22,7 +22,7 @@ public class RegisterValidatorTransactionValidator implements TransactionTypeVal
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         RegisterValidatorAttachment attachment = tx.getAttachment(RegisterValidatorAttachment.class);
         if (attachment.getFee() < 0 || attachment.getFee() > 10000) {
             throw new TxNotValidException("Fee allowed in range [0..10000], got " + attachment.getFee(), null, tx, ErrorCodes.VALIDATOR_FEE_RANGE_VIOLATED);

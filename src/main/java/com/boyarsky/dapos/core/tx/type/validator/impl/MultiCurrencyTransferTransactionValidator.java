@@ -21,7 +21,7 @@ public class MultiCurrencyTransferTransactionValidator implements TransactionTyp
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         CurrencyMultiAccountAttachment attachment = tx.getAttachment(CurrencyMultiAccountAttachment.class);
         CurrencyHolder currencyHolder = service.getCurrencyHolder(tx.getSender(), attachment.getCurrencyId());
         if (currencyHolder == null) {

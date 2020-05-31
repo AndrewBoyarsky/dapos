@@ -16,7 +16,7 @@ public class CurrencyIssueTransactionValidator implements TransactionTypeValidat
     private CurrencyService service;
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         if (tx.getRecipient() != null) {
             throw new TxNotValidException("Recipient should not be specified for currency issuance", null, tx, ErrorCodes.CURRENCY_ISSUANCE_HAS_RECIPIENT);
         }

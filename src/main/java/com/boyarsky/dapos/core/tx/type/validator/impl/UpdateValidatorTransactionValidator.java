@@ -4,7 +4,6 @@ import com.boyarsky.dapos.core.service.validator.ValidatorService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.validator.TransactionTypeValidator;
-import com.boyarsky.dapos.core.tx.type.validator.TxNotValidException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,7 +15,7 @@ public class UpdateValidatorTransactionValidator implements TransactionTypeValid
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
 
     }
 

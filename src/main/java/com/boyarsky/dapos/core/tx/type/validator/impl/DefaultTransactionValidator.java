@@ -41,7 +41,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         if (tx.getType() == TxType.ALL) {
             throw new TxNotValidException("Tx should be of concreate type, not 'ALL'", null, tx, ErrorCodes.UNDEFINED_TYPE);
         }
@@ -119,7 +119,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
 
     }
 
-    private void validateForParty(boolean isSender, Transaction tx, PartyFeeConfig partyFeeConfig, AccountId accountId, FeeProvider feeProvider) throws TxNotValidException {
+    private void validateForParty(boolean isSender, Transaction tx, PartyFeeConfig partyFeeConfig, AccountId accountId, FeeProvider feeProvider) {
         if (partyFeeConfig.isWhitelistAll()) {
             FeeConfig rootConfig = partyFeeConfig.getRootConfig();
             if (rootConfig != null) {
@@ -136,7 +136,7 @@ public class DefaultTransactionValidator implements TransactionTypeValidator {
         }
     }
 
-    private void validateForConfig(boolean isSender, Transaction tx, FeeConfig config, FeeProvider feeProvider, AccountId accountId) throws TxNotValidException {
+    private void validateForConfig(boolean isSender, Transaction tx, FeeConfig config, FeeProvider feeProvider, AccountId accountId) {
         if (!config.allowed(tx.getType())) {
             throw new TxNotValidException("Transaction of type " + tx.getType() + " is not allowed for provider " + feeProvider.getId() + ", expected - " + config.getAllowedTxs(), null, tx, ErrorCodes.FEE_PROVIDER_NOT_SUPPORTED_TX_TYPE);
         }

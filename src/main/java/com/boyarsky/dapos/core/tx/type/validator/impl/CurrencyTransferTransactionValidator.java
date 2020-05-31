@@ -21,7 +21,7 @@ public class CurrencyTransferTransactionValidator implements TransactionTypeVali
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         CurrencyIdAttachment attachment = tx.getAttachment(CurrencyIdAttachment.class);
         CurrencyHolder holder = service.getCurrencyHolder(tx.getSender(), attachment.getCurrencyId());
         if (holder == null) {

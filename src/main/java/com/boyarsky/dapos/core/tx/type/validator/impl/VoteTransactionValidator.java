@@ -30,7 +30,7 @@ public class VoteTransactionValidator implements TransactionTypeValidator {
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         if (tx.getRecipient() == null) {
             throw new TxNotValidException("Validator address should be set as recipient for vote tx, got 'null'", null, tx, ErrorCodes.VOTE_VALIDATOR_NOT_SPECIFIED);
         }

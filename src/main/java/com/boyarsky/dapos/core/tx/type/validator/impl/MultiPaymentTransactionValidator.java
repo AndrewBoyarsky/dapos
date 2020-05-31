@@ -6,7 +6,6 @@ import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.MultiAccountAttachment;
 import com.boyarsky.dapos.core.tx.type.validator.TransactionTypeValidator;
-import com.boyarsky.dapos.core.tx.type.validator.TxNotValidException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +19,7 @@ public class MultiPaymentTransactionValidator implements TransactionTypeValidato
     }
 
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         MultiAccountAttachment attachment = tx.getAttachment(MultiAccountAttachment.class);
         Account account = accountService.get(tx.getSender());
         MultiSendValidationUtil.commonValidation(tx, attachment, account.getBalance(), 1000);

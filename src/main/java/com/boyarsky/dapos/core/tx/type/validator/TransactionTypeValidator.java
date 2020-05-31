@@ -5,6 +5,6 @@ import com.boyarsky.dapos.core.tx.type.TxTypedComponent;
 
 public interface TransactionTypeValidator extends TxTypedComponent {
 
-    void validate(Transaction tx) throws TxNotValidException;
+    void validate(Transaction tx);
 
 }

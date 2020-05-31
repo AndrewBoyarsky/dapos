@@ -17,7 +17,7 @@ import java.util.Map;
 @Component
 public class FeeProviderTransactionValidator implements TransactionTypeValidator {
     @Override
-    public void validate(Transaction tx) throws TxNotValidException {
+    public void validate(Transaction tx) {
         if (tx.getRecipient() != null) {
             throw new TxNotValidException("Fee provider tx should not has recipient.", null, tx, ErrorCodes.NOT_FOUND_VALIDATOR);
         }
@@ -32,7 +32,7 @@ public class FeeProviderTransactionValidator implements TransactionTypeValidator
         validateFeeConfig(tx, toConfigs);
     }
 
-    private void validateFeeConfig(Transaction tx, Map<FeeConfig, List<AccountId>> configs) throws TxNotValidException {
+    private void validateFeeConfig(Transaction tx, Map<FeeConfig, List<AccountId>> configs) {
         HashSet<AccountId> ids = new HashSet<>();
         for (Map.Entry<FeeConfig, List<AccountId>> entry : configs.entrySet()) {
             FeeConfig feeConfig = entry.getKey();
