@@ -94,6 +94,16 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         return CollectionUtils.toList(allEntities, this::map);
     }
 
+    public <V extends DbParam> List<T> getAll(Sort sort, Pagination pagination, @NonNull V... params) {
+        EntityIterable allEntities = getAllEntities(sort, pagination, params);
+        return CollectionUtils.toList(allEntities, this::map);
+    }
+
+    public <V extends DbParam> List<T> getAll(Sort sort, @NonNull V... params) {
+        EntityIterable allEntities = getAllEntities(sort, params);
+        return CollectionUtils.toList(allEntities, this::map);
+    }
+
     protected <V extends DbParam> EntityIterable getAllEntities(Sort sort, Pagination pagination, @NonNull V... params) {
         EntityIterable iterable = null;
         if (params.length != 0) {
@@ -110,7 +120,7 @@ public abstract class XodusAbstractRepository<T extends BlockchainEntity> {
         }
         iterable = sort(iterable, sort);
         iterable = paginate(iterable, pagination);
-        return getTx().sort(entityName, "height", iterable, false);
+        return iterable;
     }
 
     protected EntityIterable paginate(EntityIterable iterable, Pagination pagination) {

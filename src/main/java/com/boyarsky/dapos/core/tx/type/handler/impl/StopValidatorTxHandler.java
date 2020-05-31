@@ -3,7 +3,6 @@ package com.boyarsky.dapos.core.tx.type.handler.impl;
 import com.boyarsky.dapos.core.service.validator.ValidatorService;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
-import com.boyarsky.dapos.core.tx.type.attachment.impl.ValidatorControlAttachment;
 import com.boyarsky.dapos.core.tx.type.handler.TransactionTypeHandler;
 import com.boyarsky.dapos.core.tx.type.handler.TxHandlingException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +19,8 @@ public class StopValidatorTxHandler implements TransactionTypeHandler {
 
     @Override
     public void handle(Transaction tx) throws TxHandlingException {
-        ValidatorControlAttachment attachment = tx.getAttachment(ValidatorControlAttachment.class);
-        validatorService.toggleValidator(attachment.getValidatorId(), false, tx.getHeight());
+//        ValidatorControlAttachment attachment = tx.getAttachment(ValidatorControlAttachment.class);
+        validatorService.toggleValidator(tx.getRecipient(), false, tx.getHeight());
     }
 
     @Override

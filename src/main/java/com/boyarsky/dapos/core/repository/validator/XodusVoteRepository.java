@@ -4,6 +4,8 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.VoteEntity;
 import com.boyarsky.dapos.core.repository.DbParam;
 import com.boyarsky.dapos.core.repository.DbParamImpl;
+import com.boyarsky.dapos.core.repository.Pagination;
+import com.boyarsky.dapos.core.repository.Sort;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
@@ -20,10 +22,12 @@ import java.util.List;
 public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> implements VoteRepository {
 
     public static final String ENTITY_NAME = "vote";
+    private final Sort defaultSort = new Sort();
 
     @Autowired
     protected XodusVoteRepository(@NonNull XodusRepoContext context) {
         super(ENTITY_NAME, true, context);
+        defaultSort.add("totalStake", false);
     }
 
     @Override
@@ -51,7 +55,13 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
     @Override
     @Transactional(readonly = true)
     public List<VoteEntity> getAllVotesForValidator(AccountId validatorId) {
-        return getAll(new DbParamImpl("validatorId", Convert.toHexString(validatorId.getAddressBytes())));
+        return getAllVotesForValidator(validatorId, null);
+    }
+
+    @Override
+    @Transactional(readonly = true)
+    public List<VoteEntity> getAllVotesForValidator(AccountId validatorId, Pagination pagination) {
+        return getAll(defaultSort, pagination, new DbParamImpl("validatorId", Convert.toHexString(validatorId.getAddressBytes())));
     }
 
     @Override
@@ -79,6 +89,18 @@ public class XodusVoteRepository extends XodusAbstractRepository<VoteEntity> imp
     @Override
     @Transactional(readonly = true)
     public List<VoteEntity> getAllVotesForVoter(AccountId voterId) {
-        return getAll(new DbParamImpl("id", Convert.toHexString(voterId.getAddressBytes())));
+        return getAllVotesForVoter(voterId, null);
+    }
+
+    @Override
+    @Transactional(readonly = true)
+    public List<VoteEntity> getAllVotesForVoter(AccountId voterId, Pagination pagination) {
+        return getAll(pagination, new DbParamImpl("id", Convert.toHexString(voterId.getAddressBytes())));
+    }
+
+    @Override
+    @Transactional(readonly = true)
+    public List<VoteEntity> getAll(Pagination pagination) {
+        return super.getAll(pagination);
     }
 }

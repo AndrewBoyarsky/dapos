@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.config.BlockchainConfig;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.model.validator.VoteEntity;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.repository.validator.VoteRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.Operation;
@@ -16,14 +17,14 @@ import java.math.RoundingMode;
 import java.util.List;
 
 @Service
-public class StakeholderServiceImpl implements StakeholderService {
+public class VoterServiceImpl implements VoterService {
     private VoteRepository repository;
     private AccountService accountService;
     private LedgerService ledgerService;
     private BlockchainConfig blockchainConfig;
 
     @Autowired
-    public StakeholderServiceImpl(VoteRepository repository, AccountService accountService, LedgerService ledgerService, BlockchainConfig blockchainConfig) {
+    public VoterServiceImpl(VoteRepository repository, AccountService accountService, LedgerService ledgerService, BlockchainConfig blockchainConfig) {
         this.repository = repository;
         this.accountService = accountService;
         this.ledgerService = ledgerService;
@@ -149,6 +150,26 @@ public class StakeholderServiceImpl implements StakeholderService {
     @Override
     public boolean exists(AccountId validator, AccountId voter) {
         return repository.getBy(validator, voter) != null;
+    }
+
+    @Override
+    public VoteEntity get(AccountId validator, AccountId voter) {
+        return repository.getBy(validator, voter);
+    }
+
+    @Override
+    public List<VoteEntity> getByVoter(AccountId voter, Pagination pagination) {
+        return repository.getAllVotesForVoter(voter, pagination);
+    }
+
+    @Override
+    public List<VoteEntity> getAll(Pagination pagination) {
+        return repository.getAll(pagination);
+    }
+
+    @Override
+    public List<VoteEntity> getValidatorVoters(AccountId validator, Pagination pagination) {
+        return repository.getAllVotesForValidator(validator, pagination);
     }
 
     @Override

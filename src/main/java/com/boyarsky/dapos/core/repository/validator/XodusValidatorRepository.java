@@ -4,6 +4,8 @@ import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.repository.DbParam;
 import com.boyarsky.dapos.core.repository.DbParamImpl;
+import com.boyarsky.dapos.core.repository.Pagination;
+import com.boyarsky.dapos.core.repository.Sort;
 import com.boyarsky.dapos.core.repository.XodusAbstractRepository;
 import com.boyarsky.dapos.core.repository.XodusRepoContext;
 import com.boyarsky.dapos.core.repository.aop.Transactional;
@@ -17,10 +19,11 @@ import java.util.List;
 
 @Repository
 public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorEntity> implements ValidatorRepository {
-
+    private final Sort defaultSort = new Sort();
     @Autowired
     public XodusValidatorRepository(XodusRepoContext context) {
         super("validator", true, context);
+        defaultSort.add("power", false);
     }
 
     @Override
@@ -57,13 +60,23 @@ public class XodusValidatorRepository extends XodusAbstractRepository<ValidatorE
     @Override
     @Transactional(readonly = true)
     public List<ValidatorEntity> getAll() {
-        return CollectionUtils.toList(getTx().sort("validator", "power", getTx().getAll("validator"), false), this::map);
+        return getAll(defaultSort);
     }
 
     @Override
     @Transactional(readonly = true)
     public List<ValidatorEntity> getAll(long height) {
-        return CollectionUtils.toList(getTx().sort("validator", "power", getTx().find("validator", "height", height, Long.MAX_VALUE), false), this::map);
+        return CollectionUtils.toList(sort(getTx().find("validator", "height", height, Long.MAX_VALUE), defaultSort), this::map);
+    }
+
+    @Override
+    @Transactional(readonly = true)
+    public List<ValidatorEntity> getAll(Boolean enabled, Pagination pagination) {
+        if (enabled == null) {
+            return getAll(defaultSort, pagination);
+        } else {
+            return getAll(defaultSort, pagination, new DbParamImpl("enabled", enabled));
+        }
     }
 
     @Override

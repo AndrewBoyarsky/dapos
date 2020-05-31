@@ -11,8 +11,10 @@ import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.Operation;
 import com.boyarsky.dapos.core.service.ledger.LedgerService;
 import com.boyarsky.dapos.core.tx.Transaction;
+import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIdAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIssuanceAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyMultiAccountAttachment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,23 +48,33 @@ public class CurrencyServiceImpl implements CurrencyService {
 
     @Override
     public void transfer(Transaction tx, CurrencyIdAttachment attachment) {
-        CurrencyHolder holder = currencyHolderRepository.get(tx.getSender(), attachment.getCurrencyId());
-        holder.setAmount(holder.getAmount() - tx.getAmount());
-        holder.setHeight(tx.getHeight());
+        doTransfer(tx.getTxId(), tx.getHeight(), tx.getType(), tx.getSender(), tx.getRecipient(), tx.getAmount(), attachment.getCurrencyId());
+    }
+
+    private void doTransfer(long eventId, long height, TxType type, AccountId sender, AccountId recipient, long amount, long currencyId) {
+        CurrencyHolder holder = currencyHolderRepository.get(sender, currencyId);
+        holder.setAmount(holder.getAmount() - amount);
+        holder.setHeight(height);
         currencyHolderRepository.save(holder);
-        if (tx.getRecipient() != null) {
-            CurrencyHolder recipient = currencyHolderRepository.get(tx.getRecipient(), attachment.getCurrencyId());
-            if (recipient == null) {
-                recipient = new CurrencyHolder(tx.getHeight(), tx.getRecipient(), attachment.getCurrencyId(), tx.getAmount());
+        if (recipient != null) {
+            CurrencyHolder currencyHolder = currencyHolderRepository.get(recipient, currencyId);
+            if (currencyHolder == null) {
+                currencyHolder = new CurrencyHolder(height, recipient, currencyId, amount);
             } else {
-                recipient.setHeight(tx.getHeight());
-                recipient.setAmount(recipient.getAmount() + tx.getAmount());
+                currencyHolder.setHeight(height);
+                currencyHolder.setAmount(currencyHolder.getAmount() + amount);
             }
-            currencyHolderRepository.save(recipient);
-            ledgerService.add(new LedgerRecord(tx.getTxId(), -tx.getAmount(), tx.getType().toString(), tx.getSender(), tx.getRecipient(), tx.getHeight()));
+            currencyHolderRepository.save(currencyHolder);
+            ledgerService.add(new LedgerRecord(eventId, -amount, type.toString(), sender, recipient, height));
         } else {
-            ledgerService.add(new LedgerRecord(tx.getTxId(), -tx.getAmount(), LedgerRecord.Type.CURRENCY_BURN.toString(), tx.getSender(), null, tx.getHeight()));
+            ledgerService.add(new LedgerRecord(eventId, -amount, LedgerRecord.Type.CURRENCY_BURN.toString(), sender, null, height));
         }
+    }
+
+    @Override
+    public void multiTransfer(Transaction tx, CurrencyMultiAccountAttachment attachment) {
+        long currencyId = attachment.getCurrencyId();
+        attachment.getTransfers().forEach((acc, amount) -> doTransfer(tx.getTxId(), tx.getHeight(), tx.getType(), tx.getSender(), acc, amount, currencyId));
     }
 
     @Override

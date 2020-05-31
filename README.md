@@ -11,12 +11,12 @@ Software Specs:
  
  Features (planned, in-development):
   * Multisignature accounts/transactions
-  * Two types of accounts (bitcoin|ethereum-compatible)
+  * Four types of accounts (bitcoin|ethereum-compatible, validator and custom ed25519 addresses)
   * Delegation/unbonding of stakes
   * Smart contracts on JS 
   * Zero-fee transactions (Fee providers)
   * Encrypted messaging
-  * Assets tokenization
+  * Assets tokenization (currencies)
   * Multisend transactions
   * Scaled by height blockchain config (different block time, tps, block size and block max gas)
   

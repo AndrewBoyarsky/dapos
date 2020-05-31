@@ -27,7 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 @ExtendWith(MockitoExtension.class)
-class StakeholderServiceImplTest {
+class VoterServiceImplTest {
     @Mock
     VoteRepository repository;
     @Mock
@@ -37,7 +37,7 @@ class StakeholderServiceImplTest {
     @Mock
     BlockchainConfig blockchainConfig;
 
-    StakeholderService service;
+    VoterService service;
 
     AccountId validatorId1 = TestUtil.generateValidatorAcc().getCryptoId();
     AccountId validatorId2 = TestUtil.generateValidatorAcc().getCryptoId();
@@ -48,7 +48,7 @@ class StakeholderServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new StakeholderServiceImpl(repository, accountService, ledgerService, blockchainConfig);
+        service = new VoterServiceImpl(repository, accountService, ledgerService, blockchainConfig);
     }
 
     @Test

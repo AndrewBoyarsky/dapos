@@ -5,6 +5,7 @@ import com.boyarsky.dapos.core.crypto.CryptoUtils;
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.ledger.LedgerRecord;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
+import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.repository.validator.ValidatorRepository;
 import com.boyarsky.dapos.core.service.account.AccountService;
 import com.boyarsky.dapos.core.service.account.Operation;
@@ -25,15 +26,15 @@ public class ValidatorServiceImpl implements ValidatorService {
     private ValidatorRepository repository;
     private BlockchainConfig config;
     private LedgerService ledgerService;
-    private StakeholderService stakeholderService;
+    private VoterService voterService;
     private AccountService accountService;
 
     @Autowired
-    public ValidatorServiceImpl(ValidatorRepository repository, BlockchainConfig config, LedgerService ledgerService, StakeholderService stakeholderService, AccountService accountService) {
+    public ValidatorServiceImpl(ValidatorRepository repository, BlockchainConfig config, LedgerService ledgerService, VoterService voterService, AccountService accountService) {
         this.repository = repository;
         this.config = config;
         this.ledgerService = ledgerService;
-        this.stakeholderService = stakeholderService;
+        this.voterService = voterService;
         this.accountService = accountService;
     }
 
@@ -52,8 +53,13 @@ public class ValidatorServiceImpl implements ValidatorService {
     }
 
     @Override
-    public List<ValidatorEntity> getAllUpdated(long height) {
+    public List<ValidatorEntity> getAll(long height) {
         return repository.getAll(height);
+    }
+
+    @Override
+    public List<ValidatorEntity> getAll(Boolean enabled, Pagination pagination) {
+        return repository.getAll(enabled, pagination);
     }
 
     @Override
@@ -81,7 +87,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         }
         byId.setHeight(height);
         byId.setEnabled(false);
-        long punishmentAmount = stakeholderService.punishByzantineStakeholders(validatorId, height).getBurned();
+        long punishmentAmount = voterService.punishByzantineStakeholders(validatorId, height).getBurned();
         ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.VALIDATOR_BYZANTINE_FINE.toString(), null, validatorId, height));
         byId.setVotePower(0);
         byId.setVotes(0);
@@ -100,7 +106,7 @@ public class ValidatorServiceImpl implements ValidatorService {
 
     @Override
     public void revoke(AccountId validatorId, AccountId voterId, long height) {
-        long votePowerLoss = stakeholderService.revokeVote(validatorId, voterId, height);
+        long votePowerLoss = voterService.revokeVote(validatorId, voterId, height);
         ValidatorEntity entity = get(validatorId);
         entity.setHeight(height);
         entity.setVotes(entity.getVotes() - 1);
@@ -122,7 +128,7 @@ public class ValidatorServiceImpl implements ValidatorService {
         byId.setAbsentFor(byId.getAbsentFor() + 1);
         if (byId.getAbsentFor() >= config.getAbsentPeriod()) {
             byId.setEnabled(false);
-            StakeholderPunishmentData punishmentData = stakeholderService.punishStakeholders(validatorId, height);
+            StakeholderPunishmentData punishmentData = voterService.punishStakeholders(validatorId, height);
             punishmentAmount = punishmentData.getBurned();
             ledgerService.add(new LedgerRecord(height, -punishmentAmount, LedgerRecord.Type.ABSENT_VALIDATOR_FINE.toString(), null, validatorId, height));
             byId.setVotePower(byId.getVotePower() - punishmentAmount);
@@ -165,7 +171,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             long validatorFeeRounded = validatorFee.toBigInteger().longValueExact();
             accountService.addToBalance(v.getRewardId(), v.getId(), new Operation(height, height, LedgerRecord.Type.VALIDATOR_BLOCK_REWARD_FEE.toString(), validatorFeeRounded));
             long stakeholdersReward = validatorReward.subtract(validatorFee).toBigInteger().longValueExact();
-            stakeholderService.distributeRewardForValidator(v.getId(), stakeholdersReward, height);
+            voterService.distributeRewardForValidator(v.getId(), stakeholdersReward, height);
         }
     }
 
@@ -176,7 +182,7 @@ public class ValidatorServiceImpl implements ValidatorService {
             byId.setVotes(byId.getVotes() + 1);
         }
         byId.setHeight(height);
-        long stakeDiff = stakeholderService.voteFor(validatorId, voterId, voterPower, height);
+        long stakeDiff = voterService.voteFor(validatorId, voterId, voterPower, height);
         byId.setVotePower(byId.getVotePower() + stakeDiff);
         repository.save(byId);
     }

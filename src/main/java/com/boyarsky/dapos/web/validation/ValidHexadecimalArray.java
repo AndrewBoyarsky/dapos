@@ -9,11 +9,9 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.PARAMETER, ElementType.FIELD, ElementType.TYPE_USE})
-@Constraint(validatedBy = AccountIdValidator.class)
-public @interface ValidAccount {
-    String message() default "Invalid account";
-
-    String[] allowedTypes() default {"VALIDATOR", "ETH", "BTC", "ED25"};
+@Constraint(validatedBy = HexadecimalByteArrayValidator.class)
+public @interface ValidHexadecimalArray {
+    String message() default "Invalid hexadecimal byte array";
 
     Class<?>[] groups() default {};
 

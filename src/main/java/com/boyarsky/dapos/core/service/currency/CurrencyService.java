@@ -7,6 +7,7 @@ import com.boyarsky.dapos.core.repository.Pagination;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIdAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIssuanceAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyMultiAccountAttachment;
 
 import java.util.List;
 
@@ -14,6 +15,8 @@ public interface CurrencyService {
     void add(Transaction tx, CurrencyIssuanceAttachment attachment);
 
     void transfer(Transaction tx, CurrencyIdAttachment attachment);
+
+    void multiTransfer(Transaction tx, CurrencyMultiAccountAttachment attachment);
 
     List<CurrencyHolder> holders(long currencyId, Pagination pagination);
 

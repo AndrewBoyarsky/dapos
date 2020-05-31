@@ -2,6 +2,7 @@ package com.boyarsky.dapos.core.service.validator;
 
 import com.boyarsky.dapos.core.model.account.AccountId;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
+import com.boyarsky.dapos.core.repository.Pagination;
 
 import java.util.List;
 import java.util.Set;
@@ -9,7 +10,9 @@ import java.util.Set;
 public interface ValidatorService {
     ValidatorEntity registerValidator(byte[] pubKey, int fee, AccountId rewardAddress, boolean enable, long height);
 
-    List<ValidatorEntity> getAllUpdated(long height);
+    List<ValidatorEntity> getAll(long height);
+
+    List<ValidatorEntity> getAll(Boolean enabled, Pagination pagination);
 
     void toggleValidator(AccountId validatorId, boolean enabled, long height);
 

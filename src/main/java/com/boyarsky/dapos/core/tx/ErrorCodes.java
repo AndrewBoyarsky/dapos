@@ -74,6 +74,17 @@ public class ErrorCodes {
     public static final ErrorCode CURRENCY_CLAIM_NOT_ENOUGH_CURRENCY = new ErrorCode(CURRENCY_VALIDATION, 143);
     public static final ErrorCode CURRENCY_CLAIM_ZERO_RESERVE = new ErrorCode(CURRENCY_VALIDATION, 144);
 
+    public static final String MULTI_SEND_VALIDATION = "MultiSend Validation";
+    public static final ErrorCode MULTI_SEND_HAS_RECIPIENT = new ErrorCode(MULTI_SEND_VALIDATION, 151);
+    public static final ErrorCode MULTI_SEND_TOO_MANY_ACCOUNTS = new ErrorCode(MULTI_SEND_VALIDATION, 152);
+    public static final ErrorCode MULTI_SEND_NOT_ENOUGH_RECIPIENTS = new ErrorCode(MULTI_SEND_VALIDATION, 153);
+    public static final ErrorCode MULTI_SEND_ZERO_AMOUNT = new ErrorCode(MULTI_SEND_VALIDATION, 154);
+    public static final ErrorCode MULTI_SEND_CONTAINS_AMOUNT = new ErrorCode(MULTI_SEND_VALIDATION, 155);
+    public static final ErrorCode MULTI_SEND_NOT_ENOUGH_FUNDS = new ErrorCode(MULTI_SEND_VALIDATION, 156);
+    public static final ErrorCode MULTI_SEND_RECIPIENT_VALIDATOR_ADDRESS = new ErrorCode(MULTI_SEND_VALIDATION, 157);
+    public static final ErrorCode MULTI_SEND_NO_CURRENCY_ON_ACCOUNT = new ErrorCode(MULTI_SEND_VALIDATION, 158);
+
+
     public static final String TX_HANDLING = "Transaction Handling";
     public static final ErrorCode HANDLING_ERROR = new ErrorCode(TX_HANDLING, 127);
     public static final ErrorCode UNKNOWN_HANDLING_ERROR = new ErrorCode(TX_HANDLING, 128);

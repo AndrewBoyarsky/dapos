@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AccountServiceImpl implements AccountService {
@@ -57,6 +58,14 @@ public class AccountServiceImpl implements AccountService {
         op.setAmount(-op.getAmount());
         addToBalance(sender, op);
         ledgerService.add(new LedgerRecord(op.getId(), op.getAmount(), op.getType(), sender, recipient, op.getHeight()));
+    }
+
+    @Override
+    public void multiTransferMoney(AccountId sender, Map<AccountId, Long> transfers, Operation op) {
+        transfers.forEach((recipient, amount) -> {
+            op.setAmount(amount);
+            transferMoney(sender, recipient, op);
+        });
     }
 
     public void addToBalance(AccountId accountId, Operation op) {

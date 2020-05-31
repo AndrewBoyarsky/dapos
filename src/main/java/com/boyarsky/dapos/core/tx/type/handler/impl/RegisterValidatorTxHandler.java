@@ -10,11 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ValidatorTxHandler implements TransactionTypeHandler {
+public class RegisterValidatorTxHandler implements TransactionTypeHandler {
     private final ValidatorService validatorService;
 
     @Autowired
-    public ValidatorTxHandler(ValidatorService validatorService) {
+    public RegisterValidatorTxHandler(ValidatorService validatorService) {
         this.validatorService = validatorService;
     }
 

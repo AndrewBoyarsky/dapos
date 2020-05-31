@@ -9,10 +9,13 @@ import com.boyarsky.dapos.core.service.currency.CurrencyService;
 import com.boyarsky.dapos.core.tx.type.TxType;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIdAttachment;
 import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyIssuanceAttachment;
+import com.boyarsky.dapos.core.tx.type.attachment.impl.CurrencyMultiAccountAttachment;
 import com.boyarsky.dapos.web.API;
 import com.boyarsky.dapos.web.controller.request.CurrencyClaimRequest;
 import com.boyarsky.dapos.web.controller.request.CurrencyIssueRequest;
+import com.boyarsky.dapos.web.controller.request.CurrencyMultisendRequest;
 import com.boyarsky.dapos.web.controller.request.CurrencyTransferRequest;
+import com.boyarsky.dapos.web.controller.request.MultisendRequest;
 import com.boyarsky.dapos.web.validation.ValidAccount;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -32,6 +35,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = API.REST_ROOT_URL + "/currencies", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -91,6 +95,13 @@ public class CurrencyController {
     @PostMapping(value = "/transfers", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> transfer(@RequestBody @Valid CurrencyTransferRequest request) throws URISyntaxException, InvalidKeyException, InterruptedException, IOException {
         CurrencyIdAttachment attachment = new CurrencyIdAttachment((byte) 1, request.getCurrencyId());
+        TransactionToolchain.AccountWithWallet accountWithWallet = toolchain.parseAccount(request);
+        return toolchain.sendTransaction(new TransactionToolchain.TxSendRequest(request, accountWithWallet, TxType.CURRENCY_TRANSFER, attachment, 1));
+    }
+
+    @PostMapping(value = "/multi-transfers", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> transfer(@RequestBody @Valid CurrencyMultisendRequest request) throws URISyntaxException, InvalidKeyException, InterruptedException, IOException {
+        CurrencyMultiAccountAttachment attachment = new CurrencyMultiAccountAttachment((byte) 1, request.getTransfers().stream().collect(Collectors.toMap(MultisendRequest.Transfer::getRecipient, MultisendRequest.Transfer::getAmount)), request.getCurrencyId());
         TransactionToolchain.AccountWithWallet accountWithWallet = toolchain.parseAccount(request);
         return toolchain.sendTransaction(new TransactionToolchain.TxSendRequest(request, accountWithWallet, TxType.CURRENCY_TRANSFER, attachment, 1));
     }

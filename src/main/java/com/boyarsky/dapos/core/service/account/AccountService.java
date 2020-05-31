@@ -4,6 +4,7 @@ import com.boyarsky.dapos.core.model.account.Account;
 import com.boyarsky.dapos.core.model.account.AccountId;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AccountService {
 
@@ -14,6 +15,8 @@ public interface AccountService {
     List<Account> getAll();
 
     void transferMoney(AccountId sender, AccountId recipient, Operation op);
+
+    void multiTransferMoney(AccountId sender, Map<AccountId, Long> transfers, Operation op);
 
     void addToBalance(AccountId accountId, AccountId senderId, Operation op);
 

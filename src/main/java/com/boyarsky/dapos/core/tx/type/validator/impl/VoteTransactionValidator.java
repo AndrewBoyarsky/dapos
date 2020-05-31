@@ -3,8 +3,8 @@ package com.boyarsky.dapos.core.tx.type.validator.impl;
 import com.boyarsky.dapos.core.config.BlockchainConfig;
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
 import com.boyarsky.dapos.core.service.account.AccountService;
-import com.boyarsky.dapos.core.service.validator.StakeholderService;
 import com.boyarsky.dapos.core.service.validator.ValidatorService;
+import com.boyarsky.dapos.core.service.validator.VoterService;
 import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
@@ -16,15 +16,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class VoteTransactionValidator implements TransactionTypeValidator {
     private ValidatorService service;
-    private StakeholderService stakeholderService;
+    private VoterService voterService;
     private AccountService accountService;
     private BlockchainConfig config;
 
     @Autowired
-    public VoteTransactionValidator(ValidatorService service, StakeholderService stakeholderService,
+    public VoteTransactionValidator(ValidatorService service, VoterService voterService,
                                     AccountService accountService, BlockchainConfig config) {
         this.service = service;
-        this.stakeholderService = stakeholderService;
+        this.voterService = voterService;
         this.accountService = accountService;
         this.config = config;
     }
@@ -44,9 +44,9 @@ public class VoteTransactionValidator implements TransactionTypeValidator {
         if (tx.getAmount() < config.getMinVoteStake()) {
             throw new TxNotValidException("Vote power is less than minimal limit, required >= " + config.getMinVoteStake() + ", got " + tx.getAmount(), null, tx, ErrorCodes.VOTE_POWER_LESSER_THAN_MINIMAL_STAKE);
         }
-        if (!stakeholderService.exists(tx.getRecipient(), tx.getSender())) {
+        if (!voterService.exists(tx.getRecipient(), tx.getSender())) {
             if (config.getMaxValidatorVotes() == validator.getVotes()) {
-                long minStake = stakeholderService.minStake(validator.getId());
+                long minStake = voterService.minStake(validator.getId());
                 if (tx.getAmount() <= minStake) {
                     throw new TxNotValidException("Vote power is not enough to supersede the weakest validator's voter, required more than " + minStake + ", got " + tx.getAmount(), null, tx, ErrorCodes.VOTE_FAILED_TO_SUPERSEDE);
                 }

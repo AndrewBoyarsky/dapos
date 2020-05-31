@@ -141,7 +141,7 @@ public class Blockchain {
         }
         EndBlockResponse response = new EndBlockResponse();
         response.setNewConfig(newConfig);
-        List<ValidatorEntity> allUpdated = validatorService.getAllUpdated(currentHeight);
+        List<ValidatorEntity> allUpdated = validatorService.getAll(currentHeight);
         response.setValidators(allUpdated);
 
         return response;

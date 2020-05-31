@@ -38,7 +38,7 @@ class ValidatorServiceTest {
     @Mock
     LedgerService lService;
     @Mock
-    StakeholderService sService;
+    VoterService sService;
     @Mock
     BlockchainConfig blockchainConfig;
 
@@ -80,7 +80,7 @@ class ValidatorServiceTest {
         List<ValidatorEntity> entities = List.of(v1, v2);
         doReturn(entities).when(vRepository).getAll(100);
 
-        List<ValidatorEntity> allUpdated = service.getAllUpdated(100);
+        List<ValidatorEntity> allUpdated = service.getAll(100);
         assertEquals(allUpdated, entities);
     }
 

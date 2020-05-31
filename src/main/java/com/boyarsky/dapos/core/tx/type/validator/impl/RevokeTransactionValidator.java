@@ -1,8 +1,8 @@
 package com.boyarsky.dapos.core.tx.type.validator.impl;
 
 import com.boyarsky.dapos.core.model.validator.ValidatorEntity;
-import com.boyarsky.dapos.core.service.validator.StakeholderService;
 import com.boyarsky.dapos.core.service.validator.ValidatorService;
+import com.boyarsky.dapos.core.service.validator.VoterService;
 import com.boyarsky.dapos.core.tx.ErrorCodes;
 import com.boyarsky.dapos.core.tx.Transaction;
 import com.boyarsky.dapos.core.tx.type.TxType;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RevokeTransactionValidator implements TransactionTypeValidator {
     private ValidatorService service;
-    private StakeholderService stakeholderService;
+    private VoterService voterService;
 
     @Autowired
     public RevokeTransactionValidator(ValidatorService service) {
@@ -33,7 +33,7 @@ public class RevokeTransactionValidator implements TransactionTypeValidator {
         if (validator == null) {
             throw new TxNotValidException("Validator not found by address " + tx.getRecipient(), null, tx, ErrorCodes.REVOKE_UNKNOWN_VALIDATOR);
         }
-        if (!stakeholderService.exists(validator.getId(), tx.getSender())) {
+        if (!voterService.exists(validator.getId(), tx.getSender())) {
             throw new TxNotValidException("Voter " + tx.getSender() + " has no votes for validator " + validator.getId(), null, tx, ErrorCodes.REVOKE_VOTE_FOR_VALIDATOR_NOT_EXIST);
         }
     }

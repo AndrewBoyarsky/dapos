@@ -191,7 +191,7 @@ class BlockchainTest {
         HeightConfig heightConfig = mock(HeightConfig.class);
         doReturn(heightConfig).when(config).tryUpdateForHeight(1);
         List<ValidatorEntity> updatedValidators = List.of(mock(ValidatorEntity.class), mock(ValidatorEntity.class));
-        doReturn(updatedValidators).when(validatorService).getAllUpdated(0);
+        doReturn(updatedValidators).when(validatorService).getAll(0);
 
         EndBlockResponse endBlockResponse = blockchain.endBlock();
 
